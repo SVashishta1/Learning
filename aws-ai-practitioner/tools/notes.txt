@@ -1,0 +1,174 @@
+P1|1|C|SageMaker is the fully managed build/train/deploy platform for custom ML. Lex = chatbots, Bedrock = consume foundation models via API, Lambda = generic serverless compute.
+P2|1|B|Unsupervised learning finds structure (clusters, associations) in UNLABELED data. A and D are supervised; C is reinforcement learning.
+P3|3|B|Sentiment of free text = Amazon Comprehend (NLP: sentiment, entities, key phrases, language, PII). Rekognition = images, Translate = languages, Polly = text-to-speech.
+P4|3|C|RAG retrieves relevant, current or private documents at query time and adds them to the prompt, grounding answers without retraining the model.
+P5|3|C|Fine-tuning continues training a pre-trained FM on a smaller task/domain-specific labeled dataset, updating its weights. Pre-training builds the model from scratch on massive data.
+P6|2|C|Amazon Bedrock = serverless API access to many FMs (Anthropic Claude, AI21, Meta, Mistral, Cohere, Stability, Amazon Titan/Nova). No infrastructure to manage.
+P7|4|C|Bias = systematic error that skews outcomes unfairly (often toward/against groups). Measured with SageMaker Clarify.
+P8|1|C|Lex builds the conversational bot (intents, slots) and uses ASR; Transcribe converts speech to text. Polly is the reverse (text→speech).
+P9|1|A|Polly = text-to-speech ("Polly the parrot talks"). Transcribe = speech-to-text.
+P10|2|C|A token is the unit of text (word, sub-word, character) the model reads and generates. Pricing and context windows are measured in tokens.
+P11|5|B|Macie uses ML to discover and classify sensitive data (PII, credit cards) in Amazon S3. Think "Macie = S3 PII detective".
+P12|4|C|SageMaker Clarify detects bias (pre-training data and post-training predictions) and explains predictions with SHAP feature attributions.
+P13|3|C|OpenSearch Service (incl. Serverless) has a vector engine with k-NN search, the default vector store for Bedrock Knowledge Bases. Others: Aurora/RDS PostgreSQL pgvector, Neptune, DocumentDB, MemoryDB.
+P14|2|C|Hallucination = confident but false output. Mitigate with RAG, low temperature, Guardrails contextual grounding checks, and human review.
+P15|1|C|Lex = conversational interfaces (voice and text chatbots), same tech as Alexa.
+P16|3|C|Chain-of-thought prompting asks the model to reason step by step ("Let's think step by step"), improving multi-step reasoning.
+P17|5|A|Amazon DataZone catalogs, discovers, shares and governs data across the organization. Artifact = compliance reports; Inspector = vulnerability scanning.
+P18|4|B|SageMaker Model Cards document intended use, risk rating, training details, evaluation metrics and ethical considerations, for governance and audits.
+P19|5|C|CloudTrail records WHO did WHAT API call WHEN. Config tracks resource configuration changes; CloudWatch tracks metrics and logs.
+P20|5|B|IAM (users, roles, policies with least privilege) controls who can invoke Bedrock models. KMS manages encryption keys.
+P21|2|B|Diffusion models (e.g. Stable Diffusion, Titan Image, Nova Canvas) generate images by learning to reverse a noising process.
+P22|1|A|Textract extracts printed and handwritten text, forms (key-value pairs) and tables from documents. Beyond simple OCR.
+P23|2|C|PartyRock is a free, no-code Bedrock playground for building and experimenting with gen-AI apps. Good for learning MOST cost-effectively.
+P24|2|B|Managed FMs: pay-per-use, no pre-training cost, fast time-to-value. Trade-off: less control over internals.
+P25|3|B|BLEU (Bilingual Evaluation Understudy) = translation. ROUGE (Recall-Oriented) = summarization. Hook: "BLEU for Bilingual, ROUGE for Reduce (summaries)".
+P26|3|B|In-context learning (zero/few-shot examples in the prompt) needs no training and no weight updates, so it is cheaper and faster than fine-tuning.
+P27|1|C|Overfitting = memorizes training data (high variance): great on train, poor on new data. Fix: more data, regularization, early stopping, fewer features.
+P28|1|C|SageMaker Feature Store is a central repository to store, share and reuse features consistently for training (offline) and inference (online).
+P29|5|C|Shared responsibility: AWS secures OF the cloud (hardware, facilities, managed service infrastructure). Customer secures IN the cloud (data, IAM, configurations, encryption choices).
+P30|4|B|Amazon Augmented AI (A2I) routes low-confidence predictions to human reviewers (human-in-the-loop).
+P31|1|C|Amazon Translate = neural machine translation between languages, real time or batch.
+P32|2|C|SageMaker JumpStart = ML hub of pre-trained models (incl. FMs) and solution templates you can deploy or fine-tune in a few clicks, inside your account/VPC.
+P33|3|B|Vector stores use (approximate) k-nearest-neighbor search with cosine similarity or Euclidean distance to find semantically similar embeddings.
+P34|2|C|An embedding is a dense numeric vector capturing semantic meaning. Similar meaning → nearby vectors.
+P35|1|C|With class imbalance, accuracy is misleading (99% accuracy by always predicting "not fraud"). Use precision, recall, F1, AUC.
+P36|4|B|SHAP (SHapley Additive exPlanations) values attribute each feature's contribution to a prediction. Used by SageMaker Clarify for explainability.
+P37|5|C|S3 offers encryption, versioning, access logging and fine-grained policies, so it is the standard secure store for model artifacts and outputs.
+P38|1|C|Rekognition = image and video analysis: objects, faces, text in images, content moderation, celebrity recognition, custom labels.
+P39|3|C|Amazon Q Business is a gen-AI assistant that answers questions grounded in company data via connectors (SharePoint, S3, Confluence...), respecting user permissions.
+P40|4|B|Prompt injection = crafted input that overrides instructions to make the model behave in unintended ways. Mitigate with Guardrails (prompt attack filter), input validation, and templates.
+P41|1|A|AWS Glue DataBrew = visual, no-code data preparation with 250+ transformations. (SageMaker Data Wrangler is the ML-focused equivalent inside SageMaker.)
+P42|3|B|The system prompt sets the model's role, rules, tone and constraints for the whole conversation.
+P43|1|B|SageMaker Model Monitor continuously monitors deployed models for data quality drift, model quality drift, bias drift and feature-attribution drift.
+P44|1|C|Comprehend detects dominant language and does topic modeling / custom classification on documents stored in S3.
+P45|3|A|ROUGE compares generated summaries to reference summaries (n-gram recall). BLEU is for translation.
+P46|2|C|Bedrock is a single serverless API across many providers' FMs, with knowledge bases, agents, guardrails and fine-tuning built in.
+P47|3|C|In RAG, the vector DB stores document embeddings so the query's embedding can be matched to the most relevant chunks, which are injected into the prompt.
+P48|5|C|AWS Audit Manager continuously collects evidence and maps it to frameworks (incl. a generative-AI best-practices framework) to simplify audits.
+P49|2|B|Amazon Titan (and newer Amazon Nova) are Amazon's own FM families on Bedrock: text, embeddings, image generation.
+P50|4|B|Use A2I when outputs must be verified by humans before release, e.g. low-confidence or high-stakes decisions.
+P51|1|B|SageMaker Studio is the web-based IDE for the whole ML lifecycle: notebooks, experiments, pipelines, debugging, deployment.
+P52|1|B|SageMaker supports bring-your-own script/container training with frameworks like PyTorch, TensorFlow and scikit-learn.
+P53|1|B|Model Monitor compares live behavior to a baseline and alerts on drift in data or model quality.
+P54|5|C|DataZone provides a business data catalog and governed sharing of data across teams and accounts.
+P55|1|C|Comprehend Custom Classification trains on your own labeled examples to sort documents into your own business categories.
+P56|3|B|Zero-shot = task instruction with NO examples. One-shot = 1 example. Few-shot = several examples.
+P57|3|C|Q Business connects to enterprise data sources and grounds answers in them, with access control, unlike a generic LLM chat.
+P58|3|C|Amazon Q Business is a managed RAG chatbot over enterprise data. (Building your own: Bedrock Knowledge Bases + an FM.)
+P59|5|C|AWS KMS creates and manages encryption keys used for encryption at rest (S3, SageMaker, Bedrock).
+P60|4|C|Bedrock Guardrails: content filters, denied topics, word filters, sensitive information (PII) filters, contextual grounding checks, prompt-attack detection.
+P61|1|C|SageMaker is the end-to-end managed environment: prepare, build, train, tune, deploy and monitor.
+P62|3|C|RAG grounds responses in up-to-date or proprietary data the FM never saw, reducing hallucinations without retraining.
+P63|1|B|Recall = TP / (TP + FN). Maximize recall when missing a positive (false negative) is costly: fraud, disease.
+P64|4|B,C|Model cards document intended uses, risk, training data details and sources, evaluation results and ethical considerations. Not infrastructure or cost metrics.
+P65|5|A|IAM policies and roles control permissions to invoke SageMaker or Bedrock endpoints.
+P66|3|B|Prompt engineering reuses the same model with no training cost. Try it first, then RAG, then fine-tuning.
+P67|1|A|Transcribe = automatic speech recognition (speech-to-text), batch or streaming.
+P68|1|C|Rekognition detects objects, scenes, faces and facial attributes (emotion, glasses, age range).
+P69|1|C|Unmonitored input drift means production data diverges from training data, so accuracy silently degrades.
+P70|4|C|Guardrails can block harmful content and mask or block PII in both prompts and responses.
+P71|2|B|Bedrock hosts FMs from Anthropic, Stability AI, AI21 Labs, Cohere, Meta, Mistral and Amazon.
+P72|4|C|Human-centered AI design: explainable, understandable outputs, user control and human oversight.
+P73|1|C|Feature Store avoids training/serving skew by serving identical feature definitions to training and inference.
+P74|5|A|S3 Lifecycle policies transition or expire (delete) objects after a set period, enforcing data retention.
+P75|4|B|A2I = Augmented AI: human review workflows for ML predictions (built-in for Textract and Rekognition, or custom).
+P76|3|C|BLEU measures n-gram overlap (precision) of machine translation with human reference translations.
+P77|5|B|AWS Artifact = self-service portal for AWS compliance reports (SOC, ISO, PCI) and agreements. Hook: "Artifact = Audit paperwork".
+P78|4|C|Model cards record training data lineage, intended use and evaluation results, giving traceability for governance.
+P79|2|C|Latent space = learned compressed representation where similar concepts sit close together; generative models sample from it.
+P80|1|C|Transcribe (speech→text) handles input; Polly (text→speech) handles output.
+P81|1|C|Transcribe supports custom vocabularies and custom language models for domain terms.
+P82|5|B|AWS: physical and infrastructure security. Customer: data, access, configuration, and the responsible use of models.
+P83|4|B|Clarify detects bias in datasets (pre-training metrics such as class imbalance) and in model predictions (post-training metrics).
+P84|2|B|Continued pre-training uses large UNLABELED domain or recent data to extend the model's knowledge.
+P85|2|B|Instruction tuning fine-tunes on (instruction, response) pairs so the model follows commands better.
+P86|3|C|Bedrock Knowledge Bases ingest documents, chunk them, embed them and add retrieved context to prompts (managed RAG).
+P87|1|A|Memorizing training data (including verbatim reproduction) is overfitting: poor generalization.
+P88|2|C|Temperature controls randomness: higher = more varied and creative; lower (~0) = more deterministic.
+P89|4|C|Explainability tools (SHAP, PDPs via Clarify) show how features influence predictions, building trust and supporting audits.
+P90|5|C|AWS PrivateLink / VPC interface endpoints keep traffic to SageMaker or Bedrock on the AWS private network, off the public internet.
+P91|3|C|Amazon Kendra is an intelligent enterprise search service; in RAG it acts as the retriever returning relevant passages.
+P92|3|A,C|Typical RAG on AWS: Bedrock (embeddings and generation) + OpenSearch (vector store). Textract may preprocess but isn't core; CodePipeline is CI/CD.
+P93|2|D|PartyRock = no-code playground for Bedrock-powered apps.
+P94|1|B|Supervised learning trains on labeled input→output pairs (classification, regression).
+P95|1|B|Transcribe supports streaming transcription and speaker diarization (who spoke when).
+P96|5|C|AWS Config records resource configurations and evaluates them against compliance rules over time.
+P97|4|C|Sampling bias: the training data is not representative of the real population. Fix with diverse, balanced data collection.
+P98|3|C|Few-shot examples live only in the prompt: no weight updates, limited by the context window, and must be resent every call.
+P99|3|B|Kendra retrieves from proprietary docs, Bedrock generates the answer (RAG). Translate could be added for language, but retrieval + generation is the core.
+P100|5|D|Amazon Comprehend detects AND redacts PII in text. Macie only discovers sensitive data in S3; it doesn't redact.
+C1|4|B|Partial dependence plots show how changing one feature changes the prediction: model explainability for stakeholders. Code, raw data and convergence tables don't explain decisions.
+C2|2|C|"Extract key points" from documents with an LLM = summarization. NER only tags entities.
+C3|1|A|Decision trees are inherently interpretable (you can trace splits) and handle multi-class classification. Neural nets are black boxes; linear regression is not for classification.
+C4|1|B|Accuracy = correct predictions / total, for classification. R² and RMSE are regression metrics; learning rate is a hyperparameter.
+C5|3|A|Output length and language are controlled cheapest by prompt instructions. Higher temperature or Top K adds randomness, not compliance.
+C6|1|C|SageMaker Asynchronous Inference: payloads up to 1 GB, processing up to 1 hour, queued, near-real-time. Real-time has ~6 MB / 60 s limits; serverless is smaller; batch is offline.
+C7|1|B|Transfer learning reuses a pre-trained model's learned knowledge and adapts it to a new related task.
+C8|1|A|SageMaker Ground Truth Plus = expert-managed human labeling for high-accuracy annotations.
+C9|5|A|Bedrock accesses S3 through a service role. That role needs s3:GetObject and decrypt permissions for the encryption key. Never make buckets public.
+C10|2|A|Lowest latency on edge = run a small, optimized model locally on the device (no network round trip). LLMs are too large for edge.
+C11|1|A|Feature Store shares and manages features (variables) across teams for training and inference.
+C12|3|A|Amazon Q Developer: code generation/suggestions, reference tracking with open-source license info, security scans, code transformation.
+C13|5|A|PrivateLink (VPC interface endpoint) lets a VPC with no internet access call Bedrock privately.
+C14|1|C|A deterministic math problem doesn't need ML. Simple rule-based code has the least overhead. Exam tip: ML isn't always the answer.
+C15|3|C|Average response time (latency) measures runtime/inference efficiency. Training time is about training, CSAT is business.
+C16|1|B|First step to analyze call audio: Transcribe converts speech to text (Transcribe Call Analytics adds sentiment and issue detection).
+C17|1|B|Unlabeled data + grouping into tiers = clustering = unsupervised learning.
+C18|2|A|Searching across text AND images needs a multimodal EMBEDDING model (e.g. Titan Multimodal Embeddings) that maps both into one vector space. Generation models create content; they don't search.
+C19|3|A|Bedrock fine-tuning takes labeled JSONL records with "prompt" and "completion" fields, stored in S3.
+C20|1|C|Flagging unusual or suspicious IP behavior = anomaly detection.
+C21|3|C|OpenSearch provides k-NN (nearest neighbor) vector search with scalable indexes.
+C22|2|B|Generative AI creates new content (images from text). The others are classic analytics or security tasks.
+C23|2|B|The context window = max tokens (input + output) a model can handle in one request.
+C24|3|C|Iteratively refining the prompt (persona, tone, examples) is the lowest-effort way to match brand tone.
+C25|3|A|Few-shot prompting: labeled examples, then the new item. Best for consistent classification without training.
+C26|5|B|CloudTrail logs every Bedrock API call including denied (AccessDenied) attempts, with the identity of the caller.
+C27|1|A|SageMaker Serverless Inference hosts models without managing instances and scales automatically, even to zero.
+C28|5|B|AWS Artifact provides AWS and ISV compliance reports (Third-Party Reports) and can send email notifications when new reports are available.
+C29|4|A|Prompt templates with guard instructions that detect and refuse attack patterns reduce prompt-injection and jailbreak risk. Combine with Bedrock Guardrails prompt-attack filters.
+C30|5|D|Generative AI Security Scoping Matrix: Scope 1 consumer app → 2 enterprise app → 3 pre-trained model → 4 fine-tuned model → 5 self-trained model. Training your own (Scope 5) = MOST customer responsibility.
+C31|1|A|Object detection identifies and locates objects (animals) in images, e.g. Rekognition labels.
+C32|2|A|Bedrock On-Demand = pay per token, no commitment. Provisioned Throughput = committed capacity (required for custom models). Batch = discounted async.
+C33|2|B|JumpStart deploys FMs to SageMaker endpoints inside your own account/VPC quickly.
+C34|5|A|Secure LLM use = clear, constrained prompts plus least-privilege IAM roles and policies.
+C35|2|A|Text-to-SQL is a natural-language generation task, so it fits generative pre-trained transformers (LLMs).
+C36|1|B|Inference = using the trained model to make predictions on new data.
+C37|4|A|Biased or imbalanced training data → augment or rebalance under-represented groups.
+C38|3|C|Supplementing an FM with private data = Bedrock Knowledge Base (managed RAG).
+C39|4|B|SageMaker Clarify provides explainability reports (feature attributions) and bias metrics for regulators.
+C40|5|B,C|Compliance frameworks address security controls such as threat detection and data protection. Scaling, cost and architecture style aren't compliance capabilities.
+C41|1|B|More epochs = more passes over the training data, which can raise accuracy until it plateaus (watch for overfitting).
+C42|3|B|Fewer agent actions per question shows up as lower average call duration (handle time).
+C43|4|D|Clarify identifies bias during data prep and after training, and explains predictions. Model Monitor watches production; Model Cards document.
+E1|4|D|AI governance frameworks = policies and guidelines for data, transparency, responsible AI and compliance.
+E2|1|B|K-means = unsupervised clustering into K groups (customer segmentation). K-NN is supervised classification. Hook: "k-MEANS makes MEMBERSHIP groups".
+E3|4|C|Guardrails filter harmful content in prompts and responses.
+E4|2|C|PartyRock is free and no-code: the most cost-effective way to experiment with gen-AI apps.
+E6|1|A|Logistic regression has an interpretable, adjustable weight (coefficient) per variable, so experts can view and tune them. PCA-based deep learning and neural nets are opaque.
+E7|5|C|Bedrock is fully managed: AWS patches and secures the infrastructure. The customer secures its data (encryption in transit/at rest), IAM and configs.
+E9|1|D|Model Monitor detects drift in model quality over time and alerts.
+E12|3|C|Real-time grounding in changing company policies = RAG. Retraining or fine-tuning is costly and goes stale.
+E13|1|A|Linear regression's coefficients directly show each feature's effect: highly explainable. SVMs, RCF and neural nets are less transparent.
+E14|4|A|Using a person's voice likeness without consent raises intellectual property / right-of-publicity infringement.
+E15|3|B|Bedrock Knowledge Bases ingest PDFs, CSVs and images (multimodal parsing), giving managed RAG with the least overhead.
+E16|2|D|If the input exceeds the model's context window (max tokens), the request fails. Fix: chunk the book and summarize hierarchically.
+E17|4|C|Passing off AI-generated text as one's own work = plagiarism.
+E18|3|A|Direct sales impact = conversion rate. Interaction counts and sentiment are indirect.
+E19|1|A|High training performance, low test performance = overfitting.
+E23|3|B|LLMs are stateless. Conversation memory = include previous messages in the prompt (within the context window).
+E24|4|B|Including all demographics = diversity / representativeness of the dataset (fairness).
+E25|1|C|Ground Truth labeling jobs with a Mechanical Turk (public) workforce label large volumes of non-confidential data.
+E27|2|A|Tokens are the basic units (words, sub-words, characters) models read and write. Embeddings (B) are the numeric representations.
+E28|3|C|Brand voice with a pre-trained model → effective prompts with clear instructions and context. Least effort.
+E29|2|A|Each Bedrock model has its own max token count / context window, so prompt length limits differ by model.
+E30|2|C|Amazon Nova Reel generates video. Nova Canvas and Titan Image generate images; Nova Pro is text/multimodal understanding.
+E31|4|D|Compliance and regulatory requirements are set at the start, during business goal identification / problem framing.
+E33|1|C|Subtitles = speech-to-text = Amazon Transcribe (add Translate for other languages).
+E34|5|A|AWS Trusted Advisor has a check for underutilized Amazon Comprehend endpoints and reports idle ones.
+E35|4|B|Clarify feature attributions (SHAP) show how inputs influence predictions.
+E36|4|A|Training data not representative of all demographics → unfair outcomes = Fairness.
+E37|3|C|Fine-tuning for style needs labeled pairs: input prompt → desired output.
+E38|2|C|Missing domain knowledge + UNLABELED data = continued pre-training. Supervised fine-tuning needs labeled pairs.
+E39|4|A|Adversarial prompting (testing with and defending against malicious prompts) hardens against injection.
+E41|2|B|JumpStart provides ready fine-tuning jobs for open-source LLMs with minimal code. Least effort.

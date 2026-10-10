@@ -1,0 +1,51 @@
+# domain|T/F|statement|why
+2|F|Amazon Bedrock uses your prompts to improve the base foundation models.|Bedrock does not use customer data to train base models or share it with model providers.
+2|T|A fine-tuned custom model on Bedrock requires Provisioned Throughput for inference.|Custom models run on purchased model units.
+2|F|Raising the temperature makes an LLM more deterministic.|Higher temperature = MORE random; lower = more deterministic.
+2|T|Embeddings that are close in vector space have similar meaning.|That's what enables semantic search.
+2|F|The context window only limits the output length.|It limits input + output tokens combined.
+3|T|RAG can give up-to-date answers without retraining the model.|It retrieves current data at query time.
+3|F|Fine-tuning is cheaper than prompt engineering.|Prompt engineering needs no training, so it's cheapest.
+3|T|ROUGE is commonly used to evaluate summarization.|ROUGE = recall overlap with reference summaries.
+3|F|BLEU is the standard metric for summarization.|BLEU is for translation; ROUGE for summaries.
+3|T|Bedrock Agents can call external APIs through action groups.|Action groups use Lambda + OpenAPI schemas.
+3|F|Bedrock Knowledge Bases fine-tune the model on your documents.|They do RAG (retrieval); model weights are unchanged.
+3|T|Few-shot prompting includes examples in the prompt.|Zero-shot has none.
+3|T|LLMs are stateless; chat history must be resent in the prompt.|Conversation memory = previous messages in context.
+1|T|Overfitting means high training performance but poor test performance.|The model memorized training data.
+1|F|Accuracy is the best metric for highly imbalanced fraud data.|Use precision/recall/F1/AUC; accuracy is misleading.
+1|T|K-means is an unsupervised clustering algorithm.|It groups unlabeled data into K clusters.
+1|F|K-nearest neighbors is an unsupervised clustering algorithm.|k-NN is supervised (classification/regression); don't confuse with K-means.
+1|T|Learning rate is a hyperparameter.|Set before training, not learned.
+1|F|Amazon Polly converts speech to text.|Polly = text→speech; Transcribe = speech→text.
+1|T|Amazon Textract can extract tables and key-value pairs from forms.|It goes beyond plain OCR.
+1|T|SageMaker Asynchronous Inference supports payloads up to 1 GB.|And processing up to ~1 hour.
+1|F|SageMaker Serverless Inference requires you to choose instance types.|Serverless manages capacity; you set memory and concurrency.
+1|T|Regression predicts a continuous numeric value.|Classification predicts categories.
+1|F|Deep learning is broader than machine learning.|Deep learning is a subset of ML.
+1|T|SageMaker Feature Store helps avoid training/serving skew.|Same features for training and inference.
+4|T|SageMaker Clarify can detect bias before training.|Pre-training bias metrics like Class Imbalance.
+4|F|Model Cards are documentation AWS publishes for its AI services.|Those are AI Service Cards; Model Cards document YOUR models.
+4|T|Amazon A2I adds human review to ML predictions.|Human-in-the-loop.
+4|T|SHAP values explain how much each feature contributed to a prediction.|Used by Clarify.
+4|F|Hallucinations can be completely eliminated by increasing max tokens.|Use RAG, grounding checks, lower temperature, human review.
+4|T|Guardrails can mask PII in model responses.|Sensitive information filters.
+4|T|Decision trees are more interpretable than deep neural networks.|Glass box vs black box.
+4|F|Explainability is unnecessary if the model is very accurate.|Regulated decisions still require explanations.
+4|T|Disclosing that users are chatting with an AI supports transparency.|A responsible AI dimension.
+5|T|CloudTrail records API calls, including failed authorization attempts.|Useful to find unauthorized access.
+5|F|AWS is responsible for encrypting your training data in S3 by default without any choice.|Encryption settings/keys are the customer's responsibility (S3 now encrypts by default with SSE-S3, but key choice and access are yours).
+5|T|AWS Artifact provides AWS compliance reports such as SOC and ISO.|Self-service download portal.
+5|F|Amazon Macie redacts PII from text before training.|Macie discovers sensitive data in S3; Comprehend can redact PII.
+5|T|AWS PrivateLink lets a VPC access Bedrock without internet access.|Interface VPC endpoints.
+5|T|Under the Security Scoping Matrix, training your own model gives you the most security responsibility.|Scope 5.
+5|F|AWS Config tells you who made an API call.|That's CloudTrail; Config tracks configuration changes.
+5|T|Trusted Advisor can flag underutilized Amazon Comprehend endpoints.|Cost optimization check.
+5|T|Data lineage tracks where data came from and how it was transformed.|Key for governance and audits.
+5|F|AWS Inspector detects PII in S3.|Inspector scans for vulnerabilities; Macie finds PII.
+2|T|Amazon Nova Reel generates videos.|Canvas = images, Reel = video.
+2|T|PartyRock is a free, no-code way to experiment with gen-AI apps.|Cost-effective learning.
+2|F|SageMaker JumpStart is serverless and needs no endpoints.|JumpStart deploys to SageMaker endpoints you manage; Bedrock is serverless.
+2|T|Continued pre-training uses unlabeled data.|Fine-tuning uses labeled pairs.
+3|T|Average response time is a measure of runtime efficiency.|Latency of inference.
+3|F|Perplexity is a business metric.|It's a model/language metric; business metrics are conversion, AOV, CSAT, etc.

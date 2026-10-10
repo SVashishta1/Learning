@@ -1,0 +1,144 @@
+# category|domain|cue|answer   (distractors drawn from same category)
+svc|1|Speech → text|Amazon Transcribe
+svc|1|Text → lifelike speech|Amazon Polly
+svc|1|Translate between languages|Amazon Translate
+svc|1|Build a voice/text chatbot with intents & slots|Amazon Lex
+svc|1|Sentiment, entities, key phrases in text|Amazon Comprehend
+svc|1|Extract medical conditions & medications from clinical notes|Amazon Comprehend Medical
+svc|1|Extract forms & tables from scanned documents|Amazon Textract
+svc|1|Detect objects, faces, unsafe content in images/video|Amazon Rekognition
+svc|1|Intelligent enterprise document search|Amazon Kendra
+svc|1|Product recommendations|Amazon Personalize
+svc|1|Detect online payment fraud & fake accounts|Amazon Fraud Detector
+svc|1|Human review of low-confidence predictions|Amazon Augmented AI (A2I)
+svc|2|Serverless API to many foundation models|Amazon Bedrock
+svc|2|Free no-code gen-AI app playground|PartyRock
+svc|2|AI coding assistant in the IDE|Amazon Q Developer
+svc|2|Enterprise assistant grounded in company data|Amazon Q Business
+svc|2|Natural-language questions on BI dashboards|Amazon Q in QuickSight
+svc|5|Find PII in S3 buckets|Amazon Macie
+svc|5|Who made which API call, when|AWS CloudTrail
+svc|5|Track resource configuration changes & compliance rules|AWS Config
+svc|5|Download AWS SOC/ISO compliance reports|AWS Artifact
+svc|5|Continuously collect audit evidence for frameworks|AWS Audit Manager
+svc|5|Manage encryption keys|AWS KMS
+svc|5|Threat detection from logs (malicious activity)|Amazon GuardDuty
+svc|5|Vulnerability scanning of workloads|Amazon Inspector
+svc|5|Central view of security findings|AWS Security Hub
+svc|5|Best-practice checks incl. idle/underused resources|AWS Trusted Advisor
+svc|5|Private connection from VPC to Bedrock, no internet|AWS PrivateLink
+svc|5|Fine-grained data lake permissions (table/column)|AWS Lake Formation
+svc|5|Catalog, discover & govern data across teams|Amazon DataZone
+svc|1|Metrics, logs & alarms|Amazon CloudWatch
+svc|1|Visual no-code data prep with 250+ transforms (outside SageMaker)|AWS Glue DataBrew
+sm|1|No-code ML for business analysts|SageMaker Canvas
+sm|1|Visual data prep & feature engineering in SageMaker|SageMaker Data Wrangler
+sm|1|Data labeling workflows|SageMaker Ground Truth
+sm|1|Share & reuse features for training and inference|SageMaker Feature Store
+sm|1|Hub of pre-trained models you deploy in your VPC|SageMaker JumpStart
+sm|4|Detect bias & explain predictions (SHAP)|SageMaker Clarify
+sm|1|Detect drift in deployed models|SageMaker Model Monitor
+sm|1|Version & approve models|SageMaker Model Registry
+sm|1|MLOps workflow orchestration (CI/CD)|SageMaker Pipelines
+sm|1|Catch vanishing gradients during training|SageMaker Debugger
+sm|4|Document intended use, risk & evaluation of your model|SageMaker Model Cards
+sm|1|Resilient clusters for training huge FMs|SageMaker HyperPod
+sm|1|Web-based IDE for the whole ML lifecycle|SageMaker Studio
+sm|1|Automatically search the best hyperparameters|SageMaker Automatic Model Tuning
+inf|1|Millisecond latency, steady traffic|Real-time inference
+inf|1|Spiky traffic, scale to zero, no instances|Serverless inference
+inf|1|Payload up to 1 GB, processing up to 1 hour|Asynchronous inference
+inf|1|Score a whole dataset offline on a schedule|Batch transform
+br|3|Managed RAG over your S3 documents|Bedrock Knowledge Bases
+br|3|Multi-step tasks that call APIs|Bedrock Agents
+br|4|Filter harmful content, PII, denied topics|Bedrock Guardrails
+br|3|Compare models on accuracy/robustness/toxicity|Bedrock Model Evaluation
+br|2|Required to run a fine-tuned custom model|Provisioned Throughput
+br|2|Cheapest way to process millions of prompts, not urgent|Batch inference
+br|2|Pay per token, no commitment|On-Demand
+br|3|Log full prompts and responses|Model invocation logging
+br|3|Version and test prompts|Bedrock Prompt Management
+br|2|Train a small student model from a big teacher|Model Distillation
+learn|1|Labeled input→output pairs|Supervised learning
+learn|1|Find clusters in unlabeled data|Unsupervised learning
+learn|1|Agent learns from rewards|Reinforcement learning
+learn|1|Small labeled set + large unlabeled set|Semi-supervised learning
+learn|1|Reuse a pre-trained model for a related task|Transfer learning
+learn|2|Model learns from data by predicting masked/next tokens itself|Self-supervised learning
+algo|1|Group customers into K segments|K-means
+algo|1|Classify by the majority of nearest labeled neighbors|K-nearest neighbors (k-NN)
+algo|1|Highly interpretable splits for classification|Decision tree
+algo|1|Predict a continuous number with interpretable coefficients|Linear regression
+algo|1|Predict a yes/no probability with adjustable weights|Logistic regression
+algo|1|Image classification network|Convolutional neural network (CNN)
+algo|1|Classic sequence model with memory|Recurrent neural network (RNN)
+algo|2|Self-attention architecture behind LLMs|Transformer
+algo|2|Generator vs discriminator|GAN
+algo|2|Generates images by removing noise step by step|Diffusion model
+algo|2|Encodes to and samples from a latent distribution|Variational autoencoder (VAE)
+algo|1|Detect unusual data points (e.g. suspicious IPs)|Anomaly detection
+metric|1|TP / (TP + FP)|Precision
+metric|1|TP / (TP + FN)|Recall
+metric|1|Harmonic mean of precision and recall|F1 score
+metric|1|Correct / total predictions|Accuracy
+metric|1|Classifier quality across all thresholds|AUC-ROC
+metric|1|Regression error in the target's units|RMSE
+metric|1|Proportion of variance explained|R-squared
+metric|3|Summarization overlap with reference|ROUGE
+metric|3|Machine translation quality|BLEU
+metric|3|Semantic similarity using embeddings|BERTScore
+metric|2|How surprised a language model is by text (lower = better)|Perplexity
+param|2|Controls randomness/creativity|Temperature
+param|2|Sample from tokens until cumulative probability reaches a threshold|Top P
+param|2|Sample from the K most likely tokens|Top K
+param|2|Caps the length of the response|Max tokens
+param|2|String that ends generation|Stop sequence
+param|2|Max tokens a model can consider at once|Context window
+gen|2|Unit of text a model reads and writes|Token
+gen|2|Dense vector capturing meaning|Embedding
+gen|2|Confident but false output|Hallucination
+gen|2|Compressed internal representation space|Latent space
+gen|2|Model that handles text + images + audio|Multimodal model
+gen|2|Humans rank outputs to train a reward model|RLHF
+gen|2|More unlabeled domain data to add knowledge|Continued pre-training
+gen|2|Labeled prompt-completion pairs to teach a task|Fine-tuning
+gen|2|Training on (instruction, response) pairs|Instruction tuning
+gen|3|Retrieve documents and add them to the prompt|RAG
+gen|3|Splitting documents into passages before embedding|Chunking
+prompt|3|No examples in the prompt|Zero-shot prompting
+prompt|3|A few examples in the prompt|Few-shot prompting
+prompt|3|"Let's think step by step"|Chain-of-thought prompting
+prompt|3|Tell an image model what to avoid|Negative prompt
+prompt|3|Reason → act (tool) → observe loop|ReAct
+prompt|3|Feed one prompt's output into the next prompt|Prompt chaining
+prompt|3|Sets role, rules and tone for the whole chat|System prompt
+attack|4|"Ignore previous instructions…"|Prompt injection
+attack|4|Bypass safety rules via role-play tricks|Jailbreaking
+attack|4|Trick the model into revealing its system prompt|Prompt leaking
+attack|5|Insert malicious data into the training set|Data poisoning
+rai|4|Impacts on different groups considered|Fairness
+rai|4|Understand why the model produced an output|Explainability
+rai|4|Disclose AI use and data to users|Transparency
+rai|4|Correct outputs even with adversarial inputs|Veracity & robustness
+rai|4|Mechanisms to monitor and steer AI behavior|Controllability
+rai|4|Prevent harmful output and misuse|Safety
+rai|4|Protect data and models|Privacy & security
+rai|4|Policies & processes for responsible AI|Governance
+bias|4|Training data doesn't represent the population|Sampling bias
+bias|1|Great on train, poor on test|Overfitting
+bias|1|Poor on train and test|Underfitting
+bias|1|Production input distribution changed|Data drift
+scope|5|Using ChatGPT-like public consumer app|Scope 1: Consumer app
+scope|5|SaaS with embedded gen-AI features|Scope 2: Enterprise app
+scope|5|Building an app on a third-party FM via API|Scope 3: Pre-trained model
+scope|5|Fine-tuning a third-party FM with your data|Scope 4: Fine-tuned model
+scope|5|Training a model from scratch|Scope 5: Self-trained model
+nova|2|Amazon video generation model|Amazon Nova Reel
+nova|2|Amazon image generation model|Amazon Nova Canvas
+nova|2|Amazon fastest, cheapest text-only model|Amazon Nova Micro
+nova|2|Amazon speech-to-speech model|Amazon Nova Sonic
+chip|1|Chip for low-cost inference|AWS Inferentia
+chip|1|Chip for cost-efficient training|AWS Trainium
+std|5|AI management system standard|ISO/IEC 42001
+std|5|EU risk-based AI regulation|EU AI Act
+std|5|US AI Risk Management Framework|NIST AI RMF
