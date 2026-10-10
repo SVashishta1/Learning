@@ -3,7 +3,7 @@
 A study app for the **AWS Certified AI Practitioner (AIF-C01)** exam. Open `index.html` in any browser; it works offline and saves progress in the browser.
 
 ## What's inside
-- **268 exam-style questions** across all 5 domains, in multiple-choice, multiple-response, matching and ordering formats, each with an explanation. 176 were checked and re-explained from public practice sets (several wrong answers in those sets were corrected); 92 were written to cover topics the sets missed.
+- **268 exam-style questions** across all 5 domains, in multiple-choice, multiple-response, matching and ordering formats, each with an explanation. 174 were checked and re-explained from public practice sets (several wrong answers in those sets were corrected); 94 were written to cover topics the sets missed.
 - **77 concept cards** with memory hooks, laid out as a 5-room memory palace (one room per domain).
 - **143 keyword drills** and **50 true/false traps** for quick warm-ups.
 
