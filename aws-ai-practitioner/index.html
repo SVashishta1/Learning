@@ -566,7 +566,9 @@ function flashCard(id){
   return `<div class="scene"><div class="card3d ${sess.flipped ? "flipped" : ""}" id="card" tabindex="0" role="button" aria-label="Flashcard, press space to flip"><div class="face front">${front}</div><div class="face back">${back}</div></div></div>
   ${sess.flipped ? `<div class="eyebrow" style="margin-top:14px;text-align:center">How well did you know it?</div><div class="rate">
     <button class="btn again" data-rate="0">Again<small>10 min</small></button><button class="btn" data-rate="1">Hard<small>${previewIvl(id, 1)}</small></button><button class="btn" data-rate="2">Good<small>${previewIvl(id, 2)}</small></button><button class="btn easy" data-rate="3">Easy<small>${previewIvl(id, 3)}</small></button></div>`
-  : `<div class="actions"><button class="btn primary" data-act="flip">Show answer <span class="kbd">space</span></button></div>`}`;
+  : `<div class="actions"><button class="btn primary" data-act="flip">Show answer <span class="kbd">space</span></button></div>`}
+  <div class="actions"><button class="btn ghost" data-act="cardback" ${sess.i ? "" : "disabled"}>← Previous <span class="kbd">←</span></button><button class="btn ghost" data-act="cardskip">${sess.i + 1 >= sess.items.length ? "Finish" : "Next card →"} <span class="kbd">→</span></button></div>
+  <p class="muted" style="text-align:center;font-size:.82rem;margin-top:6px">Swipe the card left or right to move without rating</p>`;
 }
 function previewIvl(id, g){
   const keep = S.srs[id] ? Object.assign({}, S.srs[id]) : null; schedule(id, g); const iv = S.srs[id].ivl;
@@ -647,6 +649,7 @@ function finish(){
     const ok = !!(st && st.ok); rows.push({ id, ok });
     const b = byD[it.d] = byD[it.d] || { n:0, ok:0 }; b.n++; b.ok += ok ? 1 : 0;
   });
+  if (!rows.length) { sess = null; toast("Session ended. No cards rated."); return go("home"); }
   const ok = rows.filter(r => r.ok).length;
   lastResult = { title:sess.title, mode:sess.mode, n:rows.length, ok, rows, byD, xp:S.xp - xp0, secs:(now() - sess.startedAt) / 1000 };
   if (sess.mode === "exam") { S.mocks.push({ t:now(), n:rows.length, ok, score:Math.round(100 + 900 * ok / rows.length) }); save(); }
@@ -695,6 +698,8 @@ document.addEventListener("click", e => {
   if (d.rate !== undefined) { const id = sess.items[sess.i], g = +d.rate; record(id, g > 0, g); sess.ans[id] = { final:true, ok:g > 0, graded:true }; return next(); }
   switch (d.act) {
     case "flip": sess.flipped = true; return render();
+    case "cardskip": return next();
+    case "cardback": sess.i = Math.max(0, sess.i - 1); sess.flipped = false; return render();
     case "submit": { const id = sess.items[sess.i]; if (sess.feedback === "instant") finalize(id); else { sess.ans[id].final = true; } return render(); }
     case "next": { const id = sess.items[sess.i]; const st = sess.ans[id]; if (sess.feedback === "end" && st && st.v != null && (ITEMS[id].kind !== "q" || ["mc"].includes(ITEMS[id].ref.t))) st.final = true; return next(); }
     case "prev": sess.i = Math.max(0, sess.i - 1); return render();
@@ -724,10 +729,19 @@ document.addEventListener("keydown", e => {
   const click = sel => { const b = document.querySelector(sel); if (b && !b.disabled) { b.click(); e.preventDefault(); } };
   if (e.key === " ") { if ($("#card")) { sess.flipped = !sess.flipped; render(); e.preventDefault(); } }
   else if (e.key === "Enter") click('[data-act="next"],[data-act="submit"]');
+  else if (e.key === "ArrowRight") click('[data-act="cardskip"]');
+  else if (e.key === "ArrowLeft") click('[data-act="cardback"]');
   else if (/^[1-4]$/.test(e.key) && $(".rate")) click(`[data-rate="${+e.key - 1}"]`);
   else if (/^[a-fA-F]$/.test(e.key)) { const opts = document.querySelectorAll(".opt:not(.pill)"); const b = opts["abcdef".indexOf(e.key.toLowerCase())]; if (b && !b.disabled) b.click(); }
 });
 
+let swipe = null, swiped = false;
+document.addEventListener("touchstart", e => { const c = e.target.closest("#card"); swipe = c ? { x:e.touches[0].clientX, y:e.touches[0].clientY } : null; }, { passive:true });
+document.addEventListener("touchend", e => {
+  if (!swipe) return; const dx = e.changedTouches[0].clientX - swipe.x, dy = e.changedTouches[0].clientY - swipe.y; swipe = null;
+  if (Math.abs(dx) > 60 && Math.abs(dx) > 1.5 * Math.abs(dy)) { swiped = true; setTimeout(() => swiped = false, 400); const b = document.querySelector(dx < 0 ? '[data-act="cardskip"]' : '[data-act="cardback"]'); if (b && !b.disabled) b.click(); }
+});
+document.addEventListener("click", e => { if (swiped && e.target.closest("#card")) { e.stopImmediatePropagation(); } }, true);
 function render(){
   const app = $("#app");
   app.innerHTML = view === "home" ? vHome() : view === "practice" ? vPractice() : view === "learn" ? vLearn() : view === "stats" ? vStats() : view === "results" ? vResults() : vSession();
