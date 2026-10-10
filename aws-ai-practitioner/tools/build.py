@@ -58,6 +58,16 @@ for v in SV:
         bad = v['not'][0]
         Q.append(dict(id='%sn' % v['id'], d=v['d'], l=2, t='mc', svc=1, q='Which use case is NOT a good fit for %s?' % v['n'],
                       o=[clean(bad)[0].upper() + clean(bad)[1:]] + [u[0].upper() + u[1:] for u in v['use'][:3]], a=[0], x='%s → %s' % (clean(bad), bad[len(clean(bad)):].strip(' ()') or 'use a different service') + '. %s is for: %s.' % (v['n'], '; '.join(v['use']))))
+# Look-alike pairs: a scenario condition decides between two overlapping tools
+CF = [json.loads(l) for l in open(p('confusables.jsonl')) if l.strip()]
+for i, c in enumerate(CF):
+    c['id'] = 'L%d' % i
+    for side, key in ((0, 'sa'), (1, 'sb')):
+        for j, sc in enumerate(c[key]):
+            right, wrong = (c['a'], c['b']) if side == 0 else (c['b'], c['a'])
+            Q.append(dict(id='%s%s%d' % (c['id'], 'ab'[side], j), d=c['d'], l=2, t='mc', cf=1,
+                          q='%s. Which is the better fit: %s or %s?' % (sc, c['a'], c['b']),
+                          o=[c['a'], c['b']], a=[side], x='%s, not %s. %s' % (right, wrong, c['rule'])))
 C = [dict(json.loads(l), id='K%d' % i) for i, l in enumerate(open(p('concepts.jsonl'))) if l.strip()]
 W = []
 for l in open(p('warmups.txt')):
@@ -69,7 +79,7 @@ for l in open(p('tf.txt')):
         d, v, s, w = l.rstrip('\n').split('|'); TF.append(dict(id='T%d' % len(TF), d=int(d), v=v == 'T', s=s, x=w))
 for q in Q:
     assert q['t'] in ('match', 'order') or (q['o'] and all(0 <= i < len(q['o']) for i in q['a'])), q['id']
-out = dict(questions=Q, concepts=C, warmups=W, tf=TF, services=SV)
+out = dict(questions=Q, concepts=C, warmups=W, tf=TF, services=SV, pairs=CF)
 open(p('../data.js'), 'w').write('window.DATA=' + json.dumps(out, ensure_ascii=False, separators=(',', ':')) + ';\n')
 from collections import Counter
 print(len(Q), 'questions', Counter(q['l'] for q in Q), sum(1 for q in Q if q.get('svc')), 'svc-generated', Counter(q['d'] for q in Q), Counter(q['t'] for q in Q), len(C), 'concepts', len(W), 'warmups', len(TF), 'tf')

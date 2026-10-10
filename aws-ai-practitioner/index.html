@@ -225,7 +225,8 @@ DATA.concepts.forEach(c => ITEMS[c.id] = { kind:"k", d:c.d, ref:c });
 DATA.warmups.forEach(w => ITEMS[w.id] = { kind:"w", d:w.d, ref:w });
 DATA.tf.forEach(t => ITEMS[t.id] = { kind:"tf", d:t.d, ref:t });
 DATA.services.forEach(v => ITEMS[v.id] = { kind:"v", d:v.d, ref:v });
-const EXAMQ = DATA.questions.filter(q => !q.svc), SVCQ = DATA.questions.filter(q => q.svc);
+DATA.pairs.forEach(c => ITEMS[c.id] = { kind:"v", d:c.d, ref:c, pair:1 });
+const EXAMQ = DATA.questions.filter(q => !q.svc && !q.cf), SVCQ = DATA.questions.filter(q => q.svc), CFQ = DATA.questions.filter(q => q.cf);
 const LVL = { 1:"Fundamental", 2:"Applied", 3:"Scenario" };
 
 /* ---------- spaced repetition (SM-2 variant, capped by exam date) ---------- */
@@ -332,15 +333,17 @@ const M = {
   },
   keywords(doms = [1,2,3,4,5]){ start({ title:"Keyword drill", mode:"drill", items:pickWeighted(byDomain(DATA.warmups, doms).map(w => w.id), 15) }); },
   truefalse(){ start({ title:"True or false", mode:"drill", items:pickWeighted(DATA.tf.map(t => t.id), 15) }); },
-  pop(){ start({ title:"Pop quiz", mode:"quiz", items:interleave(pickWeighted(EXAMQ.map(q => q.id), 7).concat(pickWeighted(SVCQ.map(q => q.id), 3))) }); },
+  pop(){ start({ title:"Pop quiz", mode:"quiz", items:interleave(pickWeighted(EXAMQ.map(q => q.id), 6).concat(pickWeighted(SVCQ.map(q => q.id), 2), pickWeighted(CFQ.map(q => q.id), 2))) }); },
   ladder(){
     const lv = l => interleave(pickWeighted(EXAMQ.concat(SVCQ).filter(q => q.l === l).map(q => q.id), 5));
     start({ title:"Step-up quiz · fundamental → scenario", mode:"quiz", items:lv(1).concat(lv(2), lv(3)) });
   },
+  lookalike(){ start({ title:"Tell them apart", mode:"quiz", items:interleave(pickWeighted(CFQ.map(q => q.id), 15)) }); },
+  flashp(){ start({ title:"Look-alike cards", mode:"flash", items:interleave(pickWeighted(DATA.pairs.map(c => c.id), 20)) }); },
   services(){ start({ title:"Service quiz", mode:"quiz", items:interleave(pickWeighted(SVCQ.map(q => q.id), 15)) }); },
   flashv(){ start({ title:"AWS service cards", mode:"flash", items:interleave(pickWeighted(DATA.services.map(v => v.id), 25)) }); },
   custom(){
-    const src = practiceOpts.src === "exam" ? EXAMQ : practiceOpts.src === "svc" ? SVCQ : DATA.questions;
+    const src = { exam:EXAMQ, svc:SVCQ, cf:CFQ }[practiceOpts.src] || DATA.questions;
     const pool = byDomain(src, practiceOpts.domains).filter(q => practiceOpts.lvl === "all" || q.l === +practiceOpts.lvl).map(q => q.id);
     start({ title:"Custom quiz", mode:"quiz", feedback:practiceOpts.feedback, items:interleave(pickWeighted(pool, practiceOpts.count)) });
   },
@@ -395,6 +398,7 @@ function vHome(){
     <button class="tile" data-m="pop"><span class="k">10 questions</span><span class="t">Pop quiz</span><span class="s">Exam-style scenarios, instant feedback</span></button>
     <button class="tile" data-m="flashk"><span class="k">Tap to flip</span><span class="t">Concept cards</span><span class="s">Definitions with memory hooks</span></button>
     <button class="tile" data-m="flashv"><span class="k">Tap to flip</span><span class="t">AWS service cards</span><span class="s">What it does, when to use it, when not to</span></button>
+    <button class="tile" data-m="lookalike"><span class="k">X vs Y</span><span class="t">Tell them apart</span><span class="s">Overlapping tools, one deciding detail</span></button>
     <button class="tile" data-m="ladder"><span class="k">Easy → hard</span><span class="t">Step-up quiz</span><span class="s">5 fundamental, 5 applied, 5 scenario</span></button>
     <button class="tile" data-m="flashq"><span class="k">Tap to flip</span><span class="t">Question cards</span><span class="s">Question on front, answer and why on back</span></button>
     <button class="tile" data-m="weak"><span class="k">Targeted</span><span class="t">Weak spots</span><span class="s">Only what you've missed</span></button>
@@ -420,8 +424,14 @@ function vPractice(){
       <button class="tile" data-m="services"><span class="t">Service quiz</span><span class="s">${SVCQ.length} "which service fits?" questions</span></button>
       <button class="tile" data-m="ladder"><span class="t">Step-up quiz</span><span class="s">Fundamentals first, then real scenarios</span></button>
     </div></section>
+  <section class="panel stack"><span class="eyebrow">Look-alikes · ${DATA.pairs.length} commonly confused pairs</span>
+    <p class="muted" style="font-size:.92rem">Many exam questions hinge on one detail that rules out a similar tool. Train exactly that.</p>
+    <div class="tiles">
+      <button class="tile" data-m="lookalike"><span class="t">Tell them apart</span><span class="s">${CFQ.length} scenarios: this tool or that one?</span></button>
+      <button class="tile" data-m="flashp"><span class="t">Look-alike cards</span><span class="s">"X vs Y": the rule that separates them</span></button>
+    </div></section>
   <section class="panel stack"><span class="eyebrow">Custom quiz · ${DATA.questions.length} questions</span>
-    <div class="stack" style="gap:6px"><b>Question set</b>${seg("src", [["exam","Exam-style (" + EXAMQ.length + ")"],["svc","AWS services (" + SVCQ.length + ")"],["all","Both"]], practiceOpts.src)}</div>
+    <div class="stack" style="gap:6px"><b>Question set</b>${seg("src", [["exam","Exam-style (" + EXAMQ.length + ")"],["svc","AWS services (" + SVCQ.length + ")"],["cf","Look-alikes (" + CFQ.length + ")"],["all","All"]], practiceOpts.src)}</div>
     <div class="stack" style="gap:6px"><b>Difficulty</b>${seg("lvl", [["all","All"],["1","Fundamental"],["2","Applied"],["3","Scenario"]], practiceOpts.lvl)}</div>
     <div class="stack" style="gap:6px"><b>Domains</b>${seg("dom", Object.keys(DOMAINS).map(d => [d, "D" + d + " " + DOMAINS[d].short]), practiceOpts.domains)}</div>
     <div class="stack" style="gap:6px"><b>Length</b>${seg("count", [[5,"5"],[10,"10"],[20,"20"],[30,"30"],[50,"50"]], practiceOpts.count)}</div>
@@ -441,7 +451,13 @@ function vPractice(){
 }
 const STATION = ["Door","Coat rack","Mirror","Rug","Lamp","Clock","Shelf","Window","Plant","Painting","Desk","Chair","Fireplace","Bookcase","Piano","Sofa","Table","Vase","Statue","Chest","Curtain","Globe","Candle","Map","Drawer","Lock"];
 function vLearn(){
-  const tabsSeg = `<div class="seg">${[["palace","Memory palace"],["services","AWS services"]].map(([v, l]) => `<button data-opt="learn" data-v="${v}" class="${learnTab === v ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  const tabsSeg = `<div class="seg">${[["palace","Memory palace"],["services","AWS services"],["pairs","Look-alikes"]].map(([v, l]) => `<button data-opt="learn" data-v="${v}" class="${learnTab === v ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  if (learnTab === "pairs") {
+    return header() + `<div class="stack" style="gap:16px"><h1>Look-alikes</h1>${tabsSeg}
+    <p class="muted">Tools that sound alike but serve different purposes. Exam scenarios usually include one condition that picks one over the other.</p>
+    ${Object.keys(DOMAINS).map(d => { const ps = DATA.pairs.filter(c => c.d == d); return ps.length ? `<section class="stack"><span class="eyebrow">D${d} · ${DOMAINS[d].name}</span>${ps.map(c => `<details class="room"><summary><span class="dnum" style="background:${DCOL(d)}">${d}</span><span><h3>${esc(c.a)} <span class="muted">vs</span> ${esc(c.b)}</h3></span><span class="num">▾</span></summary><div style="padding:0 16px 16px">${pairBody(c)}</div></details>`).join("")}</section>` : ""; }).join("")}
+    <div class="row"><button class="btn primary grow" data-m="lookalike">Quiz me</button><button class="btn grow" data-m="flashp">Flip the cards</button></div></div>`;
+  }
   if (learnTab === "services") {
     const groups = { genai:"Generative AI", bedrock:"Bedrock features", sm:"SageMaker & ML platform", ai:"AI services (pre-trained, API)", data:"Data, vectors & compute", sec:"Security, compliance & governance" };
     return header() + `<div class="stack" style="gap:16px"><h1>AWS services</h1>${tabsSeg}
@@ -570,7 +586,10 @@ function feedbackBlock(id){
 function flashCard(id){
   const it = ITEMS[id], r = it.ref;
   let front, back;
-  if (it.kind === "v") {
+  if (it.pair) {
+    front = `<div class="qmeta">${domTag(r.d)}<span class="tag">Look-alikes</span></div><div class="big">${esc(r.a)}<br><span class="muted" style="font-size:.9rem">vs</span><br>${esc(r.b)}</div><p class="muted" style="text-align:center">What single difference decides between them?</p><div class="hint">Tap to flip</div>`;
+    back = pairBody(r) + `<div class="hint">Tap to flip back</div>`;
+  } else if (it.kind === "v") {
     front = `<div class="qmeta">${domTag(r.d)}<span class="tag">AWS service</span></div><div class="big">What is ${esc(r.n)}?</div><p class="muted" style="text-align:center">Say what it does, one use case, and one thing it is NOT for.</p><div class="hint">Tap to flip</div>`;
     back = svcBody(r) + `<div class="hint">Tap to flip back</div>`;
   } else if (it.kind === "k") {
@@ -600,6 +619,11 @@ function flashCard(id){
   : `<div class="actions"><button class="btn primary" data-act="flip">Show answer <span class="kbd">space</span></button></div>`}
   <div class="actions"><button class="btn ghost" data-act="cardback" ${sess.i ? "" : "disabled"}>← Previous <span class="kbd">←</span></button><button class="btn ghost" data-act="cardskip">${sess.i + 1 >= sess.items.length ? "Finish" : "Next card →"} <span class="kbd">→</span></button></div>
   <p class="muted" style="text-align:center;font-size:.82rem;margin-top:6px">Swipe the card left or right to move without rating</p>`;
+}
+function pairBody(c){
+  return `<div class="qmeta">${domTag(c.d)}</div><h2 style="margin-bottom:6px">${esc(c.a)} vs ${esc(c.b)}</h2><div class="hook" style="margin-top:0"><b>The deciding rule</b>${esc(c.rule)}</div>
+  <div class="eyebrow" style="margin:10px 0 4px;color:var(--accent)">Pick ${esc(c.a)} when…</div><ul style="margin:0;padding-left:1.2rem">${c.sa.map(u => `<li>${esc(u)}</li>`).join("")}</ul>
+  <div class="eyebrow" style="margin:10px 0 4px;color:var(--d4)">Pick ${esc(c.b)} when…</div><ul style="margin:0;padding-left:1.2rem">${c.sb.map(u => `<li>${esc(u)}</li>`).join("")}</ul>`;
 }
 function svcBody(v){
   return `<div class="qmeta">${domTag(v.d)}</div><h2 style="margin-bottom:6px">${esc(v.n)}</h2><p>${esc(v.what)}</p>
@@ -711,7 +735,7 @@ document.addEventListener("click", e => {
   if (d.m) {
     const dd = d.d ? +d.d : undefined;
     ({ review:M.review, warmup:M.warmup, keywords:() => M.keywords(), truefalse:M.truefalse, pop:M.pop, custom:M.custom, domain:() => M.domain(dd), weak:M.weak,
-       flashk:() => M.flash("k", dd), flashq:() => M.flash("q", dd), mock:M.mock, ladder:M.ladder, services:M.services, flashv:M.flashv })[d.m]();
+       flashk:() => M.flash("k", dd), flashq:() => M.flash("q", dd), mock:M.mock, ladder:M.ladder, lookalike:M.lookalike, flashp:M.flashp, services:M.services, flashv:M.flashv })[d.m]();
     return;
   }
   if (d.opt) {
