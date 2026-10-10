@@ -224,6 +224,9 @@ DATA.questions.forEach(q => ITEMS[q.id] = { kind:"q", d:q.d, ref:q });
 DATA.concepts.forEach(c => ITEMS[c.id] = { kind:"k", d:c.d, ref:c });
 DATA.warmups.forEach(w => ITEMS[w.id] = { kind:"w", d:w.d, ref:w });
 DATA.tf.forEach(t => ITEMS[t.id] = { kind:"tf", d:t.d, ref:t });
+DATA.services.forEach(v => ITEMS[v.id] = { kind:"v", d:v.d, ref:v });
+const EXAMQ = DATA.questions.filter(q => !q.svc), SVCQ = DATA.questions.filter(q => q.svc);
+const LVL = { 1:"Fundamental", 2:"Applied", 3:"Scenario" };
 
 /* ---------- spaced repetition (SM-2 variant, capped by exam date) ---------- */
 function daysToExam(){ if (!S.settings.examDate) return null; const d = Math.ceil((new Date(S.settings.examDate + "T09:00") - now()) / DAY); return d; }
@@ -284,7 +287,7 @@ const level = () => Math.floor(Math.sqrt(S.xp / 50)) + 1;
 let tt; function toast(m){ const el = $("#toast"); el.textContent = m; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 1800); }
 
 /* ---------- navigation ---------- */
-let view = "home", sess = null, lastResult = null, practiceOpts = { count:20, domains:[1,2,3,4,5], feedback:"instant" };
+let view = "home", sess = null, lastResult = null, practiceOpts = { count:20, domains:[1,2,3,4,5], feedback:"instant", lvl:"all", src:"exam" }, learnTab = "palace";
 function go(v){ view = v; sess = v === "session" ? sess : null; render(); window.scrollTo(0, 0); }
 function renderTabs(){
   const tabs = [["home","Today"],["practice","Practice"],["learn","Learn"],["stats","Progress"]];
@@ -329,25 +332,32 @@ const M = {
   },
   keywords(doms = [1,2,3,4,5]){ start({ title:"Keyword drill", mode:"drill", items:pickWeighted(byDomain(DATA.warmups, doms).map(w => w.id), 15) }); },
   truefalse(){ start({ title:"True or false", mode:"drill", items:pickWeighted(DATA.tf.map(t => t.id), 15) }); },
-  pop(){ start({ title:"Pop quiz", mode:"quiz", items:interleave(pickWeighted(DATA.questions.map(q => q.id), 10)) }); },
+  pop(){ start({ title:"Pop quiz", mode:"quiz", items:interleave(pickWeighted(EXAMQ.map(q => q.id), 7).concat(pickWeighted(SVCQ.map(q => q.id), 3))) }); },
+  ladder(){
+    const lv = l => interleave(pickWeighted(EXAMQ.concat(SVCQ).filter(q => q.l === l).map(q => q.id), 5));
+    start({ title:"Step-up quiz · fundamental → scenario", mode:"quiz", items:lv(1).concat(lv(2), lv(3)) });
+  },
+  services(){ start({ title:"Service quiz", mode:"quiz", items:interleave(pickWeighted(SVCQ.map(q => q.id), 15)) }); },
+  flashv(){ start({ title:"AWS service cards", mode:"flash", items:interleave(pickWeighted(DATA.services.map(v => v.id), 25)) }); },
   custom(){
-    const pool = byDomain(DATA.questions, practiceOpts.domains).map(q => q.id);
+    const src = practiceOpts.src === "exam" ? EXAMQ : practiceOpts.src === "svc" ? SVCQ : DATA.questions;
+    const pool = byDomain(src, practiceOpts.domains).filter(q => practiceOpts.lvl === "all" || q.l === +practiceOpts.lvl).map(q => q.id);
     start({ title:"Custom quiz", mode:"quiz", feedback:practiceOpts.feedback, items:interleave(pickWeighted(pool, practiceOpts.count)) });
   },
-  domain(d){ start({ title:DOMAINS[d].short + " drill", mode:"quiz", items:pickWeighted(DATA.questions.filter(q => q.d === d).map(q => q.id), 15) }); },
+  domain(d){ start({ title:DOMAINS[d].short + " drill", mode:"quiz", items:pickWeighted(DATA.questions.filter(q => q.d === d).map(q => q.id), 15).sort((a, b) => ITEMS[a].ref.l - ITEMS[b].ref.l) }); },
   weak(){
     const ids = Object.keys(S.srs).filter(id => S.srs[id].lapses > 0 || S.srs[id].ease < 2.3).sort((a, b) => S.srs[b].lapses - S.srs[a].lapses).slice(0, 20);
     if (!ids.length) return toast("No weak spots yet. Answer some questions first.");
     start({ title:"Weak spots", mode:"quiz", items:interleave(ids) });
   },
   flash(kind, d){
-    const src = kind === "k" ? DATA.concepts : DATA.questions;
+    const src = kind === "k" ? DATA.concepts : EXAMQ;
     const pool = src.filter(x => !d || x.d === d).map(x => x.id);
     start({ title:kind === "k" ? "Concept cards" : "Question flashcards", mode:"flash", items:interleave(pickWeighted(pool, 25)) });
   },
   mock(){
     const counts = { 1:13, 2:16, 3:18, 4:9, 5:9 }; let items = [];
-    for (const d in counts) items = items.concat(shuffle(DATA.questions.filter(q => q.d == d).map(q => q.id)).slice(0, counts[d]));
+    for (const d in counts) { const pool = shuffle(EXAMQ.filter(q => q.d == d)).sort((a, b) => b.l - a.l); items = items.concat(pool.slice(0, Math.ceil(counts[d] * 1.6)).sort(() => Math.random() - .5).slice(0, counts[d]).map(q => q.id)); }
     start({ title:"Mock exam", mode:"exam", feedback:"end", items:shuffle(items), timeLimit:90 * 60 });
   },
   retry(ids){ start({ title:"Retry missed", mode:"quiz", items:shuffle(ids) }); }
@@ -384,6 +394,8 @@ function vHome(){
     <button class="tile" data-m="warmup"><span class="k">3 min</span><span class="t">Warm-up sprint</span><span class="s">10 rapid keyword and true/false questions</span></button>
     <button class="tile" data-m="pop"><span class="k">10 questions</span><span class="t">Pop quiz</span><span class="s">Exam-style scenarios, instant feedback</span></button>
     <button class="tile" data-m="flashk"><span class="k">Tap to flip</span><span class="t">Concept cards</span><span class="s">Definitions with memory hooks</span></button>
+    <button class="tile" data-m="flashv"><span class="k">Tap to flip</span><span class="t">AWS service cards</span><span class="s">What it does, when to use it, when not to</span></button>
+    <button class="tile" data-m="ladder"><span class="k">Easy → hard</span><span class="t">Step-up quiz</span><span class="s">5 fundamental, 5 applied, 5 scenario</span></button>
     <button class="tile" data-m="flashq"><span class="k">Tap to flip</span><span class="t">Question cards</span><span class="s">Question on front, answer and why on back</span></button>
     <button class="tile" data-m="weak"><span class="k">Targeted</span><span class="t">Weak spots</span><span class="s">Only what you've missed</span></button>
     <button class="tile" data-m="mock"><span class="k">65 Q · 90 min</span><span class="t">Mock exam</span><span class="s">Weighted like the real exam, scored 100–1000</span></button>
@@ -402,7 +414,15 @@ function vPractice(){
       <button class="tile" data-m="keywords"><span class="t">Keyword drill</span><span class="s">"Which service does this?" · ${DATA.warmups.length} cues</span></button>
       <button class="tile" data-m="truefalse"><span class="t">True or false</span><span class="s">Spot the common exam traps · ${DATA.tf.length} statements</span></button>
     </div></section>
-  <section class="panel stack"><span class="eyebrow">Custom quiz · ${DATA.questions.length} exam-style questions</span>
+  <section class="panel stack"><span class="eyebrow">AWS services · ${DATA.services.length} services</span>
+    <div class="tiles">
+      <button class="tile" data-m="flashv"><span class="t">Service cards</span><span class="s">What is it? When to use it, when not to</span></button>
+      <button class="tile" data-m="services"><span class="t">Service quiz</span><span class="s">${SVCQ.length} "which service fits?" questions</span></button>
+      <button class="tile" data-m="ladder"><span class="t">Step-up quiz</span><span class="s">Fundamentals first, then real scenarios</span></button>
+    </div></section>
+  <section class="panel stack"><span class="eyebrow">Custom quiz · ${DATA.questions.length} questions</span>
+    <div class="stack" style="gap:6px"><b>Question set</b>${seg("src", [["exam","Exam-style (" + EXAMQ.length + ")"],["svc","AWS services (" + SVCQ.length + ")"],["all","Both"]], practiceOpts.src)}</div>
+    <div class="stack" style="gap:6px"><b>Difficulty</b>${seg("lvl", [["all","All"],["1","Fundamental"],["2","Applied"],["3","Scenario"]], practiceOpts.lvl)}</div>
     <div class="stack" style="gap:6px"><b>Domains</b>${seg("dom", Object.keys(DOMAINS).map(d => [d, "D" + d + " " + DOMAINS[d].short]), practiceOpts.domains)}</div>
     <div class="stack" style="gap:6px"><b>Length</b>${seg("count", [[5,"5"],[10,"10"],[20,"20"],[30,"30"],[50,"50"]], practiceOpts.count)}</div>
     <div class="stack" style="gap:6px"><b>Feedback</b>${seg("fb", [["instant","After each question"],["end","At the end"]], practiceOpts.feedback)}</div>
@@ -421,8 +441,16 @@ function vPractice(){
 }
 const STATION = ["Door","Coat rack","Mirror","Rug","Lamp","Clock","Shelf","Window","Plant","Painting","Desk","Chair","Fireplace","Bookcase","Piano","Sofa","Table","Vase","Statue","Chest","Curtain","Globe","Candle","Map","Drawer","Lock"];
 function vLearn(){
+  const tabsSeg = `<div class="seg">${[["palace","Memory palace"],["services","AWS services"]].map(([v, l]) => `<button data-opt="learn" data-v="${v}" class="${learnTab === v ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  if (learnTab === "services") {
+    const groups = { genai:"Generative AI", bedrock:"Bedrock features", sm:"SageMaker & ML platform", ai:"AI services (pre-trained, API)", data:"Data, vectors & compute", sec:"Security, compliance & governance" };
+    return header() + `<div class="stack" style="gap:16px"><h1>AWS services</h1>${tabsSeg}
+    <input type="search" id="svc-q" placeholder="Search services or use cases, e.g. PII, chatbot, drift" style="font:inherit;padding:11px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);width:100%">
+    ${Object.keys(groups).map(g => `<section class="stack svc-group"><span class="eyebrow">${groups[g]}</span>${DATA.services.filter(v => v.g === g).map(v => `<details class="room svc" data-s="${esc((v.n + " " + v.what + " " + v.use.join(" ") + " " + v.cue).toLowerCase())}"><summary><span class="dnum" style="background:${DCOL(v.d)}">${v.d}</span><span><h3>${esc(v.n)}</h3></span><span class="num">▾</span></summary><div style="padding:0 16px 16px">${svcBody(v)}</div></details>`).join("")}</section>`).join("")}
+    <button class="btn primary block" data-m="flashv">Practice service cards</button></div>`;
+  }
   return header() + `<div class="stack" style="gap:16px">
-  <h1>Memory palace</h1>
+  <h1>Memory palace</h1>${tabsSeg}
   <p class="muted">Each exam domain is a room in one house you walk through in order. Each concept sits at a fixed spot in its room. Picture the hook happening at that spot. On exam day, walk the rooms in your head to recall them.</p>
   ${Object.keys(DOMAINS).map(d => {
     const cs = DATA.concepts.filter(c => c.d == d);
@@ -500,7 +528,7 @@ function renderQuestionBody(id){
       return `<button class="opt ${c}" style="grid-template-columns:1fr;text-align:center;font-weight:700" data-tf="${v}" ${locked ? "disabled" : ""}>${v ? "True" : "False"}</button>`; }).join("")}</div>`;
   }
   const typeLbl = r.t === "match" ? "Matching" : r.t === "order" ? "Ordering" : r.t === "mr" ? `Choose ${r.a.length}` : "Multiple choice";
-  let body = `<div class="qmeta">${domTag(r.d)}<span class="tag">${typeLbl}</span></div><div class="stem">${esc(r.q)}</div>`;
+  let body = `<div class="qmeta">${domTag(r.d)}<span class="tag">${LVL[r.l] || ""}</span><span class="tag">${typeLbl}</span></div><div class="stem">${esc(r.q)}</div>`;
   if (r.t === "match") {
     if (!sess.order[id]) sess.order[id] = shuffle(r.pairs.map(p => p[1]));
     const rights = sess.order[id], cur = st.v || [];
@@ -542,7 +570,10 @@ function feedbackBlock(id){
 function flashCard(id){
   const it = ITEMS[id], r = it.ref;
   let front, back;
-  if (it.kind === "k") {
+  if (it.kind === "v") {
+    front = `<div class="qmeta">${domTag(r.d)}<span class="tag">AWS service</span></div><div class="big">What is ${esc(r.n)}?</div><p class="muted" style="text-align:center">Say what it does, one use case, and one thing it is NOT for.</p><div class="hint">Tap to flip</div>`;
+    back = svcBody(r) + `<div class="hint">Tap to flip back</div>`;
+  } else if (it.kind === "k") {
     front = `<div class="qmeta">${domTag(r.d)}<span class="tag">Concept</span></div><div class="big">${esc(r.f)}</div><div class="hint">Recall it, then tap to flip</div>`;
     back = `<div class="qmeta">${domTag(r.d)}</div><h2 style="margin-bottom:8px">${esc(r.f)}</h2><p>${esc(r.b)}</p><div class="hook"><b>Memory hook</b>${esc(r.h)}</div><div class="hint">Tap to flip back</div>`;
   } else if (it.kind === "w") {
@@ -570,6 +601,12 @@ function flashCard(id){
   <div class="actions"><button class="btn ghost" data-act="cardback" ${sess.i ? "" : "disabled"}>← Previous <span class="kbd">←</span></button><button class="btn ghost" data-act="cardskip">${sess.i + 1 >= sess.items.length ? "Finish" : "Next card →"} <span class="kbd">→</span></button></div>
   <p class="muted" style="text-align:center;font-size:.82rem;margin-top:6px">Swipe the card left or right to move without rating</p>`;
 }
+function svcBody(v){
+  return `<div class="qmeta">${domTag(v.d)}</div><h2 style="margin-bottom:6px">${esc(v.n)}</h2><p>${esc(v.what)}</p>
+  <div class="eyebrow" style="margin:10px 0 4px;color:var(--good)">Use it to</div><ul style="margin:0;padding-left:1.2rem">${v.use.map(u => `<li>${esc(u)}</li>`).join("")}</ul>
+  ${v.not.length ? `<div class="eyebrow" style="margin:10px 0 4px;color:var(--bad)">Not for</div><ul style="margin:0;padding-left:1.2rem">${v.not.map(u => `<li>${esc(u)}</li>`).join("")}</ul>` : ""}
+  <div class="hook"><b>Exam cue</b>${esc(v.cue)}${v.vs ? `<br><span class="muted">${esc(v.vs)}</span>` : ""}</div>`;
+}
 function previewIvl(id, g){
   const keep = S.srs[id] ? Object.assign({}, S.srs[id]) : null; schedule(id, g); const iv = S.srs[id].ivl;
   if (keep) S.srs[id] = keep; else delete S.srs[id];
@@ -579,7 +616,7 @@ function sizeCard(){ const c = $("#card"); if (!c) return; const f = c.querySele
 
 function vSession(){
   const id = sess.items[sess.i], it = ITEMS[id];
-  const flashMode = sess.mode === "flash" || (sess.mode === "review" && it.kind === "k");
+  const flashMode = sess.mode === "flash" || (sess.mode === "review" && (it.kind === "k" || it.kind === "v"));
   const pct = 100 * sess.i / sess.items.length;
   let timer = "";
   if (sess.timeLimit) { const left = Math.max(0, sess.timeLimit - Math.floor((now() - sess.startedAt) / 1000)); timer = `<span class="timer ${left < 60 ? "low" : ""}" id="timer">${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}</span>`; }
@@ -610,7 +647,7 @@ function vResults(){
   </section>
   ${Object.keys(R.byD).length > 1 ? `<section class="panel stack"><h2>By domain</h2>${Object.keys(R.byD).map(d => `<div class="dbar"><span class="dnum" style="background:${DCOL(d)}">${d}</span><div><div class="track"><div class="fill" style="width:${100 * R.byD[d].ok / R.byD[d].n}%;background:${DCOL(d)}"></div></div></div><span class="num">${R.byD[d].ok}/${R.byD[d].n}</span></div>`).join("")}</section>` : ""}
   <div class="actions" style="margin-top:0">${missed.length ? `<button class="btn primary" data-act="retry">Retry ${missed.length} missed</button>` : ""}<button class="btn" data-tab="home">Back to Today</button></div>
-  ${R.rows.some(r => ITEMS[r.id].kind !== "k") ? `<section class="stack"><h2>Review answers</h2>${R.rows.filter(r => ITEMS[r.id].kind !== "k").map(r => { const it = ITEMS[r.id];
+  ${R.rows.some(r => !"kv".includes(ITEMS[r.id].kind)) ? `<section class="stack"><h2>Review answers</h2>${R.rows.filter(r => !"kv".includes(ITEMS[r.id].kind)).map(r => { const it = ITEMS[r.id];
     const title = it.kind === "q" ? it.ref.q : it.kind === "w" ? it.ref.k : it.ref.s;
     return `<div class="review ${r.ok ? "ok" : ""}"><div class="qmeta">${domTag(it.d)}<span class="tag">${r.ok ? "Correct" : "Missed"}</span></div><p style="margin-bottom:6px"><b>${esc(title)}</b></p>${explainStatic(r.id)}</div>`; }).join("")}</section>` : ""}
   </div>`;
@@ -644,8 +681,8 @@ function finish(){
   const rows = []; const byD = {}; let xp0 = S.xp;
   sess.items.forEach(id => {
     const it = ITEMS[id], st = sess.ans[id];
-    if (!st) { if (sess.feedback === "end" && it.kind !== "k") { record(id, false, 0); } else return; }
-    else if (!st.graded) { if (sess.feedback === "instant" && !st.final) return; const ok = it.kind === "k" ? st.ok : isCorrect(id, st.v); st.ok = ok; record(id, ok, ok ? 2 : 0); }
+    if (!st) { if (sess.feedback === "end" && !"kv".includes(it.kind)) { record(id, false, 0); } else return; }
+    else if (!st.graded) { if (sess.feedback === "instant" && !st.final) return; const ok = "kv".includes(it.kind) ? st.ok : isCorrect(id, st.v); st.ok = ok; record(id, ok, ok ? 2 : 0); }
     const ok = !!(st && st.ok); rows.push({ id, ok });
     const b = byD[it.d] = byD[it.d] || { n:0, ok:0 }; b.n++; b.ok += ok ? 1 : 0;
   });
@@ -674,13 +711,16 @@ document.addEventListener("click", e => {
   if (d.m) {
     const dd = d.d ? +d.d : undefined;
     ({ review:M.review, warmup:M.warmup, keywords:() => M.keywords(), truefalse:M.truefalse, pop:M.pop, custom:M.custom, domain:() => M.domain(dd), weak:M.weak,
-       flashk:() => M.flash("k", dd), flashq:() => M.flash("q", dd), mock:M.mock })[d.m]();
+       flashk:() => M.flash("k", dd), flashq:() => M.flash("q", dd), mock:M.mock, ladder:M.ladder, services:M.services, flashv:M.flashv })[d.m]();
     return;
   }
   if (d.opt) {
     if (d.opt === "dom") { const v = +d.v, a = practiceOpts.domains; practiceOpts.domains = a.includes(v) ? (a.length > 1 ? a.filter(x => x !== v) : a) : a.concat(v); }
     if (d.opt === "count") practiceOpts.count = +d.v;
     if (d.opt === "fb") practiceOpts.feedback = d.v;
+    if (d.opt === "src") practiceOpts.src = d.v;
+    if (d.opt === "lvl") practiceOpts.lvl = d.v;
+    if (d.opt === "learn") learnTab = d.v;
     return render();
   }
   if (t.id === "card") { sess.flipped = !sess.flipped; render(); return; }
@@ -723,6 +763,11 @@ document.addEventListener("change", e => {
   if (t.id === "set-date") { S.settings.examDate = t.value; save(); toast("Exam date saved"); }
   if (t.id === "set-goal") { S.settings.goal = Math.max(5, Math.min(300, +t.value || 30)); save(); }
   if (t.id === "set-new") { S.settings.newPerDay = Math.max(0, Math.min(100, +t.value || 0)); save(); }
+});
+document.addEventListener("input", e => {
+  if (e.target.id !== "svc-q") return; const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".svc").forEach(el => el.hidden = q && !el.dataset.s.includes(q));
+  document.querySelectorAll(".svc-group").forEach(g => g.hidden = !g.querySelector(".svc:not([hidden])"));
 });
 document.addEventListener("keydown", e => {
   if (view !== "session" || !sess || e.target.matches("input,select,textarea")) return;
