@@ -1,0 +1,739 @@
+<title>AIF-C01 Trainer</title>
+<meta name="description" content="Spaced-repetition flashcards, warm-ups, pop quizzes and full mock exams for the AWS Certified AI Practitioner (AIF-C01) exam.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: single centered column (max 720px) with a bottom tab bar on phones; flashcards are index cards that flip in 3D. */
+:root{
+  --bg:#eef2f4; --surface:#ffffff; --surface-2:#f6f8f9; --line:#d5dde2; --ink:#14222c; --muted:#5a6b76;
+  --accent:#0f6e74; --accent-ink:#ffffff; --accent-soft:#d8eeee; --spark:#e2902b; --spark-soft:#fcecd6;
+  --good:#2b8a57; --good-soft:#dcf1e4; --bad:#c2453d; --bad-soft:#f8e0de;
+  --d1:#3b6fb6; --d2:#8a4fbf; --d3:#0f6e74; --d4:#c0661c; --d5:#a2364f;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:14px; --shadow:0 1px 2px rgba(20,34,44,.06),0 6px 20px rgba(20,34,44,.07);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1418; --surface:#152027; --surface-2:#1b2830; --line:#2a3a44; --ink:#e4ecef; --muted:#93a5af;
+  --accent:#4cc1c3; --accent-ink:#06282a; --accent-soft:#163a3d; --spark:#f0a64a; --spark-soft:#3a2a14;
+  --good:#5fcf8f; --good-soft:#15362a; --bad:#f07a70; --bad-soft:#3d1d1b;
+  --d1:#7aa7ea; --d2:#bb8cf0; --d3:#4cc1c3; --d4:#f0a060; --d5:#e47d96;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1418; --surface:#152027; --surface-2:#1b2830; --line:#2a3a44; --ink:#e4ecef; --muted:#93a5af;
+  --accent:#4cc1c3; --accent-ink:#06282a; --accent-soft:#163a3d; --spark:#f0a64a; --spark-soft:#3a2a14;
+  --good:#5fcf8f; --good-soft:#15362a; --bad:#f07a70; --bad-soft:#3d1d1b;
+  --d1:#7aa7ea; --d2:#bb8cf0; --d3:#4cc1c3; --d4:#f0a060; --d5:#e47d96;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);margin:0;-webkit-tap-highlight-color:transparent}
+main{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:16px 110px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:1.75rem;font-weight:800;letter-spacing:-.01em}
+h2{font-size:1.25rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,.card3d:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.eyebrow{font:500 .72rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.small{min-height:36px;padding:6px 12px;font-size:.9rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.block{width:100%}
+/* header */
+.top{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.brand{font:800 1.05rem var(--display);letter-spacing:-.01em}
+.brand b{color:var(--accent)}
+.chips{display:flex;gap:8px;margin-left:auto}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font:500 .8rem var(--mono);background:var(--surface);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip.spark{background:var(--spark-soft);border-color:transparent;color:var(--ink)}
+.chip svg{width:14px;height:14px}
+/* hero today */
+.today{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.ring{width:108px;height:108px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .lbl{position:absolute;inset:0;display:grid;place-items:center;text-align:center;font:800 1.5rem/1 var(--display)}
+.ring .lbl small{display:block;font:500 .65rem var(--mono);color:var(--muted);letter-spacing:.06em;margin-top:4px}
+.countdown{font:500 .82rem var(--mono);color:var(--muted)}
+/* mode tiles */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:4px;min-height:104px;transition:transform .12s,border-color .12s}
+.tile:hover{border-color:var(--accent);transform:translateY(-1px)}
+.tile .t{font:700 1rem var(--display)}
+.tile .s{font-size:.85rem;color:var(--muted);line-height:1.35}
+.tile .k{font:500 .7rem var(--mono);color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+.tile.hero{grid-column:1/-1;background:var(--accent);color:var(--accent-ink);border-color:var(--accent);min-height:0}
+.tile.hero .s,.tile.hero .k{color:var(--accent-ink);opacity:.85}
+@media (min-width:600px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* domain bars */
+.dbar{display:grid;grid-template-columns:1.6rem 1fr auto;gap:10px;align-items:center;font-size:.9rem}
+.dnum{font:700 .8rem var(--mono);width:1.6rem;height:1.6rem;border-radius:7px;display:grid;place-items:center;color:#fff}
+.track{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.fill{height:100%;border-radius:99px}
+.num{font:500 .8rem var(--mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+/* session */
+.sbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.prog{flex:1;height:8px;background:var(--surface);border:1px solid var(--line);border-radius:99px;overflow:hidden}
+.prog>div{height:100%;background:var(--accent);transition:width .25s}
+.x{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none}
+.timer{font:500 .85rem var(--mono);font-variant-numeric:tabular-nums}
+.timer.low{color:var(--bad)}
+.qmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.tag{font:500 .7rem var(--mono);letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+.tag.dom{color:#fff;border-color:transparent}
+.stem{font-size:1.08rem;line-height:1.55;margin-bottom:14px}
+.cue{font:700 1.45rem/1.25 var(--display);margin:6px 0 16px;text-wrap:balance}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:grid;grid-template-columns:2rem 1fr;gap:10px;align-items:start;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;min-height:50px}
+.opt .L{font:700 .85rem var(--mono);width:1.8rem;height:1.8rem;border-radius:7px;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line)}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.ok{border-color:var(--good);background:var(--good-soft)}
+.opt.no{border-color:var(--bad);background:var(--bad-soft)}
+.opt[disabled]{cursor:default}
+.tfrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.feedback{margin-top:14px;border-radius:12px;padding:14px;border:1px solid var(--line);background:var(--surface)}
+.feedback.ok{border-color:var(--good);background:var(--good-soft)}
+.feedback.no{border-color:var(--bad);background:var(--bad-soft)}
+.feedback h3{margin-bottom:6px}
+.hook{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--spark-soft);font-size:.93rem}
+.hook b{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:2px;color:var(--ink)}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.actions .btn{flex:1}
+.rate{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.rate .btn{flex-direction:column;gap:0;padding:8px 4px;font-size:.92rem}
+.rate .btn small{font:500 .68rem var(--mono);color:var(--muted)}
+.rate .again{border-color:var(--bad)} .rate .easy{border-color:var(--good)}
+/* flip card */
+.scene{perspective:1400px}
+.card3d{position:relative;min-height:340px;transition:transform .5s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d;cursor:pointer;border-radius:18px}
+.card3d.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;overflow:auto;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,var(--surface-2) 31px,var(--surface-2) 32px);background-position:0 60px}
+.face.back{transform:rotateY(180deg);background-image:none}
+.face .hint{margin-top:auto;padding-top:14px;font:500 .72rem var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase;text-align:center}
+.face .big{font:700 1.4rem/1.3 var(--display);margin:auto 0;text-align:center;text-wrap:balance;padding:10px 0}
+.face ol{margin:6px 0 0;padding-left:1.4rem;display:flex;flex-direction:column;gap:6px}
+.ans{font:700 1.08rem var(--display);color:var(--good);margin-bottom:8px}
+@media (prefers-reduced-motion:reduce){.card3d{transition:none}}
+/* match / order */
+.mrow{display:grid;grid-template-columns:1fr;gap:6px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.mrow:last-child{border-bottom:0}
+.mrow b{font-family:var(--display)}
+select{font:inherit;font-size:.92rem;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+select.ok{border-color:var(--good);background:var(--good-soft)} select.no{border-color:var(--bad);background:var(--bad-soft)}
+.pool,.seq{display:flex;flex-direction:column;gap:8px}
+.seq{min-height:52px;padding:10px;border:1.5px dashed var(--line);border-radius:12px;margin-bottom:12px}
+.pill{display:flex;gap:10px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px}
+.pill .n{font:700 .8rem var(--mono);color:var(--accent);min-width:1.2rem}
+/* exam nav */
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px}
+.qgrid button{height:38px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font:500 .8rem var(--mono)}
+.qgrid button.done{background:var(--accent-soft);border-color:var(--accent)}
+.qgrid button.flag{box-shadow:inset 0 -3px 0 var(--spark)}
+.qgrid button.cur{outline:2px solid var(--ink)}
+.flagbtn.on{background:var(--spark-soft);border-color:var(--spark)}
+/* results */
+.score{font:800 3.2rem/1 var(--display);font-variant-numeric:tabular-nums}
+.pass{color:var(--good)} .fail{color:var(--bad)}
+.review{border-left:4px solid var(--bad);padding:10px 12px;background:var(--surface);border-radius:0 10px 10px 0}
+.review.ok{border-left-color:var(--good)}
+/* learn / palace */
+.room{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.room summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.room summary::-webkit-details-marker{display:none}
+.room .door{width:38px;height:44px;border-radius:19px 19px 4px 4px;display:grid;place-items:center;color:#fff;font:800 1rem var(--display)}
+.station{padding:12px 16px;border-top:1px solid var(--line);display:grid;grid-template-columns:2.2rem 1fr;gap:10px}
+.station .spot{font:500 .7rem var(--mono);color:var(--muted);padding-top:3px}
+.station h3{font-size:.98rem;margin-bottom:3px}
+.station p{font-size:.93rem}
+.station .hk{color:var(--spark);font-size:.9rem;margin-top:4px}
+input[type=date],input[type=number],textarea{font:inherit;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink)}
+textarea{width:100%;min-height:90px;font:500 .78rem var(--mono)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:.88rem;font-weight:700}
+.seg button.on{border-color:var(--accent);background:var(--accent-soft)}
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:10}
+nav.tabs .in{display:grid;grid-template-columns:repeat(4,1fr);max-width:720px;width:100%}
+nav.tabs button{border:0;background:none;padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font:500 .72rem var(--mono);letter-spacing:.04em;color:var(--muted)}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button.on{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center}
+.kbd{font:500 .7rem var(--mono);color:var(--muted)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+[hidden]{display:none!important}
+@media (hover:none){.kbd{display:none}}
+hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+</style>
+
+<main id="app"></main>
+<nav class="tabs" id="tabs"><div class="in"></div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+const DATA = window.DATA;
+const DOMAINS = {
+  1:{name:"Fundamentals of AI & ML",short:"AI/ML basics",w:.20,room:"The Foyer"},
+  2:{name:"Fundamentals of Generative AI",short:"GenAI basics",w:.24,room:"The Studio"},
+  3:{name:"Applications of Foundation Models",short:"FM applications",w:.28,room:"The Workshop"},
+  4:{name:"Guidelines for Responsible AI",short:"Responsible AI",w:.14,room:"The Courtroom"},
+  5:{name:"Security, Compliance & Governance",short:"Security & governance",w:.14,room:"The Vault"}
+};
+const DCOL = d => `var(--d${d})`;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const DAY = 864e5, now = () => Date.now();
+const todayKey = (t = now()) => new Date(t).toLocaleDateString("en-CA");
+const ICON = {
+  flame:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s1 3.5-1.5 6S7 12 7 15a5 5 0 0 0 10 0c0-2-1-3.5-1-3.5s-.5 2-2 2.5c0 0 1.5-3-.5-6.5C12 4.5 12 2 12 2z"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  practice:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="14" height="15" rx="2"/><path d="M7 2h12a2 2 0 0 1 2 2v13"/><path d="M7 10h6M7 14h4"/></svg>',
+  learn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-6h6v6"/><circle cx="12" cy="10" r="1.5"/></svg>',
+  stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  close:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+};
+
+/* ---------- storage ---------- */
+const KEY = "aifc01-trainer-v1";
+const blank = () => ({ srs:{}, log:[], xp:0, streak:0, lastDay:null, days:{}, mocks:[], settings:{ goal:30, newPerDay:15, examDate:"" } });
+let S;
+try { S = Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) { S = blank(); }
+S.settings = Object.assign(blank().settings, S.settings || {});
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+/* ---------- item index ---------- */
+const ITEMS = {};
+DATA.questions.forEach(q => ITEMS[q.id] = { kind:"q", d:q.d, ref:q });
+DATA.concepts.forEach(c => ITEMS[c.id] = { kind:"k", d:c.d, ref:c });
+DATA.warmups.forEach(w => ITEMS[w.id] = { kind:"w", d:w.d, ref:w });
+DATA.tf.forEach(t => ITEMS[t.id] = { kind:"tf", d:t.d, ref:t });
+
+/* ---------- spaced repetition (SM-2 variant, capped by exam date) ---------- */
+function daysToExam(){ if (!S.settings.examDate) return null; const d = Math.ceil((new Date(S.settings.examDate + "T09:00") - now()) / DAY); return d; }
+function schedule(id, grade){ // grade 0 again, 1 hard, 2 good, 3 easy
+  const c = S.srs[id] || { ease:2.5, ivl:0, reps:0, lapses:0, due:0, seen:0 };
+  c.seen++;
+  if (grade === 0) { c.reps = 0; c.lapses++; c.ease = Math.max(1.3, c.ease - .2); c.ivl = 0; c.due = now() + 10 * 6e4; }
+  else {
+    c.reps++;
+    if (c.reps === 1) c.ivl = [0, 1, 1, 3][grade];
+    else if (c.reps === 2) c.ivl = [0, 2, 3, 6][grade];
+    else c.ivl = Math.round(c.ivl * c.ease * [0, .6, 1, 1.35][grade]);
+    if (grade === 1) c.ease = Math.max(1.3, c.ease - .15);
+    if (grade === 3) c.ease += .15;
+    let cap = 45; const dte = daysToExam(); if (dte && dte > 0) cap = Math.max(1, Math.min(cap, Math.ceil(dte / 2)));
+    c.ivl = Math.max(1, Math.min(cap, c.ivl));
+    c.due = now() + c.ivl * DAY;
+  }
+  S.srs[id] = c;
+}
+const isDue = id => S.srs[id] && S.srs[id].due <= now();
+const mastered = id => S.srs[id] && S.srs[id].ivl >= 7;
+
+/* ---------- activity: xp / streak / log ---------- */
+function bumpDay(){
+  const t = todayKey();
+  if (S.lastDay !== t) {
+    const y = todayKey(now() - DAY);
+    S.streak = S.lastDay === y ? S.streak + 1 : 1;
+    S.lastDay = t;
+  }
+  S.days[t] = (S.days[t] || 0) + 1;
+}
+function record(id, ok, grade){
+  const it = ITEMS[id];
+  S.log.push({ id, d:it.d, ok:ok ? 1 : 0, t:now(), k:it.kind });
+  if (S.log.length > 4000) S.log = S.log.slice(-4000);
+  S.xp += ok ? (it.kind === "q" ? 10 : 5) : 2;
+  bumpDay();
+  schedule(id, grade);
+  save();
+}
+const doneToday = () => S.days[todayKey()] || 0;
+function domainStats(){
+  const out = {}; for (const d in DOMAINS) out[d] = { n:0, ok:0, recent:[] };
+  S.log.forEach(e => { const o = out[e.d]; if (!o) return; o.n++; o.ok += e.ok; o.recent.push(e.ok); });
+  for (const d in out) { const r = out[d].recent.slice(-40); out[d].acc = r.length ? r.reduce((a, b) => a + b, 0) / r.length : null; out[d].rn = r.length; }
+  return out;
+}
+function readiness(){
+  const ds = domainStats(); let s = 0, w = 0;
+  for (const d in DOMAINS) { const o = ds[d]; const conf = Math.min(1, o.rn / 20); s += DOMAINS[d].w * (o.acc == null ? 0 : o.acc * conf); w += DOMAINS[d].w; }
+  return Math.round(100 * s / w);
+}
+const level = () => Math.floor(Math.sqrt(S.xp / 50)) + 1;
+
+/* ---------- toast ---------- */
+let tt; function toast(m){ const el = $("#toast"); el.textContent = m; el.hidden = false; clearTimeout(tt); tt = setTimeout(() => el.hidden = true, 1800); }
+
+/* ---------- navigation ---------- */
+let view = "home", sess = null, lastResult = null, practiceOpts = { count:20, domains:[1,2,3,4,5], feedback:"instant" };
+function go(v){ view = v; sess = v === "session" ? sess : null; render(); window.scrollTo(0, 0); }
+function renderTabs(){
+  const tabs = [["home","Today"],["practice","Practice"],["learn","Learn"],["stats","Progress"]];
+  $("#tabs").hidden = view === "session";
+  $("#tabs .in").innerHTML = tabs.map(([k, l]) => `<button data-tab="${k}" class="${view === k ? "on" : ""}" aria-label="${l}">${ICON[k]}${l}</button>`).join("");
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) go(b.dataset.tab); });
+
+function header(){
+  return `<div class="top"><div class="brand">AIF-C01 <b>Trainer</b></div>
+  <div class="chips"><span class="chip spark" title="Day streak">${ICON.flame}${S.streak}</span><span class="chip" title="Experience points, level ${level()}">${ICON.bolt}${S.xp} · L${level()}</span></div></div>`;
+}
+
+/* ---------- session builders ---------- */
+const byDomain = (arr, doms) => arr.filter(x => doms.includes(x.d));
+function interleave(list){ // spread domains so consecutive items differ (interleaving)
+  const buckets = {}; shuffle(list).forEach(x => (buckets[ITEMS[x].d] = buckets[ITEMS[x].d] || []).push(x));
+  const out = []; let keys = Object.keys(buckets);
+  while (keys.length) { keys = shuffle(keys); keys.forEach(k => { const v = buckets[k].pop(); if (v) out.push(v); }); keys = keys.filter(k => buckets[k].length); }
+  return out;
+}
+function pickWeighted(pool, n){ // prefer unseen, then weak (lapses / low ease), then random
+  const score = id => { const c = S.srs[id]; if (!c) return 2 + Math.random(); return (c.lapses * .8) + (3 - c.ease) + (isDue(id) ? 1.5 : 0) + Math.random(); };
+  return pool.map(id => [id, score(id)]).sort((a, b) => b[1] - a[1]).slice(0, n).map(x => x[0]);
+}
+function start(cfg){
+  sess = Object.assign({ i:0, ans:{}, flags:{}, flipped:false, startedAt:now(), feedback:"instant" }, cfg);
+  sess.items = sess.items.filter(id => ITEMS[id]);
+  if (!sess.items.length) { toast("Nothing to review here yet"); return; }
+  sess.order = {}; // shuffled option order per question
+  view = "session"; render(); window.scrollTo(0, 0);
+}
+const M = {
+  review(){
+    const due = Object.keys(S.srs).filter(isDue);
+    const fresh = shuffle(Object.keys(ITEMS).filter(id => !S.srs[id] && ITEMS[id].kind !== "tf")).slice(0, S.settings.newPerDay);
+    start({ title:"Daily review", mode:"review", items:interleave(due.concat(fresh)).slice(0, 60) });
+  },
+  warmup(){
+    const ids = shuffle(DATA.warmups.map(w => w.id)).slice(0, 7).concat(shuffle(DATA.tf.map(t => t.id)).slice(0, 3));
+    start({ title:"Warm-up sprint", mode:"warmup", items:shuffle(ids), timeLimit:180 });
+  },
+  keywords(doms = [1,2,3,4,5]){ start({ title:"Keyword drill", mode:"drill", items:pickWeighted(byDomain(DATA.warmups, doms).map(w => w.id), 15) }); },
+  truefalse(){ start({ title:"True or false", mode:"drill", items:pickWeighted(DATA.tf.map(t => t.id), 15) }); },
+  pop(){ start({ title:"Pop quiz", mode:"quiz", items:interleave(pickWeighted(DATA.questions.map(q => q.id), 10)) }); },
+  custom(){
+    const pool = byDomain(DATA.questions, practiceOpts.domains).map(q => q.id);
+    start({ title:"Custom quiz", mode:"quiz", feedback:practiceOpts.feedback, items:interleave(pickWeighted(pool, practiceOpts.count)) });
+  },
+  domain(d){ start({ title:DOMAINS[d].short + " drill", mode:"quiz", items:pickWeighted(DATA.questions.filter(q => q.d === d).map(q => q.id), 15) }); },
+  weak(){
+    const ids = Object.keys(S.srs).filter(id => S.srs[id].lapses > 0 || S.srs[id].ease < 2.3).sort((a, b) => S.srs[b].lapses - S.srs[a].lapses).slice(0, 20);
+    if (!ids.length) return toast("No weak spots yet. Answer some questions first.");
+    start({ title:"Weak spots", mode:"quiz", items:interleave(ids) });
+  },
+  flash(kind, d){
+    const src = kind === "k" ? DATA.concepts : DATA.questions;
+    const pool = src.filter(x => !d || x.d === d).map(x => x.id);
+    start({ title:kind === "k" ? "Concept cards" : "Question flashcards", mode:"flash", items:interleave(pickWeighted(pool, 25)) });
+  },
+  mock(){
+    const counts = { 1:13, 2:16, 3:18, 4:9, 5:9 }; let items = [];
+    for (const d in counts) items = items.concat(shuffle(DATA.questions.filter(q => q.d == d).map(q => q.id)).slice(0, counts[d]));
+    start({ title:"Mock exam", mode:"exam", feedback:"end", items:shuffle(items), timeLimit:90 * 60 });
+  },
+  retry(ids){ start({ title:"Retry missed", mode:"quiz", items:shuffle(ids) }); }
+};
+
+/* ---------- views ---------- */
+function ring(pct, label, sub){
+  const r = 46, c = 2 * Math.PI * r, p = Math.max(0, Math.min(1, pct));
+  return `<div class="ring"><svg viewBox="0 0 108 108"><circle cx="54" cy="54" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="10"/><circle cx="54" cy="54" r="${r}" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c * p} ${c}" ${p ? "" : 'opacity="0"'}/></svg><div class="lbl"><div>${label}<small>${sub}</small></div></div></div>`;
+}
+function domainBars(){
+  const ds = domainStats();
+  return Object.keys(DOMAINS).map(d => {
+    const o = ds[d], pct = o.acc == null ? 0 : Math.round(o.acc * 100);
+    return `<div class="dbar"><span class="dnum" style="background:${DCOL(d)}">${d}</span><div class="grow"><div class="row" style="justify-content:space-between;gap:6px"><span>${DOMAINS[d].short} <span class="num">${Math.round(DOMAINS[d].w * 100)}% of exam</span></span><span class="num">${o.acc == null ? "not started" : pct + "%"}</span></div><div class="track"><div class="fill" style="width:${pct}%;background:${DCOL(d)}"></div></div></div><span></span></div>`;
+  }).join("");
+}
+function vHome(){
+  const due = Object.keys(S.srs).filter(isDue).length;
+  const unseen = Object.keys(ITEMS).filter(id => !S.srs[id]).length;
+  const done = doneToday(), goal = S.settings.goal, dte = daysToExam();
+  const firstRun = !S.log.length;
+  return header() + `<div class="stack" style="gap:16px">
+  <section class="panel today">
+    ${ring(done / goal, done, "OF " + goal + " TODAY")}
+    <div class="stack" style="gap:6px">
+      <h1>${firstRun ? "Let's get you exam-ready" : done >= goal ? "Daily goal done" : "Keep the streak alive"}</h1>
+      <p class="muted">${firstRun ? "Start with a 3-minute warm-up. The app learns what you forget and brings it back right before you would." : `${due} card${due === 1 ? "" : "s"} due for review · ${unseen} not yet seen · readiness ${readiness()}%`}</p>
+      <p class="countdown">${dte == null ? `<button class="btn small ghost" data-act="setdate">Set your exam date</button>` : dte >= 0 ? `Exam in ${dte} day${dte === 1 ? "" : "s"}` : "Exam date passed. Update it in Progress."}</p>
+    </div>
+  </section>
+  <div class="tiles">
+    <button class="tile hero" data-m="review"><span class="k">Spaced repetition</span><span class="t">Daily review · ${due} due + new</span><span class="s">Mixed questions, concepts and keywords, scheduled for the moment you're about to forget them.</span></button>
+    <button class="tile" data-m="warmup"><span class="k">3 min</span><span class="t">Warm-up sprint</span><span class="s">10 rapid keyword and true/false questions</span></button>
+    <button class="tile" data-m="pop"><span class="k">10 questions</span><span class="t">Pop quiz</span><span class="s">Exam-style scenarios, instant feedback</span></button>
+    <button class="tile" data-m="flashk"><span class="k">Tap to flip</span><span class="t">Concept cards</span><span class="s">Definitions with memory hooks</span></button>
+    <button class="tile" data-m="flashq"><span class="k">Tap to flip</span><span class="t">Question cards</span><span class="s">Question on front, answer and why on back</span></button>
+    <button class="tile" data-m="weak"><span class="k">Targeted</span><span class="t">Weak spots</span><span class="s">Only what you've missed</span></button>
+    <button class="tile" data-m="mock"><span class="k">65 Q · 90 min</span><span class="t">Mock exam</span><span class="s">Weighted like the real exam, scored 100–1000</span></button>
+  </div>
+  <section class="panel stack"><div class="row" style="justify-content:space-between"><h2>Domain mastery</h2><span class="eyebrow">last 40 answers each</span></div>${domainBars()}</section>
+  </div>`;
+}
+function vPractice(){
+  const seg = (k, vals, cur) => `<div class="seg">${vals.map(([v, l]) => `<button data-opt="${k}" data-v="${v}" class="${String(cur) === String(v) || (Array.isArray(cur) && cur.includes(+v)) ? "on" : ""}">${l}</button>`).join("")}</div>`;
+  const qn = d => DATA.questions.filter(q => q.d === d).length;
+  return header() + `<div class="stack" style="gap:16px">
+  <h1>Practice</h1>
+  <section class="panel stack"><span class="eyebrow">Warm-ups · fundamentals and keywords</span>
+    <div class="tiles">
+      <button class="tile" data-m="warmup"><span class="t">Warm-up sprint</span><span class="s">10 items against a 3-minute clock</span></button>
+      <button class="tile" data-m="keywords"><span class="t">Keyword drill</span><span class="s">"Which service does this?" · ${DATA.warmups.length} cues</span></button>
+      <button class="tile" data-m="truefalse"><span class="t">True or false</span><span class="s">Spot the common exam traps · ${DATA.tf.length} statements</span></button>
+    </div></section>
+  <section class="panel stack"><span class="eyebrow">Custom quiz · ${DATA.questions.length} exam-style questions</span>
+    <div class="stack" style="gap:6px"><b>Domains</b>${seg("dom", Object.keys(DOMAINS).map(d => [d, "D" + d + " " + DOMAINS[d].short]), practiceOpts.domains)}</div>
+    <div class="stack" style="gap:6px"><b>Length</b>${seg("count", [[5,"5"],[10,"10"],[20,"20"],[30,"30"],[50,"50"]], practiceOpts.count)}</div>
+    <div class="stack" style="gap:6px"><b>Feedback</b>${seg("fb", [["instant","After each question"],["end","At the end"]], practiceOpts.feedback)}</div>
+    <button class="btn primary block" data-m="custom">Start custom quiz</button>
+  </section>
+  <section class="panel stack"><span class="eyebrow">Drill one domain</span>
+    ${Object.keys(DOMAINS).map(d => `<button class="btn block" style="justify-content:flex-start;text-align:left" data-m="domain" data-d="${d}"><span class="dnum" style="background:${DCOL(d)}">${d}</span><span class="grow">${DOMAINS[d].name}</span><span class="num">${qn(+d)} Q</span></button>`).join("")}
+  </section>
+  <section class="panel stack"><span class="eyebrow">Flashcards</span>
+    <div class="tiles">
+      <button class="tile" data-m="flashk"><span class="t">Concept cards</span><span class="s">${DATA.concepts.length} cards with memory hooks</span></button>
+      <button class="tile" data-m="flashq"><span class="t">Question cards</span><span class="s">Read, recall, flip, rate</span></button>
+      <button class="tile" data-m="mock"><span class="t">Mock exam</span><span class="s">65 questions · 90 minutes · flag and review</span></button>
+    </div></section>
+  </div>`;
+}
+const STATION = ["Door","Coat rack","Mirror","Rug","Lamp","Clock","Shelf","Window","Plant","Painting","Desk","Chair","Fireplace","Bookcase","Piano","Sofa","Table","Vase","Statue","Chest","Curtain","Globe","Candle","Map","Drawer","Lock"];
+function vLearn(){
+  return header() + `<div class="stack" style="gap:16px">
+  <h1>Memory palace</h1>
+  <p class="muted">Each exam domain is a room in one house you walk through in order. Each concept sits at a fixed spot in its room. Picture the hook happening at that spot. On exam day, walk the rooms in your head to recall them.</p>
+  ${Object.keys(DOMAINS).map(d => {
+    const cs = DATA.concepts.filter(c => c.d == d);
+    return `<details class="room"${d == 1 ? " open" : ""}><summary><span class="door" style="background:${DCOL(d)}">${d}</span><span><h2>${DOMAINS[d].room}</h2><span class="muted" style="font-size:.9rem">${DOMAINS[d].name} · ${cs.length} spots · ${Math.round(DOMAINS[d].w * 100)}% of exam</span></span><span class="num">▾</span></summary>
+      ${cs.map((c, i) => `<div class="station"><span class="spot">${String(i + 1).padStart(2, "0")}<br>${STATION[i % STATION.length]}</span><div><h3>${esc(c.f)}</h3><p>${esc(c.b)}</p><p class="hk">↳ ${esc(c.h)}</p></div></div>`).join("")}
+      <div class="station"><span></span><div class="row"><button class="btn small" data-m="flashk" data-d="${d}">Flip these cards</button><button class="btn small" data-m="domain" data-d="${d}">Quiz this room</button></div></div>
+    </details>`;
+  }).join("")}
+  <section class="panel stack"><h2>How this app trains you</h2>
+    <p><b>Retrieval practice.</b> Recalling an answer strengthens memory more than rereading it, so every mode makes you answer before you see the solution.</p>
+    <p><b>Spaced repetition.</b> Each card returns just before you'd forget it: 10 minutes after a miss, then 1, 3, 7+ days. Intervals tighten as your exam date approaches.</p>
+    <p><b>Interleaving.</b> Sessions mix domains so you learn to tell similar services apart, which is what the exam tests.</p>
+    <p><b>Elaboration and hooks.</b> Every answer explains why the distractors are wrong, plus a vivid hook for the memory palace.</p>
+    <p><b>Small daily wins.</b> Streaks, XP and a daily goal keep sessions short and frequent, the habit loop Duolingo uses.</p>
+  </section></div>`;
+}
+function vStats(){
+  const ds = domainStats(), total = S.log.length, ok = S.log.filter(e => e.ok).length;
+  const seen = Object.keys(S.srs).length, mast = Object.keys(S.srs).filter(mastered).length;
+  const last14 = [...Array(14)].map((_, i) => todayKey(now() - (13 - i) * DAY)), mx = Math.max(1, ...last14.map(k => S.days[k] || 0));
+  return header() + `<div class="stack" style="gap:16px">
+  <h1>Progress</h1>
+  <section class="panel today">${ring(readiness() / 100, readiness() + "%", "READINESS")}
+    <div class="stack" style="gap:4px"><p><b>${total}</b> answers · <b>${total ? Math.round(100 * ok / total) : 0}%</b> correct</p><p><b>${seen}</b> of ${Object.keys(ITEMS).length} items seen · <b>${mast}</b> mastered (interval ≥ 7 days)</p><p class="muted" style="font-size:.88rem">Readiness weights your recent accuracy by each domain's share of the exam, and counts low until you've answered 20+ per domain. Aim for 80%+ before booking.</p></div></section>
+  <section class="panel stack"><h2>Last 14 days</h2>
+    <div style="display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:end;height:90px">${last14.map(k => `<div title="${k}: ${S.days[k] || 0}" style="height:${Math.max(4, 86 * (S.days[k] || 0) / mx)}px;background:${S.days[k] ? "var(--accent)" : "var(--surface-2)"};border-radius:4px"></div>`).join("")}</div>
+    <div class="row" style="justify-content:space-between"><span class="num">${last14[0].slice(5)}</span><span class="num">today</span></div></section>
+  <section class="panel stack"><h2>By domain</h2>${domainBars()}
+    ${Object.keys(DOMAINS).map(d => `<div class="row" style="justify-content:space-between;font-size:.9rem"><span>D${d} answered</span><span class="num">${ds[d].ok}/${ds[d].n}</span></div>`).join("")}</section>
+  <section class="panel stack"><h2>Mock exams</h2>${S.mocks.length ? S.mocks.slice(-8).reverse().map(m => `<div class="row" style="justify-content:space-between"><span>${new Date(m.t).toLocaleDateString()}</span><span class="num ${m.score >= 700 ? "pass" : "fail"}">${m.score} / 1000 · ${m.ok}/${m.n}</span></div>`).join("") : `<p class="muted">No mock exams yet. Take one once your readiness passes 60%.</p>`}</section>
+  <section class="panel stack"><h2>Settings</h2>
+    <label class="row"><span class="grow">Exam date</span><input type="date" id="set-date" value="${esc(S.settings.examDate)}"></label>
+    <label class="row"><span class="grow">Daily goal (answers)</span><input type="number" id="set-goal" min="5" max="300" value="${S.settings.goal}" style="width:90px"></label>
+    <label class="row"><span class="grow">New cards per daily review</span><input type="number" id="set-new" min="0" max="100" value="${S.settings.newPerDay}" style="width:90px"></label>
+    <hr><b>Back up or move your progress</b><p class="muted" style="font-size:.88rem">Progress is saved in this browser only. Copy the code to keep it, or paste a code from another device.</p>
+    <textarea id="backup" aria-label="Progress backup code"></textarea>
+    <div class="row"><button class="btn small" data-act="export">Copy backup code</button><button class="btn small" data-act="import">Restore from code</button><span class="grow"></span><button class="btn small" data-act="reset" style="color:var(--bad)">Reset all progress</button></div>
+  </section></div>`;
+}
+
+/* ---------- session rendering ---------- */
+function optOrder(q){ if (!sess.order[q.id]) sess.order[q.id] = shuffle(q.o.map((_, i) => i)); return sess.order[q.id]; }
+function warmOpts(w){
+  if (sess.order[w.id]) return sess.order[w.id];
+  let same = DATA.warmups.filter(x => x.c === w.c && x.a !== w.a).map(x => x.a);
+  if (same.length < 3) same = same.concat(DATA.warmups.filter(x => x.d === w.d && x.a !== w.a && !same.includes(x.a)).map(x => x.a));
+  return sess.order[w.id] = shuffle([w.a].concat(shuffle([...new Set(same)]).slice(0, 3)));
+}
+const domTag = d => `<span class="tag dom" style="background:${DCOL(d)}">D${d} · ${DOMAINS[d].short}</span>`;
+function isCorrect(id, a){
+  const it = ITEMS[id], r = it.ref;
+  if (a == null) return false;
+  if (it.kind === "w") return a === r.a;
+  if (it.kind === "tf") return a === r.v;
+  if (r.t === "match") return r.pairs.every((p, i) => a[i] === p[1]);
+  if (r.t === "order") return r.items.every((x, i) => a[i] === x);
+  const want = r.a.slice().sort().join(), got = [].concat(a).slice().sort().join();
+  return want === got;
+}
+function answered(id){ const a = sess.ans[id]; return a && a.final; }
+
+function renderQuestionBody(id){
+  const it = ITEMS[id], r = it.ref, st = sess.ans[id] || {}, show = st.final && sess.feedback === "instant";
+  const locked = st.final && (sess.feedback === "instant" || sess.submitted);
+  const reveal = show || sess.submitted;
+  if (it.kind === "w") {
+    const opts = warmOpts(r);
+    return `<div class="qmeta">${domTag(r.d)}<span class="tag">Keyword</span></div><div class="eyebrow">Which one matches?</div><div class="cue">${esc(r.k)}</div>
+    <div class="opts">${opts.map((o, i) => { let c = ""; if (reveal) c = o === r.a ? "ok" : st.v === o ? "no" : ""; else if (st.v === o) c = "sel";
+      return `<button class="opt ${c}" data-pick="${esc(o)}" ${locked ? "disabled" : ""}><span class="L">${"ABCD"[i]}</span><span>${esc(o)}</span></button>`; }).join("")}</div>`;
+  }
+  if (it.kind === "tf") {
+    return `<div class="qmeta">${domTag(r.d)}<span class="tag">True or false</span></div><div class="cue" style="font-size:1.25rem">${esc(r.s)}</div>
+    <div class="tfrow">${[true, false].map(v => { let c = ""; if (reveal) c = v === r.v ? "ok" : st.v === v ? "no" : ""; else if (st.v === v) c = "sel";
+      return `<button class="opt ${c}" style="grid-template-columns:1fr;text-align:center;font-weight:700" data-tf="${v}" ${locked ? "disabled" : ""}>${v ? "True" : "False"}</button>`; }).join("")}</div>`;
+  }
+  const typeLbl = r.t === "match" ? "Matching" : r.t === "order" ? "Ordering" : r.t === "mr" ? `Choose ${r.a.length}` : "Multiple choice";
+  let body = `<div class="qmeta">${domTag(r.d)}<span class="tag">${typeLbl}</span></div><div class="stem">${esc(r.q)}</div>`;
+  if (r.t === "match") {
+    if (!sess.order[id]) sess.order[id] = shuffle(r.pairs.map(p => p[1]));
+    const rights = sess.order[id], cur = st.v || [];
+    body += `<div class="panel" style="padding:4px 14px">${r.pairs.map((p, i) => { let c = ""; if (reveal) c = cur[i] === p[1] ? "ok" : "no";
+      return `<div class="mrow"><b>${esc(p[0])}</b><select data-match="${i}" class="${c}" ${locked ? "disabled" : ""}><option value="">Choose…</option>${rights.map(rt => `<option ${cur[i] === rt ? "selected" : ""}>${esc(rt)}</option>`).join("")}</select>${reveal && cur[i] !== p[1] ? `<span style="color:var(--good);font-size:.88rem">✓ ${esc(p[1])}</span>` : ""}</div>`; }).join("")}</div>
+      ${locked ? "" : `<div class="actions"><button class="btn primary" data-act="submit" ${cur.filter(Boolean).length === r.pairs.length ? "" : "disabled"}>Check answer</button></div>`}`;
+  } else if (r.t === "order") {
+    if (!sess.order[id]) sess.order[id] = shuffle(r.items);
+    const seq = st.v || [], pool = sess.order[id].filter(x => !seq.includes(x));
+    body += `<div class="eyebrow" style="margin-bottom:6px">Your order (tap to remove)</div><div class="seq">${seq.length ? seq.map((x, i) => { const c = reveal ? (r.items[i] === x ? "ok" : "no") : "";
+      return `<button class="pill opt ${c}" style="grid-template-columns:auto 1fr" data-unseq="${i}" ${locked ? "disabled" : ""}><span class="n">${i + 1}</span><span>${esc(x)}</span></button>`; }).join("") : `<span class="muted" style="font-size:.9rem">Tap the steps below in the correct order</span>`}</div>
+      ${pool.length && !locked ? `<div class="pool">${pool.map(x => `<button class="pill" data-seq="${esc(x)}"><span class="n">+</span><span>${esc(x)}</span></button>`).join("")}</div>` : ""}
+      ${reveal && !isCorrect(id, seq) ? `<div class="panel" style="margin-top:10px"><div class="eyebrow">Correct order</div><ol style="margin:6px 0 0;padding-left:1.3rem">${r.items.map(x => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
+      ${locked ? "" : `<div class="actions"><button class="btn primary" data-act="submit" ${seq.length === r.items.length ? "" : "disabled"}>Check answer</button></div>`}`;
+  } else {
+    const ord = optOrder(r), cur = [].concat(st.v ?? []);
+    body += `<div class="opts">${ord.map((oi, k) => { let c = ""; if (reveal) c = r.a.includes(oi) ? "ok" : cur.includes(oi) ? "no" : ""; else if (cur.includes(oi)) c = "sel";
+      return `<button class="opt ${c}" data-opt-i="${oi}" ${locked ? "disabled" : ""}><span class="L">${"ABCDEF"[k]}</span><span>${esc(r.o[oi])}</span></button>`; }).join("")}</div>
+      ${r.t === "mr" && !locked ? `<div class="actions"><button class="btn primary" data-act="submit" ${cur.length === r.a.length ? "" : "disabled"}>Check answer</button></div>` : ""}`;
+  }
+  return body;
+}
+function explain(id){
+  const it = ITEMS[id], r = it.ref;
+  if (it.kind === "w") { const k = DATA.concepts.find(c => c.f.includes(r.a.replace(/^Amazon |^AWS |^SageMaker /, "")) ); return `<p><b>${esc(r.k)}</b> → <b>${esc(r.a)}</b></p>${k ? `<div class="hook"><b>Memory hook</b>${esc(k.h)}</div>` : ""}`; }
+  if (it.kind === "tf") return `<p><b>${r.v ? "True." : "False."}</b> ${esc(r.x)}</p>`;
+  let ans = "";
+  if (r.t === "mc" || r.t === "mr") { const ord = optOrder(r); ans = `<p class="ans">Answer: ${r.a.map(i => "ABCDEF"[ord.indexOf(i)] + ") " + esc(r.o[i])).join(" + ")}</p>`; }
+  return ans + `<p>${esc(r.x)}</p>`;
+}
+function feedbackBlock(id){
+  const st = sess.ans[id]; if (!st || !st.final || sess.feedback !== "instant") return "";
+  const ok = st.ok;
+  const lines = ok ? ["Correct", "Nailed it", "Exactly right", "Yes"] : ["Not quite", "Missed this one", "Close, but no"];
+  return `<div class="feedback ${ok ? "ok" : "no"}" role="status"><h3>${lines[sess.i % lines.length]}</h3>${explain(id)}</div>
+  ${ok && sess.mode !== "warmup" ? `<div class="row" style="margin-top:10px"><span class="muted grow" style="font-size:.88rem">Was it a guess?</span><button class="btn small" data-act="guess">I guessed</button><button class="btn small" data-act="easy">Too easy</button></div>` : ""}
+  <div class="actions"><button class="btn primary" data-act="next">${sess.i + 1 >= sess.items.length ? "See results" : "Continue"} <span class="kbd">↵</span></button></div>`;
+}
+function flashCard(id){
+  const it = ITEMS[id], r = it.ref;
+  let front, back;
+  if (it.kind === "k") {
+    front = `<div class="qmeta">${domTag(r.d)}<span class="tag">Concept</span></div><div class="big">${esc(r.f)}</div><div class="hint">Recall it, then tap to flip</div>`;
+    back = `<div class="qmeta">${domTag(r.d)}</div><h2 style="margin-bottom:8px">${esc(r.f)}</h2><p>${esc(r.b)}</p><div class="hook"><b>Memory hook</b>${esc(r.h)}</div><div class="hint">Tap to flip back</div>`;
+  } else if (it.kind === "w") {
+    front = `<div class="qmeta">${domTag(r.d)}<span class="tag">Keyword</span></div><div class="big">${esc(r.k)}</div><div class="hint">Name the service or concept, then tap</div>`;
+    back = `<div class="qmeta">${domTag(r.d)}</div><div class="big" style="color:var(--good)">${esc(r.a)}</div><div class="hint">Tap to flip back</div>`;
+  } else if (it.kind === "tf") {
+    front = `<div class="qmeta">${domTag(r.d)}<span class="tag">True or false</span></div><div class="big" style="font-size:1.2rem">${esc(r.s)}</div><div class="hint">Decide, then tap</div>`;
+    back = `<div class="ans">${r.v ? "True" : "False"}</div><p>${esc(r.x)}</p><div class="hint">Tap to flip back</div>`;
+  } else {
+    let opts = "";
+    if (r.t === "match") opts = `<ul style="margin:6px 0 0;padding-left:1.2rem">${r.pairs.map(p => `<li>${esc(p[0])} → ?</li>`).join("")}</ul>`;
+    else if (r.t === "order") opts = `<ul style="margin:6px 0 0;padding-left:1.2rem">${shuffle(r.items).map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+    else { const ord = optOrder(r); opts = `<ol type="A">${ord.map(i => `<li>${esc(r.o[i])}</li>`).join("")}</ol>`; }
+    front = `<div class="qmeta">${domTag(r.d)}<span class="tag">Exam question</span></div><p style="font-size:1.02rem">${esc(r.q)}</p>${opts}<div class="hint">Pick your answer in your head, then tap</div>`;
+    let ans = "";
+    if (r.t === "match") ans = `<ul style="margin:0 0 8px;padding-left:1.2rem">${r.pairs.map(p => `<li><b>${esc(p[0])}</b> → ${esc(p[1])}</li>`).join("")}</ul>`;
+    else if (r.t === "order") ans = `<ol style="margin:0 0 8px">${r.items.map(x => `<li>${esc(x)}</li>`).join("")}</ol>`;
+    else { const ord = optOrder(r); ans = `<p class="ans">${r.a.map(i => "ABCDEF"[ord.indexOf(i)] + ") " + esc(r.o[i])).join("<br>")}</p>`; }
+    back = `<div class="qmeta">${domTag(r.d)}<span class="tag">Answer</span></div>${ans}<p>${esc(r.x)}</p><div class="hint">Tap to flip back</div>`;
+  }
+  return `<div class="scene"><div class="card3d ${sess.flipped ? "flipped" : ""}" id="card" tabindex="0" role="button" aria-label="Flashcard, press space to flip"><div class="face front">${front}</div><div class="face back">${back}</div></div></div>
+  ${sess.flipped ? `<div class="eyebrow" style="margin-top:14px;text-align:center">How well did you know it?</div><div class="rate">
+    <button class="btn again" data-rate="0">Again<small>10 min</small></button><button class="btn" data-rate="1">Hard<small>${previewIvl(id, 1)}</small></button><button class="btn" data-rate="2">Good<small>${previewIvl(id, 2)}</small></button><button class="btn easy" data-rate="3">Easy<small>${previewIvl(id, 3)}</small></button></div>`
+  : `<div class="actions"><button class="btn primary" data-act="flip">Show answer <span class="kbd">space</span></button></div>`}`;
+}
+function previewIvl(id, g){
+  const keep = S.srs[id] ? Object.assign({}, S.srs[id]) : null; schedule(id, g); const iv = S.srs[id].ivl;
+  if (keep) S.srs[id] = keep; else delete S.srs[id];
+  return iv + "d";
+}
+function sizeCard(){ const c = $("#card"); if (!c) return; const f = c.querySelectorAll(".face"); let h = 340; f.forEach(x => { x.style.position = "relative"; h = Math.max(h, x.scrollHeight); x.style.position = ""; }); c.style.minHeight = Math.min(h, 900) + "px"; }
+
+function vSession(){
+  const id = sess.items[sess.i], it = ITEMS[id];
+  const flashMode = sess.mode === "flash" || (sess.mode === "review" && it.kind === "k");
+  const pct = 100 * sess.i / sess.items.length;
+  let timer = "";
+  if (sess.timeLimit) { const left = Math.max(0, sess.timeLimit - Math.floor((now() - sess.startedAt) / 1000)); timer = `<span class="timer ${left < 60 ? "low" : ""}" id="timer">${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}</span>`; }
+  let top = `<div class="sbar"><button class="x" data-act="quit" aria-label="End session">${ICON.close}</button><div class="prog" aria-hidden="true"><div style="width:${pct}%"></div></div><span class="num">${sess.i + 1}/${sess.items.length}</span>${timer}</div>
+  <div class="row" style="justify-content:space-between;margin-bottom:10px"><span class="eyebrow">${esc(sess.title)}</span>${sess.mode === "exam" ? `<button class="btn small flagbtn ${sess.flags[id] ? "on" : ""}" data-act="flag">${sess.flags[id] ? "Flagged" : "Flag for review"}</button>` : ""}</div>`;
+  if (sess.confirmQuit) return top + `<div class="panel stack"><h2>End this session?</h2><p class="muted">${sess.mode === "exam" ? "Unanswered questions will be marked wrong." : "Answers so far are saved."}</p><div class="actions"><button class="btn" data-act="noquit">Keep going</button><button class="btn primary" data-act="doquit">${sess.mode === "exam" ? "Submit exam" : "End and see results"}</button></div></div>`;
+  if (flashMode) return top + flashCard(id);
+  let out = top + `<section>${renderQuestionBody(id)}</section>` + feedbackBlock(id);
+  if (sess.feedback === "end") {
+    const nAns = sess.items.filter(answered).length;
+    out += `<div class="actions"><button class="btn" data-act="prev" ${sess.i ? "" : "disabled"}>Back</button><button class="btn primary" data-act="next">${sess.i + 1 >= sess.items.length ? "Review & submit" : "Next"}</button></div>
+    <details class="panel" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Question map · ${nAns}/${sess.items.length} answered · ${Object.values(sess.flags).filter(Boolean).length} flagged</summary>
+    <div class="qgrid" style="margin-top:12px">${sess.items.map((q, i) => `<button data-jump="${i}" class="${answered(q) ? "done" : ""} ${sess.flags[q] ? "flag" : ""} ${i === sess.i ? "cur" : ""}">${i + 1}</button>`).join("")}</div>
+    <button class="btn primary block" style="margin-top:12px" data-act="doquit">Submit ${sess.mode === "exam" ? "exam" : "quiz"}</button></details>`;
+  }
+  return out;
+}
+function vResults(){
+  const R = lastResult, pct = R.n ? R.ok / R.n : 0;
+  const exam = R.mode === "exam", score = Math.round(100 + 900 * pct);
+  const missed = R.rows.filter(r => !r.ok);
+  return header() + `<div class="stack" style="gap:16px">
+  <section class="panel stack" style="text-align:center;align-items:center">
+    <span class="eyebrow">${esc(R.title)} · ${Math.round(R.secs / 60)} min</span>
+    ${exam ? `<div class="score ${score >= 700 ? "pass" : "fail"}">${score}</div><p><b>${score >= 700 ? "Estimated pass" : "Below the 700 pass mark"}</b> · ${R.ok}/${R.n} correct</p><p class="muted" style="font-size:.85rem">Estimate only. AWS scales scores across exam forms.</p>`
+      : `<div class="score">${R.ok}<span class="muted" style="font-size:1.6rem">/${R.n}</span></div><p>${pct >= .85 ? "Excellent. These will come back later to stay fresh." : pct >= .6 ? "Solid. The misses are queued for review." : "Good practice. Misses come back in 10 minutes and again tomorrow."}</p>`}
+    <p class="chip spark">+${R.xp} XP</p>
+  </section>
+  ${Object.keys(R.byD).length > 1 ? `<section class="panel stack"><h2>By domain</h2>${Object.keys(R.byD).map(d => `<div class="dbar"><span class="dnum" style="background:${DCOL(d)}">${d}</span><div><div class="track"><div class="fill" style="width:${100 * R.byD[d].ok / R.byD[d].n}%;background:${DCOL(d)}"></div></div></div><span class="num">${R.byD[d].ok}/${R.byD[d].n}</span></div>`).join("")}</section>` : ""}
+  <div class="actions" style="margin-top:0">${missed.length ? `<button class="btn primary" data-act="retry">Retry ${missed.length} missed</button>` : ""}<button class="btn" data-tab="home">Back to Today</button></div>
+  ${R.rows.some(r => ITEMS[r.id].kind !== "k") ? `<section class="stack"><h2>Review answers</h2>${R.rows.filter(r => ITEMS[r.id].kind !== "k").map(r => { const it = ITEMS[r.id];
+    const title = it.kind === "q" ? it.ref.q : it.kind === "w" ? it.ref.k : it.ref.s;
+    return `<div class="review ${r.ok ? "ok" : ""}"><div class="qmeta">${domTag(it.d)}<span class="tag">${r.ok ? "Correct" : "Missed"}</span></div><p style="margin-bottom:6px"><b>${esc(title)}</b></p>${explainStatic(r.id)}</div>`; }).join("")}</section>` : ""}
+  </div>`;
+}
+function explainStatic(id){
+  const it = ITEMS[id], r = it.ref;
+  if (it.kind === "w") return `<p>→ ${esc(r.a)}</p>`;
+  if (it.kind === "tf") return `<p>${r.v ? "True" : "False"}: ${esc(r.x)}</p>`;
+  let ans = r.t === "match" ? r.pairs.map(p => esc(p[0]) + " → " + esc(p[1])).join("<br>") : r.t === "order" ? r.items.map((x, i) => (i + 1) + ". " + esc(x)).join("<br>") : r.a.map(i => esc(r.o[i])).join(" + ");
+  return `<p class="ans" style="font-size:.95rem">${ans}</p><p style="font-size:.93rem">${esc(r.x)}</p>`;
+}
+
+/* ---------- session actions ---------- */
+function setAnswer(v, autoFinal){
+  const id = sess.items[sess.i]; const st = sess.ans[id] = sess.ans[id] || {};
+  if (st.final && (sess.feedback === "instant" || sess.submitted)) return;
+  st.v = v;
+  if (autoFinal) finalize(id);
+  render();
+}
+function finalize(id){
+  const st = sess.ans[id]; st.final = true; st.ok = isCorrect(id, st.v);
+  if (sess.feedback === "instant") { st.prev = S.srs[id] ? Object.assign({}, S.srs[id]) : null; record(id, st.ok, st.ok ? 2 : 0); st.graded = true; }
+}
+function next(){
+  if (sess.i + 1 >= sess.items.length) { if (sess.feedback === "end") { sess.confirmQuit = true; render(); return; } return finish(); }
+  sess.i++; sess.flipped = false; render(); window.scrollTo(0, 0);
+}
+function finish(){
+  clearInterval(timerH);
+  const rows = []; const byD = {}; let xp0 = S.xp;
+  sess.items.forEach(id => {
+    const it = ITEMS[id], st = sess.ans[id];
+    if (!st) { if (sess.feedback === "end" && it.kind !== "k") { record(id, false, 0); } else return; }
+    else if (!st.graded) { if (sess.feedback === "instant" && !st.final) return; const ok = it.kind === "k" ? st.ok : isCorrect(id, st.v); st.ok = ok; record(id, ok, ok ? 2 : 0); }
+    const ok = !!(st && st.ok); rows.push({ id, ok });
+    const b = byD[it.d] = byD[it.d] || { n:0, ok:0 }; b.n++; b.ok += ok ? 1 : 0;
+  });
+  const ok = rows.filter(r => r.ok).length;
+  lastResult = { title:sess.title, mode:sess.mode, n:rows.length, ok, rows, byD, xp:S.xp - xp0, secs:(now() - sess.startedAt) / 1000 };
+  if (sess.mode === "exam") { S.mocks.push({ t:now(), n:rows.length, ok, score:Math.round(100 + 900 * ok / rows.length) }); save(); }
+  sess = null; view = "results"; render(); window.scrollTo(0, 0);
+}
+let timerH;
+function restore(id){ const st = sess.ans[id]; if (st && "prev" in st) { if (st.prev) S.srs[id] = st.prev; else delete S.srs[id]; } }
+function tickTimer(){
+  clearInterval(timerH);
+  if (!sess || !sess.timeLimit) return;
+  timerH = setInterval(() => {
+    if (!sess) return clearInterval(timerH);
+    const left = Math.max(0, sess.timeLimit - Math.floor((now() - sess.startedAt) / 1000)), el = $("#timer");
+    if (el) { el.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`; el.classList.toggle("low", left < 60); }
+    if (left <= 0) { toast("Time's up"); finish(); }
+  }, 1000);
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("button,[data-m],#card"); if (!t) return;
+  const d = t.dataset;
+  if (d.m) {
+    const dd = d.d ? +d.d : undefined;
+    ({ review:M.review, warmup:M.warmup, keywords:() => M.keywords(), truefalse:M.truefalse, pop:M.pop, custom:M.custom, domain:() => M.domain(dd), weak:M.weak,
+       flashk:() => M.flash("k", dd), flashq:() => M.flash("q", dd), mock:M.mock })[d.m]();
+    return;
+  }
+  if (d.opt) {
+    if (d.opt === "dom") { const v = +d.v, a = practiceOpts.domains; practiceOpts.domains = a.includes(v) ? (a.length > 1 ? a.filter(x => x !== v) : a) : a.concat(v); }
+    if (d.opt === "count") practiceOpts.count = +d.v;
+    if (d.opt === "fb") practiceOpts.feedback = d.v;
+    return render();
+  }
+  if (t.id === "card") { sess.flipped = !sess.flipped; render(); return; }
+  if (!sess && !["setdate","export","import","reset","retry"].includes(d.act)) return;
+  if (d.pick !== undefined) return setAnswer(t.dataset.pick, sess.feedback === "instant");
+  if (d.tf !== undefined) return setAnswer(d.tf === "true", sess.feedback === "instant");
+  if (d.optI !== undefined) {
+    const id = sess.items[sess.i], r = ITEMS[id].ref, oi = +d.optI;
+    if (r.t === "mr") { const cur = [].concat((sess.ans[id] || {}).v || []); const v = cur.includes(oi) ? cur.filter(x => x !== oi) : cur.concat(oi).slice(-r.a.length); return setAnswer(v, false); }
+    return setAnswer(oi, sess.feedback === "instant");
+  }
+  if (d.seq !== undefined) { const id = sess.items[sess.i]; const cur = ((sess.ans[id] || {}).v || []).concat(t.dataset.seq); return setAnswer(cur, false); }
+  if (d.unseq !== undefined) { const id = sess.items[sess.i]; const cur = ((sess.ans[id] || {}).v || []).filter((_, i) => i !== +d.unseq); return setAnswer(cur, false); }
+  if (d.jump !== undefined) { sess.i = +d.jump; return render(); }
+  if (d.rate !== undefined) { const id = sess.items[sess.i], g = +d.rate; record(id, g > 0, g); sess.ans[id] = { final:true, ok:g > 0, graded:true }; return next(); }
+  switch (d.act) {
+    case "flip": sess.flipped = true; return render();
+    case "submit": { const id = sess.items[sess.i]; if (sess.feedback === "instant") finalize(id); else { sess.ans[id].final = true; } return render(); }
+    case "next": { const id = sess.items[sess.i]; const st = sess.ans[id]; if (sess.feedback === "end" && st && st.v != null && (ITEMS[id].kind !== "q" || ["mc"].includes(ITEMS[id].ref.t))) st.final = true; return next(); }
+    case "prev": sess.i = Math.max(0, sess.i - 1); return render();
+    case "flag": { const id = sess.items[sess.i]; sess.flags[id] = !sess.flags[id]; return render(); }
+    case "guess": { const id = sess.items[sess.i]; restore(id); schedule(id, 1); save(); toast("Marked as a guess. It will come back sooner."); return next(); }
+    case "easy": { const id = sess.items[sess.i]; restore(id); schedule(id, 3); save(); toast("Got it. Pushed further out."); return next(); }
+    case "quit": sess.confirmQuit = true; return render();
+    case "noquit": sess.confirmQuit = false; return render();
+    case "doquit": sess.submitted = true; return finish();
+    case "retry": return M.retry(lastResult.rows.filter(r => !r.ok).map(r => r.id));
+    case "setdate": go("stats"); setTimeout(() => { const el = $("#set-date"); if (el) { el.scrollIntoView({ block:"center" }); el.focus(); } }, 50); return;
+    case "export": { const el = $("#backup"); el.value = btoa(unescape(encodeURIComponent(JSON.stringify(S)))); el.select();
+      try { navigator.clipboard.writeText(el.value).then(() => toast("Backup code copied"), () => toast("Code selected. Copy it manually.")); } catch (er) { toast("Code selected. Copy it manually."); } return; }
+    case "import": try { const o = JSON.parse(decodeURIComponent(escape(atob($("#backup").value.trim())))); if (!o.srs) throw 0; S = Object.assign(blank(), o); save(); toast("Progress restored"); render(); } catch (er) { toast("That code isn't valid. Paste the full backup code."); } return;
+    case "reset": if (t.dataset.sure) { S = blank(); save(); toast("Progress reset"); render(); } else { t.dataset.sure = "1"; t.textContent = "Tap again to confirm"; } return;
+  }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.match !== undefined && sess) { const id = sess.items[sess.i]; const cur = ((sess.ans[id] || {}).v || []).slice(); cur[+t.dataset.match] = t.value || undefined; return setAnswer(cur, false); }
+  if (t.id === "set-date") { S.settings.examDate = t.value; save(); toast("Exam date saved"); }
+  if (t.id === "set-goal") { S.settings.goal = Math.max(5, Math.min(300, +t.value || 30)); save(); }
+  if (t.id === "set-new") { S.settings.newPerDay = Math.max(0, Math.min(100, +t.value || 0)); save(); }
+});
+document.addEventListener("keydown", e => {
+  if (view !== "session" || !sess || e.target.matches("input,select,textarea")) return;
+  const click = sel => { const b = document.querySelector(sel); if (b && !b.disabled) { b.click(); e.preventDefault(); } };
+  if (e.key === " ") { if ($("#card")) { sess.flipped = !sess.flipped; render(); e.preventDefault(); } }
+  else if (e.key === "Enter") click('[data-act="next"],[data-act="submit"]');
+  else if (/^[1-4]$/.test(e.key) && $(".rate")) click(`[data-rate="${+e.key - 1}"]`);
+  else if (/^[a-fA-F]$/.test(e.key)) { const opts = document.querySelectorAll(".opt:not(.pill)"); const b = opts["abcdef".indexOf(e.key.toLowerCase())]; if (b && !b.disabled) b.click(); }
+});
+
+function render(){
+  const app = $("#app");
+  app.innerHTML = view === "home" ? vHome() : view === "practice" ? vPractice() : view === "learn" ? vLearn() : view === "stats" ? vStats() : view === "results" ? vResults() : vSession();
+  renderTabs();
+  if (view === "session") { sizeCard(); if (!sess._t) { sess._t = 1; tickTimer(); } }
+}
+render();
+})();
+</script>
