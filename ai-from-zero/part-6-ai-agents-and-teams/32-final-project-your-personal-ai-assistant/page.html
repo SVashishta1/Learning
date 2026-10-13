@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>My AI Assistant</title>
+<style>
+ *{box-sizing:border-box} body{margin:0;font-family:system-ui;background:#f5f3ef;color:#1e1b16;height:100vh;display:flex;flex-direction:column}
+ header{padding:12px 16px;background:#2b2118;color:#fff;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+ header b{margin-right:auto} label,.chip{background:#4a3a2c;padding:7px 11px;border-radius:10px;cursor:pointer;font-size:13px;border:0;color:#fff}
+ main{flex:1;display:flex;max-width:1000px;width:100%;margin:0 auto;gap:16px;padding:16px;min-height:0}
+ #log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-width:0}
+ aside{width:240px;background:#fff;border:1px solid #e3ddd3;border-radius:14px;padding:12px;white-space:pre-wrap;font-size:14px;overflow-y:auto}
+ @media (max-width:700px){aside{display:none}}
+ .msg{padding:10px 14px;border-radius:14px;max-width:88%;white-space:pre-wrap;line-height:1.45}
+ .user{align-self:flex-end;background:#8a4b1f;color:#fff} .bot{align-self:flex-start;background:#fff;border:1px solid #e3ddd3}
+ .who{font-size:12px;font-weight:700;margin-bottom:4px;color:#8a4b1f} .tools{font-size:12px;color:#7a6f63;margin-top:6px}
+ form{display:flex;gap:8px;padding:0 16px 16px;max-width:1000px;width:100%;margin:0 auto}
+ input[type=text]{flex:1;font:inherit;padding:12px;border-radius:12px;border:1px solid #d6cdbf} button.send{font:inherit;padding:0 18px;border-radius:12px;border:0;background:#2b2118;color:#fff}
+ @media (prefers-color-scheme:dark){body{background:#14110e;color:#eee6dc}.bot,aside{background:#1f1a15;border-color:#3a3128}input[type=text]{background:#1f1a15;color:#eee6dc;border-color:#3a3128}.tools{color:#b3a593}}
+</style></head>
+<body>
+<header><b>🧠 My AI Assistant</b>
+ <button class="chip" onclick="ask('What does my study plan say I find hard?')">📚 my docs</button>
+ <button class="chip" onclick="ask('What is one big AI news story this week?')">🌍 web</button>
+ <button class="chip" onclick="ask('Add a task: redo project 05 this weekend')">✅ tasks</button>
+ <label>⬆ Upload<input type="file" id="file" accept=".pdf,.txt,.md" hidden></label></header>
+<main><div id="log"></div><aside id="tasks">To-do list</aside></main>
+<form onsubmit="event.preventDefault(); const b=document.getElementById('box'); ask(b.value); b.value='';">
+ <input type="text" id="box" placeholder="Ask about your documents, the web, or your to-do list..." autocomplete="off" autofocus><button class="send">Send</button></form>
+<script>
+const ICON = {librarian:"📚 Librarian", researcher:"🌍 Researcher", organizer:"✅ Organizer", chatter:"💬 Chatter"};
+function bubble(cls, text, who, tools){ const d=document.createElement("div"); d.className="msg "+cls;
+  if(who){ const w=document.createElement("div"); w.className="who"; w.textContent=who; d.appendChild(w); }
+  d.appendChild(document.createTextNode(text));
+  if(tools && tools.length){ const t=document.createElement("div"); t.className="tools"; t.textContent="🔧 "+tools.join(" · "); d.appendChild(t); }
+  const log=document.getElementById("log"); log.appendChild(d); log.scrollTop=log.scrollHeight; return d; }
+async function refreshTasks(){ const d=await (await fetch("/tasks")).json(); document.getElementById("tasks").textContent="✅ To-do list\n\n"+d.tasks; }
+async function ask(text){ text=text.trim(); if(!text) return; bubble("user", text); const wait=bubble("bot","The team is thinking…");
+  const d=await (await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})})).json();
+  wait.remove(); bubble("bot", d.reply, ICON[d.specialist], d.tools_used); refreshTasks(); }
+document.getElementById("file").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; const fd=new FormData(); fd.append("file",f);
+  const d=await (await fetch("/upload",{method:"POST",body:fd})).json(); bubble("bot","Added "+d.file+" to your library ("+d.chunks+" chunks).","📚 Librarian"); };
+refreshTasks();
+</script></body></html>
