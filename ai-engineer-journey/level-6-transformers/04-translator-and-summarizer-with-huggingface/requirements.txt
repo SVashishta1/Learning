@@ -1,0 +1,7 @@
+torch
+transformers
+sentencepiece
+evaluate
+rouge_score
+fastapi
+uvicorn[standard]

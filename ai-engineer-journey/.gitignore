@@ -13,3 +13,7 @@ checkpoints/
 .pytest_cache/
 chroma/
 mlruns/
+names.txt
+input.txt
+dataset/
+*.png

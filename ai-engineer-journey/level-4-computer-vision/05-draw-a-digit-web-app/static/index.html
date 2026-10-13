@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Draw a digit</title>
+<style>
+  body { font-family: system-ui, sans-serif; background:#10141a; color:#e8edf2; display:grid; place-items:center; min-height:100vh; margin:0; padding:16px; }
+  .wrap { display:grid; gap:16px; max-width:640px; width:100%; }
+  canvas { background:#000; border-radius:12px; touch-action:none; width:min(280px, 100%); aspect-ratio:1; cursor:crosshair; border:2px solid #2c3743; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
+  .guess { font-size:96px; font-weight:800; line-height:1; min-width:80px; }
+  .bars { display:grid; gap:4px; flex:1; min-width:200px; }
+  .bar { display:grid; grid-template-columns:16px 1fr 48px; gap:8px; align-items:center; font-variant-numeric:tabular-nums; }
+  .bar div { height:12px; background:#3ea6a6; border-radius:6px; transition:width .15s; }
+  button { font:inherit; padding:10px 16px; border-radius:10px; border:0; background:#3ea6a6; color:#04201f; font-weight:700; cursor:pointer; }
+  .note { color:#93a5af; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Draw a digit (0–9)</h1>
+  <div class="row">
+    <canvas id="c" width="280" height="280"></canvas>
+    <div><div class="guess" id="guess">?</div><button id="clear">Clear</button></div>
+  </div>
+  <div class="bars" id="bars"></div>
+  <p class="note" id="note">The model guesses while you draw. Draw big and centered.</p>
+</div>
+<script>
+const c = document.getElementById("c"), ctx = c.getContext("2d");
+ctx.lineWidth = 20; ctx.lineCap = "round"; ctx.strokeStyle = "#fff";
+let drawing = false, timer;
+const pos = e => { const r = c.getBoundingClientRect(), t = e.touches ? e.touches[0] : e;
+  return [(t.clientX - r.left) * c.width / r.width, (t.clientY - r.top) * c.height / r.height]; };
+const start = e => { drawing = true; ctx.beginPath(); ctx.moveTo(...pos(e)); e.preventDefault(); };
+const move = e => { if (!drawing) return; ctx.lineTo(...pos(e)); ctx.stroke(); e.preventDefault();
+  clearTimeout(timer); timer = setTimeout(predict, 120); };
+const stop = () => { drawing = false; predict(); };
+["mousedown","touchstart"].forEach(ev => c.addEventListener(ev, start));
+["mousemove","touchmove"].forEach(ev => c.addEventListener(ev, move));
+["mouseup","mouseleave","touchend"].forEach(ev => c.addEventListener(ev, stop));
+document.getElementById("clear").onclick = () => { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 280, 280);
+  document.getElementById("guess").textContent = "?"; render(Array(10).fill(0)); };
+function render(p) { document.getElementById("bars").innerHTML = p.map((v, i) =>
+  `<div class="bar"><span>${i}</span><div style="width:${Math.round(v * 100)}%"></div><span>${(v * 100).toFixed(0)}%</span></div>`).join(""); }
+async function predict() {
+  const r = await fetch("/predict", { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ image: c.toDataURL("image/png") }) });
+  if (!r.ok) return;
+  const d = await r.json();
+  document.getElementById("guess").textContent = d.digit;
+  render(d.probabilities);
+  if (!d.trained) document.getElementById("note").textContent = "⚠️ No trained model found: copy mnist_mlp.pt from project 4.1 (guesses are random until then).";
+}
+ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 280, 280); render(Array(10).fill(0));
+</script>
+</body>
+</html>
