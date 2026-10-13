@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.db
+*.sqlite3
+data/
+checkpoints/
+*.pt
+*.pth
+*.joblib
+.pytest_cache/
+chroma/
+mlruns/
