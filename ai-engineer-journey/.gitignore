@@ -18,3 +18,11 @@ input.txt
 dataset/
 *.png
 index/
+notes.json
+workspace/
+audit_log.jsonl
+incident_data/
+incident_report.md
+report.md
+review.md
+output.md

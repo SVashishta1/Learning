@@ -1,0 +1,1 @@
+# install inside Docker from app/requirements.txt; for local tests: pip install -r app/requirements.txt
