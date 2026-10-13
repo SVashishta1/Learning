@@ -24,7 +24,7 @@ class LoRALinear(nn.Module):
 
 
 # 1. "Pretrain" a model on task A: y = sum of the inputs
-d = 64
+d = 256
 model = nn.Sequential(nn.Linear(d, d), nn.ReLU(), nn.Linear(d, 1))
 X = torch.randn(2000, d)
 task_a, task_b = X.sum(1, keepdim=True), (X[:, :d // 2].sum(1) - X[:, d // 2:].sum(1)).unsqueeze(1)

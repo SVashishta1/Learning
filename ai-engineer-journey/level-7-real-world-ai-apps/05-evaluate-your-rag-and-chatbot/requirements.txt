@@ -1,0 +1,7 @@
+anthropic
+numpy
+scikit-learn
+pypdf
+sentence-transformers
+pydantic
+pytest

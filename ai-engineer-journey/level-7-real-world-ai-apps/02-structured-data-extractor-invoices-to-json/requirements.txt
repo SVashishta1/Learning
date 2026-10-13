@@ -1,0 +1,7 @@
+anthropic
+pydantic
+fastapi
+uvicorn[standard]
+python-multipart
+httpx
+pytest

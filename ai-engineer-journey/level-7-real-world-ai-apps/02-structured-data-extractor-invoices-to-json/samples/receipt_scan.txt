@@ -1,0 +1,9 @@
+   CAFE LUNA  -  Via Roma 12, Milano
+   Scontrino n. 00451     14/10/2026 13:42
+   2  CAPPUCCINO        x 1,80    3,60
+   1  CORNETTO CREMA              1,50
+   1  SPREMUTA ARANCIA            3,90
+   ------------------------------------
+   TOTALE EURO                    9,00
+   di cui IVA 10%                 0,82
+   PAGAMENTO CARTA

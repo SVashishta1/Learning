@@ -1,7 +1,7 @@
 # 6.3 · Fine-tune a small LLM with LoRA
 
 **What you build:**
-- **Part A:** LoRA from scratch in 20 lines. You see a "pretrained" model adapt to a new task while training only a few percent of its weights.
+- **Part A:** LoRA from scratch in 20 lines. You see a "pretrained" model adapt to a new task while training only ~5% of its weights. (On real LLMs it is often under 1%.)
 - **Part B:** teach a real open LLM (SmolLM2, 135M parameters) to **answer everything like a pirate** 🏴‍☠️ from just 12 examples, using the `peft` library. The question at the end isn't in the training data, so you'll see it generalise the *style*.
 
 **Like you're 10:** the model is a huge, finished painting. Repainting it all (full fine-tuning) is slow and expensive. LoRA sticks a thin **transparent sheet** on top and paints only on the sheet. Peel it off and the original is untouched. You can keep different sheets for different jobs.

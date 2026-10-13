@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: handbook-ai
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false            # you paste it in the Render dashboard; it's never stored in git
+      - key: APP_API_KEYS
+        generateValue: true
+      - key: CLAUDE_MODEL
+        value: claude-haiku-5-5

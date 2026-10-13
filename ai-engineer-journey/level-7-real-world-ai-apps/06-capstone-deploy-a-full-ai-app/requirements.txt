@@ -1,0 +1,12 @@
+anthropic
+numpy
+scikit-learn
+pypdf
+fastapi
+uvicorn[standard]
+python-multipart
+prometheus-client
+httpx
+pytest
+# optional, better retrieval (adds ~1 GB to the Docker image):
+# sentence-transformers

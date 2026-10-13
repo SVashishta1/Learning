@@ -1,0 +1,14 @@
+{"question": "How many days of paid annual leave do full-time employees get?", "must_include": ["25"], "source": "vacation_policy.md"}
+{"question": "Until when can carried-over vacation days be used?", "must_include": ["March 31"], "source": "vacation_policy.md"}
+{"question": "When do I need a doctor's note for sick leave?", "must_include": ["3"], "source": "vacation_policy.md"}
+{"question": "How long is parental leave for a secondary caregiver?", "must_include": ["6 weeks"], "source": "vacation_policy.md"}
+{"question": "What's the daily meal allowance when travelling?", "must_include": ["60"], "source": "expense_policy.md"}
+{"question": "Can I fly premium economy to Tokyo on a 12-hour flight?", "must_include": ["premium economy"], "source": "expense_policy.md"}
+{"question": "What is the hotel limit per night in Paris?", "must_include": ["180"], "source": "expense_policy.md"}
+{"question": "What happens if I submit an expense 4 months late?", "must_include": ["not be reimbursed"], "source": "expense_policy.md"}
+{"question": "How much is the home office allowance?", "must_include": ["500"], "source": "expense_policy.md"}
+{"question": "How long must my password be?", "must_include": ["14"], "source": "it_security.md"}
+{"question": "My laptop was stolen. What should I do and how fast?", "must_include": ["1 hour"], "source": "it_security.md"}
+{"question": "Can I paste customer data into any AI chatbot?", "must_include": ["approved"], "source": "it_security.md"}
+{"question": "What is the CEO's salary?", "must_include": [], "source": null, "unanswerable": true}
+{"question": "Does the company offer free gym membership?", "must_include": [], "source": null, "unanswerable": true}

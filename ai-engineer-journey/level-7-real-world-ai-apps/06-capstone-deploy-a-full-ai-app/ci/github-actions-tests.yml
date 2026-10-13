@@ -1,0 +1,16 @@
+# Copy this file to .github/workflows/capstone-tests.yml at the ROOT of your repo to run tests on every push.
+name: capstone-tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-engineer-journey/level-7-real-world-ai-apps/06-capstone-deploy-a-full-ai-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pytest -q          # uses a fake LLM: no API key or cost in CI

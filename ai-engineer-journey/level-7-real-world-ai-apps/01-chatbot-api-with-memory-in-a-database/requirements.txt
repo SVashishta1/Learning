@@ -1,0 +1,6 @@
+anthropic
+fastapi
+uvicorn[standard]
+sqlalchemy>=2.0
+httpx
+pytest

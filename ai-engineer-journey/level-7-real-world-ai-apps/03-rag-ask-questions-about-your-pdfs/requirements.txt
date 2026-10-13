@@ -1,0 +1,10 @@
+anthropic
+numpy
+scikit-learn
+pypdf
+sentence-transformers
+fastapi
+uvicorn[standard]
+python-multipart
+httpx
+pytest
