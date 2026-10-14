@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Notes</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+  button { font-size: 1.1rem; padding: .7rem 1.2rem; border-radius: 8px; border: 0; background: #2563eb; color: #fff; cursor: pointer; }
+  button.recording { background: #dc2626; }
+  input { width: 100%; padding: .6rem; font-size: 1rem; margin: 1rem 0; box-sizing: border-box; }
+  .note { border: 1px solid #ddd; border-radius: 8px; padding: .8rem; margin-bottom: .6rem; }
+  .note small { color: #666; } .note a { float: right; color: #dc2626; cursor: pointer; }
+</style>
+</head>
+<body>
+<h1>🎙️ Voice Notes</h1>
+<button id="rec">Start recording</button> <span id="status"></span>
+<input id="search" placeholder="Search your notes...">
+<div id="notes"></div>
+
+<script>
+let recorder, chunks = [];
+const rec = document.getElementById("rec"), status = document.getElementById("status");
+
+rec.onclick = async () => {
+  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+  recorder = new MediaRecorder(mic);
+  chunks = [];
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = async () => {
+    mic.getTracks().forEach(t => t.stop());
+    rec.textContent = "Start recording"; rec.className = "";
+    status.textContent = "✍️ writing it down...";
+    const form = new FormData();
+    form.append("audio", new Blob(chunks, { type: recorder.mimeType }), "note.webm");
+    await fetch("/notes", { method: "POST", body: form });
+    status.textContent = "";
+    loadNotes();
+  };
+  recorder.start();
+  rec.textContent = "Stop"; rec.className = "recording";
+};
+
+async function loadNotes() {
+  const q = document.getElementById("search").value;
+  const notes = await (await fetch("/notes?q=" + encodeURIComponent(q))).json();
+  const box = document.getElementById("notes");
+  box.innerHTML = "";
+  for (const n of notes) {
+    const div = document.createElement("div");
+    div.className = "note";
+    div.innerHTML = `<a title="delete">✕</a><small>${n.created}</small><p></p>`;
+    div.querySelector("p").textContent = n.text;          // textContent = safe, no HTML injection
+    div.querySelector("a").onclick = async () => { await fetch("/notes/" + n.id, { method: "DELETE" }); loadNotes(); };
+    box.appendChild(div);
+  }
+}
+document.getElementById("search").oninput = loadNotes;
+loadNotes();
+</script>
+</body>
+</html>

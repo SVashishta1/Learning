@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whisper in your browser</title>
+<style>
+ body{font-family:system-ui;background:#0f141b;color:#e6edf3;margin:0;padding:24px 16px;display:flex;justify-content:center}
+ .box{display:grid;gap:14px;width:min(640px,100%)} button,label.btn{font:inherit;font-weight:700;padding:12px 16px;border-radius:12px;border:0;cursor:pointer;background:#2f6feb;color:#fff;text-align:center}
+ button:disabled{opacity:.5;cursor:wait} .row{display:flex;gap:10px;flex-wrap:wrap} .row>*{flex:1}
+ #status{color:#9fb0c3;font-size:14px;min-height:1.4em} #out{background:#161d27;border-radius:12px;padding:14px;min-height:120px;white-space:pre-wrap;line-height:1.5}
+ select{font:inherit;padding:10px;border-radius:10px;background:#161d27;color:#e6edf3;border:1px solid #2b3747}
+</style></head>
+<body><div class="box">
+ <h1 style="margin:0">🗣️ Whisper, running in your browser</h1>
+ <p style="margin:0;color:#9fb0c3">No server and no upload. The AI model is downloaded once, then runs on your own device.</p>
+ <select id="model">
+   <option value="Xenova/whisper-tiny.en">tiny.en (40 MB, English only, fastest)</option>
+   <option value="Xenova/whisper-base" selected>base (75 MB, 99 languages)</option>
+   <option value="Xenova/whisper-small">small (250 MB, more accurate)</option>
+ </select>
+ <div class="row"><button id="rec">🎙️ Record</button><label class="btn">📁 Pick an audio file<input type="file" id="file" accept="audio/*,video/*" hidden></label></div>
+ <div id="status">Ready.</div>
+ <div id="out">Your transcript appears here.</div>
+</div>
+<script type="module">
+import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0";
+
+const $ = id => document.getElementById(id);
+let transcriber = null, loadedModel = null, recorder = null;
+
+async function getTranscriber() {
+  const name = $("model").value;
+  if (transcriber && loadedModel === name) return transcriber;
+  const device = navigator.gpu ? "webgpu" : "wasm";          // use the graphics card if the browser allows it
+  $("status").textContent = `Downloading ${name} (only the first time)...`;
+  transcriber = await pipeline("automatic-speech-recognition", name, {
+    device,
+    progress_callback: p => { if (p.status === "progress") $("status").textContent = `Downloading ${p.file}: ${Math.round(p.progress)}%`; },
+  });
+  loadedModel = name;
+  return transcriber;
+}
+
+async function transcribe(blob) {
+  $("rec").disabled = true;
+  try {
+    // Whisper wants 16,000 numbers per second, mono. The browser can convert any audio for us:
+    const ctx = new AudioContext({ sampleRate: 16000 });
+    const audio = (await ctx.decodeAudioData(await blob.arrayBuffer())).getChannelData(0);
+    const t = await getTranscriber();
+    $("status").textContent = `Transcribing ${(audio.length / 16000).toFixed(1)} s of audio...`;
+    const start = performance.now();
+    const result = await t(audio, { chunk_length_s: 30, stride_length_s: 5 });   // long audio is handled in 30 s pieces
+    $("out").textContent = result.text.trim();
+    $("status").textContent = `Done in ${((performance.now() - start) / 1000).toFixed(1)} s on ${navigator.gpu ? "your GPU (WebGPU)" : "your CPU (WebAssembly)"}.`;
+  } catch (e) {
+    $("status").textContent = "Something went wrong: " + e.message;
+  }
+  $("rec").disabled = false;
+}
+
+$("rec").onclick = async () => {
+  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const chunks = [];
+  recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => { stream.getTracks().forEach(t => t.stop()); $("rec").textContent = "🎙️ Record"; transcribe(new Blob(chunks)); };
+  recorder.start();
+  $("rec").textContent = "⏹ Stop and transcribe";
+  $("status").textContent = "Recording...";
+};
+$("file").onchange = e => e.target.files[0] && transcribe(e.target.files[0]);
+</script></body></html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meeting Assistant</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; display: flex; min-height: 100vh; }
+  aside { width: 230px; background: #f3f4f6; padding: 1rem; flex-shrink: 0; }
+  main { flex: 1; padding: 1rem 2rem; max-width: 760px; }
+  aside a { display: block; padding: .5rem; border-radius: 6px; cursor: pointer; }
+  aside a:hover { background: #e5e7eb; } aside small { color: #666; }
+  button { padding: .6rem 1rem; border: 0; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; }
+  button.rec { background: #dc2626; }
+  input { padding: .5rem; } .box { border: 1px solid #ddd; border-radius: 10px; padding: 1rem; margin: 1rem 0; }
+  pre { white-space: pre-wrap; font-size: .9rem; }
+  @media (max-width: 700px) { body { flex-direction: column; } aside { width: auto; } main { padding: 1rem; } }
+</style>
+</head>
+<body>
+<aside>
+  <h3>📁 Meetings</h3>
+  <div id="list"></div>
+</aside>
+<main>
+  <h1>🗒️ Private Meeting Assistant</h1>
+  <div class="box">
+    <input id="title" placeholder="Meeting title"><br><br>
+    <input type="file" id="file" accept="audio/*,video/*"> <button id="upload">Upload</button>
+    &nbsp;or&nbsp; <button id="rec">🎙️ Record</button>
+    <p id="status"></p>
+  </div>
+  <div id="meeting"></div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const status = $("status");
+let recorder;
+
+async function send(blob, name) {
+  status.textContent = "⏳ Transcribing and summarizing... (about 1 minute per 5–10 minutes of audio)";
+  const form = new FormData();
+  form.append("audio", blob, name);
+  form.append("title", $("title").value || "Meeting");
+  const res = await fetch("/meetings", { method: "POST", body: form });
+  const data = await res.json();
+  status.textContent = res.ok ? "" : "❌ " + data.detail;
+  if (res.ok) { loadList(); show(data); }
+}
+
+$("upload").onclick = () => { const f = $("file").files[0]; if (f) send(f, f.name); };
+
+$("rec").onclick = async () => {
+  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const chunks = [];
+  recorder = new MediaRecorder(mic);
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => {
+    mic.getTracks().forEach(t => t.stop());
+    $("rec").textContent = "🎙️ Record"; $("rec").className = "";
+    send(new Blob(chunks, { type: recorder.mimeType }), "meeting.webm");
+  };
+  recorder.start();
+  $("rec").textContent = "⏹ Stop"; $("rec").className = "rec";
+};
+
+async function loadList() {
+  const meetings = await (await fetch("/meetings")).json();
+  $("list").innerHTML = "";
+  for (const m of meetings) {
+    const a = document.createElement("a");
+    a.innerHTML = "<span></span><br><small></small>";
+    a.querySelector("span").textContent = m.title;
+    a.querySelector("small").textContent = m.created;
+    a.onclick = async () => show(await (await fetch("/meetings/" + m.id)).json());
+    $("list").appendChild(a);
+  }
+}
+
+function list(items) {                       // safe <li> list (textContent, no HTML injection)
+  const ul = document.createElement("ul");
+  for (const text of items) { const li = document.createElement("li"); li.textContent = text; ul.appendChild(li); }
+  return ul;
+}
+
+function show(m) {
+  const box = $("meeting");
+  box.innerHTML = `
+    <h2></h2>
+    <a href="/meetings/${m.id}/markdown" download="meeting-${m.id}.md">⬇️ Download as Markdown</a>
+    <div class="box"><h3>Summary</h3><p id="sum"></p></div>
+    <div class="box"><h3>Decisions</h3><div id="dec"></div></div>
+    <div class="box"><h3>Action items</h3><div id="act"></div></div>
+    <div class="box"><h3>Ask about this meeting</h3>
+      <input id="q" placeholder="What did we decide about the budget?" style="width:70%">
+      <button id="ask">Ask</button><p id="answer"></p></div>
+    <details class="box"><summary>Full transcript</summary><pre id="tr"></pre></details>`;
+  box.querySelector("h2").textContent = m.title;
+  $("sum").textContent = m.summary;
+  $("dec").appendChild(list(m.decisions.length ? m.decisions : ["(none)"]));
+  $("act").appendChild(list(m.action_items.length
+    ? m.action_items.map(a => `${a.who}: ${a.task} (due: ${a.due})`) : ["(none)"]));
+  $("tr").textContent = m.transcript;
+  $("ask").onclick = async () => {
+    $("answer").textContent = "🤔 ...";
+    const form = new FormData();
+    form.append("question", $("q").value);
+    const res = await (await fetch(`/meetings/${m.id}/ask`, { method: "POST", body: form })).json();
+    $("answer").textContent = res.answer;
+  };
+}
+
+loadList();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+__pycache__/
+.venv/
+*.wav
+*.mp3
+*.webm
+*.onnx
+*.onnx.json
+*.bin
+*.db
+*.srt
+*.png
+models/

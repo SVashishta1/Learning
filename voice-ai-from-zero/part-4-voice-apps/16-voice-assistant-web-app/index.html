@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Assistant</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 1rem; }
+  #chat { min-height: 50vh; }
+  .msg { padding: .6rem .9rem; border-radius: 14px; margin: .4rem 0; max-width: 80%; }
+  .you { background: #2563eb; color: #fff; margin-left: auto; }
+  .bot { background: #eee; }
+  #talk { width: 100%; padding: 1.4rem; font-size: 1.2rem; border: 0; border-radius: 14px;
+          background: #16a34a; color: #fff; user-select: none; touch-action: none; }
+  #talk.on { background: #dc2626; }
+</style>
+</head>
+<body>
+<h1>🤖 Voice Assistant</h1>
+<label>Voice <select id="voice">
+  <option>af_heart</option><option>af_bella</option><option>am_adam</option><option>bf_emma</option><option>bm_george</option>
+</select></label>
+<div id="chat"></div>
+<button id="talk">Hold to talk</button>
+<p id="status"></p>
+
+<script>
+const talk = document.getElementById("talk"), status = document.getElementById("status");
+let recorder, chunks, history = [];
+
+function show(text, who) {
+  const div = document.createElement("div");
+  div.className = "msg " + who;
+  div.textContent = text;
+  document.getElementById("chat").appendChild(div);
+}
+
+talk.onpointerdown = async () => {
+  const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+  recorder = new MediaRecorder(mic);
+  chunks = [];
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => { mic.getTracks().forEach(t => t.stop()); send(); };
+  recorder.start();
+  talk.className = "on"; talk.textContent = "Listening... (release to send)";
+};
+talk.onpointerup = talk.onpointerleave = () => {
+  if (recorder && recorder.state === "recording") recorder.stop();
+  talk.className = ""; talk.textContent = "Hold to talk";
+};
+
+async function send() {
+  status.textContent = "🤔 thinking...";
+  const form = new FormData();
+  form.append("audio", new Blob(chunks, { type: recorder.mimeType }), "speech.webm");
+  form.append("history", JSON.stringify(history.slice(-10)));      // last 10 messages = short memory
+  form.append("voice", document.getElementById("voice").value);
+  const data = await (await fetch("/talk", { method: "POST", body: form })).json();
+  status.textContent = "";
+  if (!data.heard) { status.textContent = "I didn't catch that."; return; }
+  show(data.heard, "you");
+  show(data.reply, "bot");
+  history.push({ role: "user", content: data.heard }, { role: "assistant", content: data.reply });
+  new Audio("data:audio/wav;base64," + data.audio).play();
+}
+</script>
+</body>
+</html>

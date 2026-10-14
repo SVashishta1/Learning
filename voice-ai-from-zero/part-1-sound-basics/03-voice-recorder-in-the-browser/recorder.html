@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voice recorder</title>
+<style>
+ body{font-family:system-ui;background:#10151c;color:#e8eef5;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px}
+ .box{display:grid;gap:14px;width:min(420px,100%)}
+ button{font:inherit;font-weight:700;padding:14px;border-radius:12px;border:0;cursor:pointer;background:#e5484d;color:#fff}
+ button.stop{background:#30a46c} #meter{height:14px;border-radius:7px;background:#243040;overflow:hidden} #level{height:100%;width:0;background:#3dd68c;transition:width .05s}
+ audio{width:100%} .note{color:#9aa8b8;font-size:14px}
+</style></head>
+<body><div class="box">
+ <h1 style="margin:0">🎙️ Voice recorder</h1>
+ <button id="btn">Start recording</button>
+ <div id="meter"><div id="level"></div></div>
+ <div id="list"></div>
+ <p class="note">Everything stays in your browser. The first click asks for microphone permission.</p>
+</div>
+<script>
+let recorder, chunks = [], stream, raf;
+const btn = document.getElementById("btn");
+
+btn.onclick = async () => {
+  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  stream = await navigator.mediaDevices.getUserMedia({ audio: true });     // ask for the microphone
+  recorder = new MediaRecorder(stream);                                     // the browser's built-in recorder
+  chunks = [];
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: recorder.mimeType });
+    const url = URL.createObjectURL(blob);
+    document.getElementById("list").insertAdjacentHTML("afterbegin",
+      `<p>${new Date().toLocaleTimeString()}<br><audio controls src="${url}"></audio></p>`);
+    stream.getTracks().forEach(t => t.stop());
+    cancelAnimationFrame(raf); document.getElementById("level").style.width = "0";
+    btn.textContent = "Start recording"; btn.className = "";
+  };
+  recorder.start();
+  btn.textContent = "Stop"; btn.className = "stop";
+
+  // Live volume meter: read the loudness 60 times a second
+  const ctx = new AudioContext(), analyser = ctx.createAnalyser();
+  ctx.createMediaStreamSource(stream).connect(analyser);
+  const data = new Float32Array(analyser.fftSize);
+  const tick = () => {
+    analyser.getFloatTimeDomainData(data);
+    const loudness = Math.sqrt(data.reduce((s, x) => s + x * x, 0) / data.length);
+    document.getElementById("level").style.width = Math.min(100, loudness * 400) + "%";
+    raf = requestAnimationFrame(tick);
+  };
+  tick();
+};
+</script></body></html>

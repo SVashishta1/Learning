@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Real-time Assistant</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 1rem; }
+  .msg { padding: .6rem .9rem; border-radius: 14px; margin: .4rem 0; max-width: 80%; }
+  .you { background: #2563eb; color: #fff; margin-left: auto; }
+  .bot { background: #eee; }
+  button { padding: 1rem 1.4rem; font-size: 1.1rem; border: 0; border-radius: 12px; background: #16a34a; color: #fff; }
+</style>
+</head>
+<body>
+<h1>⚡ Real-time Assistant</h1>
+<p>Use headphones. Just talk; interrupt it any time.</p>
+<button id="start">Start conversation</button> <span id="status"></span>
+<div id="chat"></div>
+
+<script>
+const audioQueue = [];
+let playing = null, botBubble = null, ignoreAudio = false;
+
+function show(text, who) {
+  const div = document.createElement("div");
+  div.className = "msg " + who;
+  div.textContent = text;
+  document.getElementById("chat").appendChild(div);
+  return div;
+}
+
+function playNext() {                         // play the answer's sentences one after another
+  if (playing || !audioQueue.length) return;
+  playing = new Audio(URL.createObjectURL(audioQueue.shift()));
+  playing.onended = () => { playing = null; playNext(); };
+  playing.play();
+}
+
+function stopTalking() {                      // you started speaking: go quiet immediately
+  audioQueue.length = 0;
+  if (playing) { playing.pause(); playing = null; }
+  ignoreAudio = true;                         // drop any old sentences still on their way
+}
+
+document.getElementById("start").onclick = async () => {
+  document.getElementById("start").disabled = true;
+  const ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onmessage = e => {
+    if (e.data instanceof Blob) {             // a WAV with one spoken sentence
+      if (!ignoreAudio) { audioQueue.push(e.data); playNext(); }
+      return;
+    }
+    const msg = JSON.parse(e.data);
+    if (msg.type === "stop") stopTalking();
+    if (msg.type === "you") { show(msg.text, "you"); botBubble = null; ignoreAudio = false; }
+    if (msg.type === "bot") { botBubble = botBubble || show("", "bot"); botBubble.textContent += msg.text + " "; }
+  };
+
+  // Microphone → 16 kHz numbers → WebSocket, 512 at a time (what Silero VAD expects)
+  const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+  const ctx = new AudioContext({ sampleRate: 16000 });
+  await ctx.resume();
+  const code = `class Mic extends AudioWorkletProcessor {
+    process(inputs) { if (inputs[0][0]) this.port.postMessage(inputs[0][0].slice()); return true; }
+  } registerProcessor("mic", Mic);`;
+  await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([code], { type: "application/javascript" })));
+  const node = new AudioWorkletNode(ctx, "mic");
+  ctx.createMediaStreamSource(mic).connect(node);
+
+  let buffer = new Float32Array(0);
+  node.port.onmessage = e => {                // the browser gives us 128 samples at a time
+    const joined = new Float32Array(buffer.length + e.data.length);
+    joined.set(buffer);
+    joined.set(e.data, buffer.length);
+    buffer = joined;
+    while (buffer.length >= 512 && ws.readyState === WebSocket.OPEN) {
+      ws.send(buffer.slice(0, 512));
+      buffer = buffer.slice(512);
+    }
+  };
+  document.getElementById("status").textContent = "🎧 listening...";
+};
+</script>
+</body>
+</html>

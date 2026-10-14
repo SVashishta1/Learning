@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Speech in the browser</title>
+<style>
+ body{font-family:system-ui;background:#11151b;color:#e8edf3;margin:0;padding:24px 16px;display:flex;justify-content:center}
+ .box{display:grid;gap:12px;width:min(640px,100%)} textarea,select{font:inherit;padding:12px;border-radius:12px;background:#1a212b;color:#e8edf3;border:1px solid #2c3746}
+ textarea{min-height:110px} button{font:inherit;font-weight:700;padding:12px;border-radius:12px;border:0;cursor:pointer;background:#2f6feb;color:#fff}
+ button.k{background:#8e4ec6} button:disabled{opacity:.5} .note{color:#9aa8b8;font-size:14px;margin:0} h2{margin:12px 0 0;font-size:18px}
+</style></head>
+<body><div class="box">
+ <h1 style="margin:0">🔊 Speech in the browser</h1>
+ <textarea id="text">Hello! This voice is made right here, inside your web browser.</textarea>
+ <h2>A · The browser's built-in voices</h2>
+ <select id="voices"></select>
+ <button id="speak">Speak with the built-in voice</button>
+ <h2>B · Kokoro, an AI voice running inside this page</h2>
+ <p class="note">Downloads ~90 MB once, then runs on your device. Natural, private and free.</p>
+ <select id="kvoice"><option>af_heart</option><option>af_bella</option><option>am_michael</option><option>bf_emma</option><option>bm_george</option></select>
+ <button class="k" id="kokoro">Speak with Kokoro</button>
+ <p class="note" id="status"></p>
+ <audio id="player" controls hidden></audio>
+</div>
+<script type="module">
+const $ = id => document.getElementById(id);
+
+// A) speechSynthesis: built into every browser, instant, uses your system's voices
+function loadVoices() {
+  $("voices").innerHTML = speechSynthesis.getVoices().map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join("");
+}
+speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
+$("speak").onclick = () => {
+  const say = new SpeechSynthesisUtterance($("text").value);
+  say.voice = speechSynthesis.getVoices()[$("voices").value];
+  say.rate = 1.0;
+  speechSynthesis.speak(say);
+};
+
+// B) Kokoro via kokoro-js: a real neural TTS model running in the page
+let tts = null;
+$("kokoro").onclick = async () => {
+  $("kokoro").disabled = true;
+  try {
+    if (!tts) {
+      $("status").textContent = "Loading Kokoro (first time only, ~90 MB)...";
+      const { KokoroTTS } = await import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm");
+      tts = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "q8", device: "wasm" });
+    }
+    $("status").textContent = "Generating speech...";
+    const start = performance.now();
+    const audio = await tts.generate($("text").value, { voice: $("kvoice").value });
+    $("player").src = URL.createObjectURL(audio.toBlob());
+    $("player").hidden = false; $("player").play();
+    $("status").textContent = `Made in ${((performance.now() - start) / 1000).toFixed(1)} s on your device.`;
+  } catch (e) { $("status").textContent = "Error: " + e.message; }
+  $("kokoro").disabled = false;
+};
+</script></body></html>
