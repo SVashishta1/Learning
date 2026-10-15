@@ -4,6 +4,9 @@ import sys
 
 import anthropic
 
+if not os.getenv("ANTHROPIC_API_KEY"):
+    sys.exit("❌ ANTHROPIC_API_KEY is not set in this terminal. See 'Get your API key' in the Part 4 README.")
+
 client = anthropic.Anthropic()                            # finds your key in the ANTHROPIC_API_KEY setting
 model = os.getenv("CLAUDE_MODEL", "claude-opus-5-5")      # which AI model to use
 question = " ".join(sys.argv[1:]) or "Explain what an API is to a 10-year-old, in 3 short sentences."
@@ -21,4 +24,5 @@ response = client.beta.messages.create(
 
 # The response is made of "blocks"; we print the text ones.
 print("".join(block.text for block in response.content if block.type == "text"))
-print(f"\n(used {response.usage.input_tokens} tokens in, {response.usage.output_tokens} tokens out)")
+print(f"\n(used {response.usage.input_tokens} tokens in, {response.usage.output_tokens} tokens out; "
+      f"stopped because: {response.stop_reason})")      # "end_turn" = finished; "max_tokens" = hit the limit

@@ -23,8 +23,11 @@ async function send(e){
   e.preventDefault(); const box = document.getElementById("box"); const text = box.value.trim(); if(!text) return;
   box.value = ""; bubble("user", text); const bot = bubble("bot", "…");
   const r = await fetch("/chat", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({chat_id: chatId, text})});
+  if(!r.ok){ bot.textContent = "⚠️ Something went wrong. Look at the terminal running uvicorn."; return; }
   const reader = r.body.getReader(), decoder = new TextDecoder(); bot.textContent = "";
-  while(true){ const {done, value} = await reader.read(); if(done) break; bot.textContent += decoder.decode(value); }
+  // read the reply piece by piece as it arrives; {stream:true} keeps emoji/accents that are split across pieces intact
+  while(true){ const {done, value} = await reader.read(); if(done) break; bot.textContent += decoder.decode(value, {stream:true}); }
+  if(!bot.textContent) bot.textContent = "⚠️ No reply. Look at the terminal running uvicorn for the error.";
 }
 fetch("/history/" + chatId).then(r => r.json()).then(msgs => msgs.forEach(m => bubble(m.role === "user" ? "user" : "bot", m.content)));
 </script></body></html>

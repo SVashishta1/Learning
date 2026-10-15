@@ -1,5 +1,5 @@
 # Teach a neural network to read handwritten digits (0-9) from 60,000 real examples (the famous MNIST dataset).
-# Takes 1-3 minutes on a normal laptop. Downloads ~12 MB of images the first time.
+# Takes a few minutes on a normal laptop (no GPU needed). Downloads ~12 MB of images the first time.
 import torch
 from torchvision import datasets, transforms
 
@@ -16,6 +16,7 @@ brain = torch.nn.Sequential(
 measure_mistake = torch.nn.CrossEntropyLoss()
 nudger = torch.optim.Adam(brain.parameters(), lr=0.001)
 
+print("Training... each lap can take a minute or more, so be patient.")
 for lap in range(1, 4):                       # 3 laps through all 60,000 pictures
     for pictures, labels in train_batches:
         mistake = measure_mistake(brain(pictures), labels)

@@ -13,6 +13,7 @@ for round_number in range(1, 61):
     w = w - step_size * direction
     if round_number in (1, 2, 3, 5, 10, 20, 40, 60):
         avg_miss = sum(abs(m) for m in mistakes) / len(mistakes)
-        print(f"round {round_number:2d}: knob = {w:.3f}   average miss = {avg_miss:.3f}  " + "■" * int(avg_miss * 5))
+        bar = "■" * min(int(avg_miss * 5), 40)        # a bar that shrinks with the mistakes (never longer than 40)
+        print(f"round {round_number:2d}: knob = {w:.3f}   average miss = {avg_miss:.3f}  {bar}")
 
 print(f"\nIt learned w = {w:.3f} (the true rule is 2). So 7 → {w * 7:.2f}")

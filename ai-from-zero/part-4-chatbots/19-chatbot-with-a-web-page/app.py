@@ -1,14 +1,15 @@
 # Your own mini ChatGPT: a web page + an API that streams replies word by word and saves chats.
 import sqlite3
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
 import ai
 
+ai.client()          # stop straight away, with a clear message, if your API key isn't set
 app = FastAPI()
-db = sqlite3.connect("chats.db", check_same_thread=False)
+db = sqlite3.connect("chats.db", check_same_thread=False)                 # the file is created on first run
 db.execute("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY, chat_id TEXT, role TEXT, content TEXT)")
 PERSONALITY = "You are a helpful, cheerful assistant. Use short paragraphs."
 
@@ -25,6 +26,8 @@ def load_chat(chat_id):
 
 @app.post("/chat")
 def chat(message: Message):
+    if not message.text.strip():
+        raise HTTPException(400, "The message is empty")
     db.execute("INSERT INTO messages (chat_id, role, content) VALUES (?, 'user', ?)", (message.chat_id, message.text))
     db.commit()
     history = load_chat(message.chat_id)

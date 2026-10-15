@@ -9,9 +9,15 @@ conversation = []          # THE MEMORY: every message so far, in order
 
 print("Chatbot ready! Type 'bye' to quit.\n")
 while True:
-    you = input("you: ").strip()
+    try:
+        you = input("you: ").strip()
+    except (EOFError, KeyboardInterrupt):    # Ctrl+D / Ctrl+C also quit, politely
+        print()
+        break
     if you.lower() in {"bye", "quit", "exit"}:
         break
+    if not you:                              # empty line: ask again (Claude rejects empty messages)
+        continue
     conversation.append({"role": "user", "content": you})
 
     print("bot: ", end="", flush=True)

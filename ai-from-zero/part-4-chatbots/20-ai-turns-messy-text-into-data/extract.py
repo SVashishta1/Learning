@@ -27,9 +27,9 @@ for text in messy_texts:
     print(f"✅ {receipt.shop:20s} {receipt.date or '?':12s} {receipt.total:8.2f} {receipt.currency}  items: {receipt.items}")
     rows.append({**receipt.model_dump(), "items": ", ".join(receipt.items)})
 
-# Save everything to a CSV file that Excel or Google Sheets can open
-with open("receipts.csv", "w", newline="") as f:
-    writer = csv.DictWriter(f, fieldnames=["shop", "date", "total", "currency", "items"])
+# Save everything to a CSV file that Excel or Google Sheets can open ("utf-8-sig" keeps € and accents readable in Excel)
+with open("receipts.csv", "w", newline="", encoding="utf-8-sig") as f:
+    writer = csv.DictWriter(f, fieldnames=list(Receipt.model_fields))   # the columns = the boxes on the form
     writer.writeheader()
     writer.writerows(rows)
 print("\nSaved receipts.csv. Open it in Excel or Google Sheets!")

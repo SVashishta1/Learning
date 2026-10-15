@@ -2,6 +2,7 @@
 # Run: copy ../14-read-handwritten-digits/digit_brain.pt here, then: uvicorn app:app --reload
 import base64
 import io
+import os
 
 import numpy as np
 import torch
@@ -11,7 +12,9 @@ from PIL import Image
 from pydantic import BaseModel
 
 brain = torch.nn.Sequential(torch.nn.Flatten(), torch.nn.Linear(784, 128), torch.nn.ReLU(), torch.nn.Linear(128, 10))
-brain.load_state_dict(torch.load("digit_brain.pt"))      # the brain you trained in project 14
+if not os.path.exists("digit_brain.pt"):
+    raise SystemExit("❌ digit_brain.pt not found. Run project 14, then copy digit_brain.pt into this folder (see README).")
+brain.load_state_dict(torch.load("digit_brain.pt", weights_only=True))      # the brain you trained in project 14
 app = FastAPI()
 
 
