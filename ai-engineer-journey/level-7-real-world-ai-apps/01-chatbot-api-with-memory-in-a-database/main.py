@@ -1,5 +1,7 @@
 """Project 7.1: a chatbot API with memory. Conversations live in a database, so the bot remembers you
 across requests and server restarts. Includes a STREAMING endpoint (words appear as they're generated)."""
+import json
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -76,7 +78,10 @@ def send_streaming(cid: int, body: UserMessage):
     """Server-Sent Events: the client receives the reply piece by piece, like ChatGPT's typing effect."""
     with Session() as db:
         conv = _load(db, cid)
-        db.add(Message(conversation_id=cid, role="user", content=body.content)); db.commit()
+        db.add(Message(conversation_id=cid, role="user", content=body.content))
+        if conv.title == "New chat":
+            conv.title = body.content[:60]
+        db.commit()
         persona, msgs = conv.persona, history(db, cid)
 
     def events():
@@ -84,7 +89,8 @@ def send_streaming(cid: int, body: UserMessage):
         with llm.stream(get_llm(), max_tokens=2000, system=persona, messages=msgs, output_config={"effort": "low"}) as s:
             for text in s.text_stream:
                 pieces.append(text)
-                yield f"data: {text}\n\n"
+                # json.dumps turns line breaks into "\n", so a multi-line piece still fits on ONE "data:" line
+                yield f"data: {json.dumps(text)}\n\n"
             final = s.get_final_message()
         with Session() as db:
             db.add(Message(conversation_id=cid, role="assistant", content="".join(pieces),

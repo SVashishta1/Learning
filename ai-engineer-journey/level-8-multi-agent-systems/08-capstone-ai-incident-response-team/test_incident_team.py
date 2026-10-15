@@ -5,12 +5,14 @@ from pathlib import Path
 import incident_team as it
 from fake_llm import FakeClient, text_reply, tool_reply
 
-if not Path("incident_data/app.log").exists():
-    subprocess.run([sys.executable, "make_incident.py"], check=True)
+if not (it.DATA / "app.log").exists():
+    subprocess.run([sys.executable, str(Path(it.__file__).with_name("make_incident.py"))], check=True)
 
 
 def test_tools_on_generated_incident():
     assert "QueuePool" in it.search_logs("QueuePool", 4)
+    assert it.search_logs("QueuePool", 4).count("\n") == 5          # header + 2 first + "..." + 2 last
+    assert "v2.13.0" in it.recent_deploys()                          # the last good version is in the history
     assert "v2.14.0" in it.recent_deploys()
     assert it.search_runbooks("database connection pool exhausted").startswith("[database_connection_pool_exhausted.md]")
 

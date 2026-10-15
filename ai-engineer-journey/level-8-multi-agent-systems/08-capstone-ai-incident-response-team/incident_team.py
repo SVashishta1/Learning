@@ -18,7 +18,8 @@ from pydantic import BaseModel, Field
 
 from agent_core import Agent, Tool, cost_report
 
-DATA, RUNBOOKS = Path("incident_data"), Path("runbooks")
+HERE = Path(__file__).parent                       # data folders sit next to this file
+DATA, RUNBOOKS = HERE / "incident_data", HERE / "runbooks"
 ACTIONS_TAKEN: list[str] = []
 
 
@@ -53,22 +54,27 @@ class RollbackIn(BaseModel):
 
 def search_logs(pattern: str, max_lines: int = 20) -> str:
     rx = re.compile(pattern, re.IGNORECASE)
-    hits = [line for line in (DATA / "app.log").read_text().splitlines() if rx.search(line)]
-    return f"{len(hits)} matching lines. First and last {max_lines // 2}:\n" + "\n".join(hits[: max_lines // 2] + ["..."] + hits[-(max_lines // 2):]) if hits else "No matches."
+    hits = [line for line in (DATA / "app.log").read_text(encoding="utf-8").splitlines() if rx.search(line)]
+    if not hits:
+        return "No matches."
+    if len(hits) <= max_lines:
+        return f"{len(hits)} matching lines:\n" + "\n".join(hits)
+    half = max(1, max_lines // 2)                       # show the first and last lines: when it started and how it is now
+    return f"{len(hits)} matching lines. First and last {half}:\n" + "\n".join(hits[:half] + ["..."] + hits[-half:])
 
 
 def get_metrics(service: str) -> str:
-    return json.dumps(json.loads((DATA / "metrics.json").read_text()).get(service, "unknown service"))
+    return json.dumps(json.loads((DATA / "metrics.json").read_text(encoding="utf-8")).get(service, "unknown service"))
 
 
 def recent_deploys() -> str:
-    return (DATA / "deploys.json").read_text()
+    return (DATA / "deploys.json").read_text(encoding="utf-8")
 
 
 def search_runbooks(query: str) -> str:
     words = set(re.findall(r"\w+", query.lower()))
-    scored = sorted(RUNBOOKS.glob("*.md"), key=lambda p: -len(words & set(re.findall(r"\w+", p.read_text().lower()))))
-    return "\n\n---\n\n".join(f"[{p.name}]\n{p.read_text()}" for p in scored[:2])
+    scored = sorted(RUNBOOKS.glob("*.md"), key=lambda p: -len(words & set(re.findall(r"\w+", p.read_text(encoding="utf-8").lower()))))
+    return "\n\n---\n\n".join(f"[{p.name}]\n{p.read_text(encoding='utf-8')}" for p in scored[:2])
 
 
 def rollback_deploy(service: str, to_version: str, reason: str) -> str:
@@ -130,7 +136,7 @@ def build_team(client=None, verbose=True, approver=None):
 
 def respond(alert: str, client=None, verbose=True, approver=None) -> tuple[str, list[Agent]]:
     triage, investigator, runbook, commander, operator, scribe = team = build_team(client, verbose, approver)
-    tri = triage.ask_structured(f"ALERT: {alert}\n\nMetrics snapshot:\n{(DATA / 'metrics.json').read_text()}", TriageResult)
+    tri = triage.ask_structured(f"ALERT: {alert}\n\nMetrics snapshot:\n{(DATA / 'metrics.json').read_text(encoding='utf-8')}", TriageResult)
 
     with ThreadPoolExecutor(max_workers=2) as pool:                  # investigation and runbook lookup in parallel
         evidence_f = pool.submit(investigator.run, f"Incident: {alert}\nTriage: {tri.model_dump_json()}\nFind the root cause.")
@@ -154,6 +160,6 @@ if __name__ == "__main__":
         raise SystemExit("Run: python make_incident.py")
     alert = "PagerDuty: checkout-api error rate 41% (threshold 2%), p95 latency 30s, since ~14:10 UTC"
     report, agents = respond(alert)
-    Path("incident_report.md").write_text(report)
+    Path("incident_report.md").write_text(report, encoding="utf-8")
     print("\n" + report + "\n\nSaved incident_report.md\n")
     print(cost_report(agents))

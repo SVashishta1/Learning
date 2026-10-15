@@ -13,6 +13,8 @@ def test_refund_policy_is_enforced_in_code():
     assert "Refunded $29.0" in st.issue_refund("INV-502", "duplicate")
     assert "manager" in st.issue_refund("INV-701", "seats")          # $249 > $50 limit -> human review
     assert db.INVOICES["INV-701"]["status"] == "paid"
+    assert "only paid invoices" in st.issue_refund("INV-502", "again")      # no double refunds
+    assert "only paid invoices" in st.issue_refund("INV-601", "unpaid")     # nothing to refund
 
 
 def test_router_sends_to_specialist_and_handoff_works():

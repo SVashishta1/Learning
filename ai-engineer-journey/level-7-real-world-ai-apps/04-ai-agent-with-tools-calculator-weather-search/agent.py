@@ -23,6 +23,10 @@ def run_agent(client, question: str, max_steps: int = 8, verbose: bool = True, w
     for step in range(1, max_steps + 1):
         response = llm.create(client, max_tokens=4000, system=SYSTEM, tools=tools, messages=messages)
         messages.append({"role": "assistant", "content": response.content})   # keep EVERYTHING the model said
+        if verbose:
+            for block in response.content:
+                if block.type == "server_tool_use":    # a search Anthropic already ran for us
+                    print(f"  🌐 step {step}: {block.name}({json.dumps(block.input)})")
 
         if response.stop_reason == "pause_turn":       # a long server-side search paused; just continue
             continue

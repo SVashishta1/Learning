@@ -15,7 +15,7 @@ from rag import Embedder, Index, answer
 
 # $ per 1M tokens (input, output). Check current prices: https://platform.claude.com/docs/en/about-claude/pricing
 PRICES = {"claude-opus-5-5": (4.0, 20.0), "claude-sonnet-5-5": (2.0, 10.0), "claude-haiku-5-5": (0.10, 0.50)}
-CASES = [json.loads(line) for line in open("eval_set.jsonl")]
+CASES = [json.loads(line) for line in open("eval_set.jsonl", encoding="utf-8")]
 
 
 # ---------- 1. Retrieval metrics (no LLM needed) ----------
@@ -60,19 +60,21 @@ def run_full(client, index, k=4) -> dict:
         total_in += result["usage"]["input_tokens"]; total_out += result["usage"]["output_tokens"]
         text = result["answer"].lower()
         if case.get("unanswerable"):
-            keyword_ok = "couldn't find" in text or "could not find" in text or "not mention" in text
+            keyword_ok = any(p in text for p in ("couldn't find", "couldn’t find", "could not find", "not mention"))
         else:
             keyword_ok = all(word.lower() in text for word in case["must_include"])
         verdict = judge(client, case, result)
         rows.append({"question": case["question"], "keyword_ok": keyword_ok, "judge_correct": verdict.correct,
                      "faithful": verdict.faithful, "latency_s": round(latency, 2), "reason": verdict.reason})
         print(f"{'✅' if verdict.correct else '❌'} {latency:4.1f}s | {case['question'][:60]}")
+    if llm.MODEL not in PRICES:
+        print(f"(No price listed for {llm.MODEL}; add it to PRICES to see the cost.)")
     price_in, price_out = PRICES.get(llm.MODEL, (0, 0))
     n = len(rows)
     return {"rows": rows, "summary": {
-        "keyword_accuracy": sum(r["keyword_ok"] for r in rows) / n,
-        "judge_accuracy": sum(r["judge_correct"] for r in rows) / n,
-        "faithfulness": sum(r["faithful"] for r in rows) / n,
+        "keyword_accuracy": round(sum(r["keyword_ok"] for r in rows) / n, 3),
+        "judge_accuracy": round(sum(r["judge_correct"] for r in rows) / n, 3),
+        "faithfulness": round(sum(r["faithful"] for r in rows) / n, 3),
         "avg_latency_s": round(sum(r["latency_s"] for r in rows) / n, 2),
         "answer_cost_usd": round((total_in * price_in + total_out * price_out) / 1e6, 4)}}
 
@@ -80,15 +82,16 @@ def run_full(client, index, k=4) -> dict:
 def main():
     print("== Retrieval experiment (offline) ==")
     print("chunk size | k | hit rate | MRR")
+    embedder = Embedder()                       # load the embedding model once and reuse it
     for size in (200, 600, 1500):
-        index = Index(Embedder()).build("docs", size=size, overlap=size // 5)
+        index = Index(embedder).build("docs", size=size, overlap=size // 5)
         for k in (1, 3):
             m = retrieval_metrics(index, k)
             print(f"{size:10d} | {k} |   {m['hit_rate']:.0%}   | {m['mrr']:.2f}")
     if "--retrieval-only" in sys.argv:
         return
     print(f"\n== Full evaluation with {llm.MODEL} ==")
-    report = run_full(llm.get_client(), Index(Embedder()).build("docs"))
+    report = run_full(llm.get_client(), Index(embedder).build("docs"))
     Path("results").mkdir(exist_ok=True)
     Path("results/report.json").write_text(json.dumps(report, indent=2))
     print("\nSUMMARY:", json.dumps(report["summary"], indent=2))

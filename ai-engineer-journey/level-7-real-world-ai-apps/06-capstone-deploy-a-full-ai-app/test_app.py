@@ -43,3 +43,32 @@ def test_upload_rejects_bad_types():
     security._calls.clear()
     with client_with([]) as c:
         assert c.post("/documents", files={"file": ("x.exe", b"MZ", "application/octet-stream")}, headers=H).status_code == 400
+
+
+def test_daily_budget_blocks_llm_calls():
+    import time
+
+    from app import security
+    security._calls.clear()
+    security._spend.update(day=time.strftime("%Y-%m-%d"), usd=security.DAILY_BUDGET_USD)   # pretend we spent it all
+    try:
+        with client_with([text_reply("never sent")]) as c:
+            assert c.post("/ask", json={"question": "hotel limit?"}, headers=H).status_code == 503
+    finally:
+        security._spend["usd"] = 0.0
+
+
+def test_llm_failure_becomes_a_clean_502():
+    import anthropic
+
+    from app import security
+    security._calls.clear()
+
+    class BrokenClient(FakeClient):
+        def _create(self, **kwargs):                       # simulate Claude's API being unreachable
+            raise anthropic.APIConnectionError(message="Connection error.", request=None)
+
+    with client_with([]) as c:
+        main.state["client"] = BrokenClient()
+        r = c.post("/ask", json={"question": "hotel limit?"}, headers=H)
+        assert r.status_code == 502 and "APIConnectionError" in r.json()["detail"]

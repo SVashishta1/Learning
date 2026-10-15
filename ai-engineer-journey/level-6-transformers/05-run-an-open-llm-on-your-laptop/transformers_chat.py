@@ -18,6 +18,7 @@ ids = tok(prompt, return_tensors="pt")
 start = time.time()
 with torch.no_grad():
     out = model.generate(**ids, max_new_tokens=80, do_sample=True, temperature=0.7, top_p=0.9)
-new_tokens = out[0][ids["input_ids"].shape[1]:]
+seconds = time.time() - start
+new_tokens = out[0][ids["input_ids"].shape[1]:]                # drop the prompt, keep only what the model wrote
 print("=== Answer ===\n" + tok.decode(new_tokens, skip_special_tokens=True))
-print(f"\n{len(new_tokens)} tokens in {time.time() - start:.1f}s = {len(new_tokens) / (time.time() - start):.1f} tokens/sec on your machine")
+print(f"\n{len(new_tokens)} tokens in {seconds:.1f}s = {len(new_tokens) / seconds:.1f} tokens/sec on your machine")

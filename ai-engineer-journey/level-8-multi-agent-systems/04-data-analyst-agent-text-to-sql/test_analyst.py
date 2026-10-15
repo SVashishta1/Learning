@@ -12,6 +12,7 @@ analyst.REVIEWER.verbose = False
 
 def test_safety_filter():
     assert analyst.is_safe_select("SELECT * FROM orders")
+    assert analyst.run_sql("DROP TABLE orders", "oops").startswith("REJECTED")
     assert not analyst.is_safe_select("DROP TABLE orders")
     assert not analyst.is_safe_select("SELECT 1; DELETE FROM orders")
 
@@ -34,5 +35,6 @@ def test_reviewer_can_fix_a_query_before_it_runs():
 
 def test_chart_is_written(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
+    analyst.REVIEWER.client = FakeClient(parsed=[analyst.Review(approved=True, problems=[], corrected_sql=None)])
     msg = analyst.make_chart("SELECT category, COUNT(*) FROM products GROUP BY category", "Products", "bar", "p.png")
     assert (tmp_path / "p.png").exists() and "Saved" in msg

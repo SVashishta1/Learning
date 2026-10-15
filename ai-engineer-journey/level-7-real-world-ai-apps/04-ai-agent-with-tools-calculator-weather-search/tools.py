@@ -8,6 +8,8 @@ from zoneinfo import ZoneInfo
 import httpx
 from pydantic import BaseModel, Field
 
+import llm
+
 
 class CalculatorInput(BaseModel):
     """Evaluate an arithmetic expression exactly. Use this for ANY maths instead of doing it in your head."""
@@ -35,13 +37,15 @@ def calculator(expression: str) -> str:
         if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
             return node.value
         if isinstance(node, ast.BinOp) and type(node.op) in _OPS:
-            if isinstance(node.op, ast.Pow) and abs(ev(node.right)) > 1000:
-                raise ValueError("exponent too large")
-            return _OPS[type(node.op)](ev(node.left), ev(node.right))
+            left, right = ev(node.left), ev(node.right)
+            if isinstance(node.op, ast.Pow) and abs(right) > 1000:
+                raise ValueError("exponent too large")          # 9 ** 9 ** 9 would freeze your computer
+            return _OPS[type(node.op)](left, right)
         if isinstance(node, ast.UnaryOp) and type(node.op) in _OPS:
             return _OPS[type(node.op)](ev(node.operand))
         raise ValueError(f"not allowed: {ast.dump(node)[:40]}")
-    return str(ev(ast.parse(expression, mode="eval").body))
+    result = ev(ast.parse(expression, mode="eval").body)
+    return str(round(result, 10) if isinstance(result, float) else result)   # 11.599999999999998 -> 11.6
 
 
 def get_weather(city: str) -> str:
@@ -63,15 +67,17 @@ REGISTRY = {"calculator": (calculator, CalculatorInput), "get_weather": (get_wea
             "get_time": (get_time, TimeInput)}
 
 
-def tool_definitions(include_web_search=True) -> list[dict]:
+def tool_definitions(include_web_search=True, model: str = llm.MODEL) -> list[dict]:
     defs = []
-    for name, (_, model) in REGISTRY.items():
-        schema = model.model_json_schema()
-        defs.append({"name": name, "description": model.__doc__.strip(),
+    for name, (_, input_model) in REGISTRY.items():
+        schema = input_model.model_json_schema()
+        defs.append({"name": name, "description": input_model.__doc__.strip(),
                      "input_schema": {"type": "object", "properties": schema["properties"], "required": schema.get("required", [])}})
     if include_web_search:
         # A SERVER tool: Anthropic runs the search for us. No code or extra API key needed on our side.
-        defs.append({"type": "web_search_20260209", "name": "web_search", "max_uses": 3})
+        # Opus/Sonnet get the newest version (it filters results smartly); Haiku uses the basic version.
+        version = "web_search_20250305" if "haiku" in model else "web_search_20260209"
+        defs.append({"type": version, "name": "web_search", "max_uses": 3})
     return defs
 
 

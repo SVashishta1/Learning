@@ -74,11 +74,11 @@ if __name__ == "__main__":
         code, name = subprocess.run(["git", "diff"], capture_output=True, text=True).stdout, "git diff"
     else:
         path = Path(sys.argv[1] if len(sys.argv) > 1 else "sample_code/user_service.py")
-        code, name = path.read_text(), path.name
+        code, name = path.read_text(encoding="utf-8"), path.name
     if not code.strip():
         sys.exit("Nothing to review.")
     report, agents = review(code)
     md = to_markdown(report, name)
-    Path("review.md").write_text(md)
+    Path("review.md").write_text(md, encoding="utf-8")
     print("\n" + md + "\n\nSaved review.md\n")
     print(cost_report(agents))

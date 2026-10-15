@@ -15,14 +15,22 @@ history = [{"role": "system", "content": "You are a friendly tutor. Keep answers
 
 print(f"Chatting with {MODEL} running on YOUR machine. Type 'quit' to exit.\n")
 while True:
-    user = input("you> ").strip()
+    try:
+        user = input("you> ").strip()
+    except (EOFError, KeyboardInterrupt):        # Ctrl+D / Ctrl+C also exit cleanly
+        break
     if user.lower() in {"quit", "exit"}:
         break
+    if not user:
+        continue
     history.append({"role": "user", "content": user})
     reply = ""
     try:
         # stream=True: tokens arrive one by one, just like ChatGPT's typing effect
         with httpx.stream("POST", URL, json={"model": MODEL, "messages": history, "stream": True}, timeout=120) as r:
+            if r.status_code != 200:                # e.g. 404 when the model hasn't been pulled yet
+                r.read()
+                sys.exit(f"Ollama error {r.status_code}: {r.text}\nTry: ollama pull {MODEL}")
             print("bot> ", end="", flush=True)
             for line in r.iter_lines():
                 if line:

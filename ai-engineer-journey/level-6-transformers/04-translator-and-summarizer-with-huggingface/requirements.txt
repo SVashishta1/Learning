@@ -1,7 +1,7 @@
 torch
 transformers
 sentencepiece
-evaluate
+sacremoses
 rouge_score
 fastapi
 uvicorn[standard]

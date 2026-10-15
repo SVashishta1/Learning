@@ -15,11 +15,11 @@ mcp = MCPServer("study-notes")
 
 
 def _load() -> list[dict]:
-    return json.loads(NOTES_FILE.read_text()) if NOTES_FILE.exists() else []
+    return json.loads(NOTES_FILE.read_text(encoding="utf-8")) if NOTES_FILE.exists() else []
 
 
 def _save(notes: list[dict]):
-    NOTES_FILE.write_text(json.dumps(notes, indent=2))
+    NOTES_FILE.write_text(json.dumps(notes, indent=2), encoding="utf-8")
 
 
 @mcp.tool()

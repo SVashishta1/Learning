@@ -10,8 +10,9 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import anthropic
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from prometheus_client import generate_latest
 from pydantic import BaseModel, Field
 
@@ -51,6 +52,13 @@ async def observe(request: Request, call_next):
     return response
 
 
+@app.exception_handler(anthropic.APIError)
+async def llm_failed(request: Request, exc: anthropic.APIError):
+    """Claude's API had a problem (overloaded, rate limited, bad key...): answer 502 'bad gateway', not a crash."""
+    log.error("llm_error", extra={"extra_fields": {"path": request.url.path, "error": type(exc).__name__}})
+    return JSONResponse(status_code=502, content={"detail": f"The AI provider failed: {type(exc).__name__}. Try again."})
+
+
 class Question(BaseModel):
     question: str = Field(min_length=3, max_length=1000)
     k: int = Field(4, ge=1, le=10)
@@ -84,7 +92,7 @@ def ask(q: Question, key: str = Depends(require_api_key)):
 
 
 @app.post("/documents", status_code=201)
-async def upload(file: UploadFile = File(...), key: str = Depends(require_api_key)):
+def upload(file: UploadFile = File(...), key: str = Depends(require_api_key)):
     name = Path(file.filename or "").name
     if Path(name).suffix.lower() not in {".pdf", ".md", ".txt"}:
         raise HTTPException(400, "Only .pdf, .md and .txt files are accepted")

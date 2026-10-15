@@ -12,7 +12,8 @@ words = ["the", "cat", "sat", "on", "the", "mat"]
 T, d_model, d_head = len(words), 8, 4
 
 # Pretend embeddings (in a real model these are learned). The two "the"s share an embedding.
-emb_table = {w: rng.normal(0, 1, d_model) for w in set(words)}
+# sorted() gives a fixed order, so the random numbers (and your output) are the same on every run.
+emb_table = {w: rng.normal(0, 1, d_model) for w in sorted(set(words))}
 X = np.stack([emb_table[w] for w in words])          # (T, d_model) = (6, 8)
 
 # Learned projection matrices (random here, trained in 6.2)

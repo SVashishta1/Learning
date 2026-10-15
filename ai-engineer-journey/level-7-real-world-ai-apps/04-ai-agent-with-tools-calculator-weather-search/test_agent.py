@@ -25,3 +25,20 @@ def test_agent_loop_runs_tool_then_answers():
 def test_agent_stops_after_max_steps():
     fake = FakeClient([tool_reply("calculator", {"expression": "1+1"}) for _ in range(10)])
     assert "maximum" in run_agent(fake, "loop forever", max_steps=3, verbose=False, web_search=False)
+
+
+def test_weather_tool_formats_the_api_reply(monkeypatch):
+    from types import SimpleNamespace
+
+    import tools
+    replies = iter([{"results": [{"name": "Rome", "country": "Italy", "latitude": 41.9, "longitude": 12.5}]},
+                    {"current": {"temperature_2m": 21.4, "wind_speed_10m": 7.2}}])
+    monkeypatch.setattr(tools.httpx, "get", lambda *a, **k: SimpleNamespace(json=lambda: next(replies)))
+    assert tools.get_weather("Rome") == "Rome, Italy: 21.4°C, wind 7.2 km/h"
+
+
+def test_web_search_version_matches_the_model():
+    from tools import tool_definitions
+    assert tool_definitions(model="claude-opus-5-5")[-1]["type"] == "web_search_20260209"
+    assert tool_definitions(model="claude-haiku-5-5")[-1]["type"] == "web_search_20250305"
+    assert all(t["name"] != "web_search" for t in tool_definitions(include_web_search=False))

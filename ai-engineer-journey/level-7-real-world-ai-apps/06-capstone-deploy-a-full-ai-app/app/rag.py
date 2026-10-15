@@ -58,9 +58,10 @@ class Embedder:
                 from sentence_transformers import SentenceTransformer
                 self.model = SentenceTransformer("all-MiniLM-L6-v2")
                 self.backend = "sentence-transformers"
-            except Exception:
+            except Exception as e:                   # not installed, or the model couldn't be downloaded
                 if backend != "auto":
                     raise
+                print(f"(No sentence-transformers model: {type(e).__name__}. Falling back to TF-IDF keyword search.)")
                 self.backend = "tfidf"
         self.vectorizer = None
 

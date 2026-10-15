@@ -48,5 +48,5 @@ if __name__ == "__main__":
                                        "questions about a company handbook with citations, aimed at recruiters, no hashtag spam")
     final, history = write_with_feedback(brief)
     print("\n" + "=" * 60 + "\nFINAL\n" + "=" * 60 + "\n" + final)
-    Path("output.md").write_text(f"# Brief\n{brief}\n\n# Scores\n{[h['score'] for h in history]}\n\n# Final\n{final}\n")
+    Path("output.md").write_text(f"# Brief\n{brief}\n\n# Scores\n{[h['score'] for h in history]}\n\n# Final\n{final}\n", encoding="utf-8")
     print("\n" + cost_report([WRITER, CRITIC]))

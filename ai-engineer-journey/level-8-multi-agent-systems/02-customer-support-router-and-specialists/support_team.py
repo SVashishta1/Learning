@@ -51,8 +51,8 @@ def issue_refund(invoice_id: str, reason: str) -> str:
     inv = db.INVOICES.get(invoice_id)
     if not inv:
         return f"No invoice {invoice_id}"
-    if inv["status"] == "refunded":
-        return "Already refunded."
+    if inv["status"] != "paid":                       # can't refund money we never received (or refunded already)
+        return f"Invoice {invoice_id} is {inv['status']}; only paid invoices can be refunded."
     if inv["amount"] > db.REFUND_AUTO_LIMIT:          # policy enforced in CODE, not just in the prompt
         db.TICKETS.append({"type": "refund_review", "invoice": invoice_id, "reason": reason})
         return f"Refund of ${inv['amount']} exceeds the ${db.REFUND_AUTO_LIMIT} auto-limit; sent to a manager (ticket #{len(db.TICKETS)})."

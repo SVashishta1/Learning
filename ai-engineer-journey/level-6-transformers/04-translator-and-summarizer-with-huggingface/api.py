@@ -1,11 +1,10 @@
 """Optional: the two models behind an API.  uvicorn api:app --reload"""
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
-from transformers import pipeline
+
+from translate_and_summarize import summarize, translate   # loads both models once, when the server starts
 
 app = FastAPI(title="Translate & summarise")
-translator = pipeline("translation", model="Helsinki-NLP/opus-mt-en-fr")
-summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 
 
 class Text(BaseModel):
@@ -13,10 +12,10 @@ class Text(BaseModel):
 
 
 @app.post("/translate")
-def translate(t: Text):
-    return {"french": translator(t.text)[0]["translation_text"]}
+def translate_endpoint(t: Text):
+    return {"french": translate(t.text)}
 
 
 @app.post("/summarize")
-def summarize(t: Text):
-    return {"summary": summarizer(t.text, max_length=80, min_length=15, do_sample=False)[0]["summary_text"]}
+def summarize_endpoint(t: Text):
+    return {"summary": summarize(t.text, max_length=80, min_length=15)}

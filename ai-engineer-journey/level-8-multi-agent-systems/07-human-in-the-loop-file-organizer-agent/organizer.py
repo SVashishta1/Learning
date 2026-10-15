@@ -18,8 +18,9 @@ from pydantic import BaseModel, Field
 
 from agent_core import Agent, Tool, cli_approver, cost_report
 
-SANDBOX = Path("workspace").resolve()
-AUDIT_LOG = Path("audit_log.jsonl")
+HERE = Path(__file__).parent                     # paths are relative to this file, not to where you run it from
+SANDBOX = (HERE / "workspace").resolve()
+AUDIT_LOG = HERE / "audit_log.jsonl"
 DRY_RUN = "--dry-run" in sys.argv
 
 
@@ -32,7 +33,7 @@ def safe_path(p: str) -> Path:
 
 
 def audit(action: str, **details):
-    with AUDIT_LOG.open("a") as f:
+    with AUDIT_LOG.open("a", encoding="utf-8") as f:
         f.write(json.dumps({"time": datetime.now().isoformat(timespec="seconds"), "action": action, "dry_run": DRY_RUN, **details}) + "\n")
 
 
@@ -51,7 +52,7 @@ def list_files(path: str) -> str:
 
 
 def read_file(path: str) -> str:
-    return safe_path(path).read_text(errors="replace")[:2000]
+    return safe_path(path).read_text(encoding="utf-8", errors="replace")[:2000]
 
 
 # ---------- tools that CHANGE things (approval required) ----------
@@ -88,7 +89,12 @@ def delete_file(path: str) -> str:
 
 
 def approver(agent, tool, args):
-    return True if DRY_RUN else cli_approver(agent, tool, args)
+    if DRY_RUN:
+        return True                                  # nothing really happens in a dry run, so no need to ask
+    allowed = cli_approver(agent, tool, args)
+    if not allowed:
+        audit("declined", tool=tool, **args)         # the log also records what the human said NO to
+    return allowed
 
 
 organizer = Agent(

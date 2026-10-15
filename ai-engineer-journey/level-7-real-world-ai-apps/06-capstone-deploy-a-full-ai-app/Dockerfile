@@ -10,4 +10,5 @@ RUN useradd --create-home appuser && chown -R appuser /srv
 USER appuser
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 2"]
+# One worker: the rate limiter, budget and metrics live in this process's memory (see "Try this" to share them)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --workers 1"]

@@ -12,7 +12,10 @@ print(f"Indexed {len(index.chunks)} chunks with the '{index.embedder.backend}' e
 client = llm.get_client()
 questions = sys.argv[1:]
 while True:
-    q = questions.pop(0) if questions else (None if sys.argv[1:] else input("question> ").strip())
+    try:
+        q = questions.pop(0) if questions else (None if sys.argv[1:] else input("question> ").strip())
+    except (EOFError, KeyboardInterrupt):      # Ctrl+D / Ctrl+C: leave quietly
+        break
     if not q:
         break
     result = answer(client, index, q)

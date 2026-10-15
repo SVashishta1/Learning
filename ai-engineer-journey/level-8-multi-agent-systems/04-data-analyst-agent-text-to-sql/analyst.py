@@ -7,6 +7,7 @@ import os
 import re
 import sqlite3
 import sys
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -37,7 +38,7 @@ class SqlIn(BaseModel):
 class ChartIn(BaseModel):
     sql: str = Field(description="SELECT returning exactly 2 columns (label, value) or 3 columns (x, series, value)")
     title: str
-    kind: str = Field(description="'bar' or 'line'")
+    kind: Literal["bar", "line"]
     filename: str = Field(description="e.g. revenue_by_month.png")
 
 
@@ -69,20 +70,26 @@ class Review(BaseModel):
     corrected_sql: str | None = Field(description="A fixed query if not approved, else null")
 
 
-def run_sql(sql: str, purpose: str, max_rows: int = 50) -> str:
+def reviewed(sql: str, purpose: str) -> tuple[str | None, str]:
+    """Safety filter + Reviewer agent. Returns (sql to run or None if rejected, a note for the Analyst)."""
     if not is_safe_select(sql):
-        return "REJECTED: only a single read-only SELECT is allowed."
+        return None, "REJECTED: only a single read-only SELECT is allowed."
     review = REVIEWER.ask_structured(f"Schema:\n{SCHEMA}\n\nQuestion: {purpose}\n\nSQL:\n{sql}", Review)
-    if not review.approved:
-        if review.corrected_sql and is_safe_select(review.corrected_sql):
-            sql = review.corrected_sql
-        else:
-            return f"Reviewer rejected the query: {review.problems}"
+    if review.approved:
+        return sql, ""
+    if review.corrected_sql and is_safe_select(review.corrected_sql):
+        return review.corrected_sql, f"(Reviewer fixed the query: {review.problems})\n"
+    return None, f"Reviewer rejected the query: {review.problems}"
+
+
+def run_sql(sql: str, purpose: str, max_rows: int = 50) -> str:
+    sql, note = reviewed(sql, purpose)          # every query is checked BEFORE it touches the database
+    if sql is None:
+        return note
     with connect_readonly() as con:
         cur = con.execute(sql)
         cols = [d[0] for d in cur.description]
         rows = cur.fetchmany(max_rows)
-    note = "" if review.approved else f"(Reviewer fixed the query: {review.problems})\n"
     return note + " | ".join(cols) + "\n" + "\n".join(" | ".join(str(v) for v in r) for r in rows)
 
 
@@ -90,8 +97,9 @@ def make_chart(sql: str, title: str, kind: str, filename: str) -> str:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    if not is_safe_select(sql):
-        return "REJECTED: only SELECT is allowed."
+    sql, note = reviewed(sql, f"Data for a chart titled '{title}'")    # charts get reviewed too
+    if sql is None:
+        return note
     with connect_readonly() as con:
         rows = con.execute(sql).fetchall()
     fig, ax = plt.subplots(figsize=(9, 4.5))
@@ -105,7 +113,7 @@ def make_chart(sql: str, title: str, kind: str, filename: str) -> str:
     ax.set_title(title); plt.xticks(rotation=45, ha="right"); plt.tight_layout()
     name = re.sub(r"[^\w.-]", "_", filename)
     fig.savefig(name, dpi=110); plt.close(fig)
-    return f"Saved chart to {name}"
+    return f"{note}Saved chart to {name}"
 
 
 SCHEMA = """customers(id, name, country, signup_date)

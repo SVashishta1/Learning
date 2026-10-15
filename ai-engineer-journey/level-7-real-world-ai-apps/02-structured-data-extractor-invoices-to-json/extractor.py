@@ -42,7 +42,7 @@ def document_content(path: Path) -> list:
         data = base64.standard_b64encode(path.read_bytes()).decode()
         return [{"type": "document", "source": {"type": "base64", "media_type": "application/pdf", "data": data}},
                 {"type": "text", "text": "Extract the invoice data from this PDF."}]
-    return [{"type": "text", "text": f"Extract the invoice data from this document:\n\n<document>\n{path.read_text()}\n</document>"}]
+    return [{"type": "text", "text": f"Extract the invoice data from this document:\n\n<document>\n{path.read_text(encoding='utf-8')}\n</document>"}]
 
 
 def check_math(inv: Invoice) -> list[str]:
@@ -77,6 +77,8 @@ if __name__ == "__main__":
         print("✅ numbers add up" if not problems else "⚠️  needs human review: " + "; ".join(problems))
         rows.append({"file": name, "vendor": inv.vendor, "date": inv.date, "currency": inv.currency,
                      "total": inv.total, "needs_review": bool(problems)})
-    with open("extracted.csv", "w", newline="") as f:
+    if not rows:
+        sys.exit("No documents found. Run it from this folder, or pass file paths.")
+    with open("extracted.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
     print("\nWrote extracted.csv. Open it in Excel or Google Sheets.")

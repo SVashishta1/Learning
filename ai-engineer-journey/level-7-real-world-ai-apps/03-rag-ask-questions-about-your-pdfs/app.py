@@ -2,7 +2,7 @@
 import shutil
 from pathlib import Path
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 import llm
@@ -24,8 +24,11 @@ def ask(q: Question):
 
 
 @app.post("/documents")
-async def upload(file: UploadFile = File(...)):
-    dest = Path("docs") / Path(file.filename).name
+def upload(file: UploadFile = File(...)):
+    name = Path(file.filename or "").name                                  # .name drops any folder path (safety)
+    if Path(name).suffix.lower() not in {".pdf", ".md", ".txt"}:
+        raise HTTPException(400, "Upload a .pdf, .md or .txt file")
+    dest = Path("docs") / name
     with dest.open("wb") as f:
         shutil.copyfileobj(file.file, f)
     state["index"] = Index(state["index"].embedder).build("docs")          # re-index (fine for small collections)

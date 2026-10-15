@@ -34,3 +34,9 @@ def test_invalid_args_become_errors():
     agent.run("add")
     result = agent.client.calls[1]["messages"][2]["content"][0]
     assert result["is_error"] is True
+
+
+def test_each_agent_can_use_its_own_model():
+    agent = make_agent([text_reply("hi")], model="claude-haiku-5-5")
+    agent.run("hello")
+    assert agent.client.calls[0]["model"] == "claude-haiku-5-5"

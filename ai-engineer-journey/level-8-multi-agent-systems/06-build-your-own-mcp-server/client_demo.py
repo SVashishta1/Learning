@@ -1,13 +1,16 @@
 """Talk to the MCP server directly (no AI involved) to see exactly what an AI app sees.  python client_demo.py"""
 import asyncio
 import sys
+from pathlib import Path
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+SERVER = str(Path(__file__).with_name("server.py"))     # works from any folder
+
 
 async def main():
-    server = StdioServerParameters(command=sys.executable, args=["server.py"])
+    server = StdioServerParameters(command=sys.executable, args=[SERVER])
     async with stdio_client(server) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()

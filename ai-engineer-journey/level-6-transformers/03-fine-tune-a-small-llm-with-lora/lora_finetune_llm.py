@@ -16,7 +16,7 @@ torch.manual_seed(0)
 
 tok = AutoTokenizer.from_pretrained(MODEL_ID)
 model = AutoModelForCausalLM.from_pretrained(MODEL_ID)
-data = [json.loads(line) for line in open("pirate_data.jsonl")]
+data = [json.loads(line) for line in open("pirate_data.jsonl", encoding="utf-8")]
 
 
 def chat(q):

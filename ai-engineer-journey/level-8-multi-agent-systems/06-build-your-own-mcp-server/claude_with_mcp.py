@@ -3,6 +3,7 @@ python claude_with_mcp.py "Add 3 flashcards about transformers, then quiz me on 
 """
 import asyncio
 import sys
+from pathlib import Path
 
 from anthropic import AsyncAnthropic
 from anthropic.lib.tools.mcp import async_mcp_tool
@@ -11,10 +12,12 @@ from mcp.client.stdio import stdio_client
 
 import llm
 
+SERVER = str(Path(__file__).with_name("server.py"))     # works from any folder
+
 
 async def main(request: str):
     client = AsyncAnthropic()
-    async with stdio_client(StdioServerParameters(command=sys.executable, args=["server.py"])) as (read, write):
+    async with stdio_client(StdioServerParameters(command=sys.executable, args=[SERVER])) as (read, write):
         async with ClientSession(read, write) as mcp_client:
             await mcp_client.initialize()
             tools = (await mcp_client.list_tools()).tools

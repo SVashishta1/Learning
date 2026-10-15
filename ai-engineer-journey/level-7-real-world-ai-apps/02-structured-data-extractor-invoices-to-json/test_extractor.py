@@ -27,3 +27,13 @@ def test_extract_uses_structured_output():
     assert inv.total == 65 and problems == []
     assert fake.calls[0]["output_format"] is Invoice              # the schema was sent to the model
     assert "plumbing" in fake.calls[0]["messages"][0]["content"][0]["text"]
+
+
+def test_api_returns_json_and_flags_bad_math():
+    from fastapi.testclient import TestClient
+
+    import api
+    api.client = FakeClient(parsed=[make([("banners", 6, 45, 207)], 207, 0, 207)])
+    r = TestClient(api.app).post("/extract", files={"file": ("note.txt", b"6 banners at $45 each, total $207", "text/plain")})
+    assert r.status_code == 200
+    assert r.json()["needs_review"] is True and "banners" in r.json()["problems"][0]

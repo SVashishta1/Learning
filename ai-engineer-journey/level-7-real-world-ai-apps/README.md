@@ -24,3 +24,5 @@ These projects call **Claude** through the official Anthropic SDK.
 Every project has a small `llm.py` helper (same in each folder) and **tests that use a fake LLM**. `pytest` runs free and offline, which is exactly how professionals test LLM apps in CI.
 
 **Read this first (20 min, best free resource on building with LLMs):** Anthropic, "Building effective agents": https://www.anthropic.com/engineering/building-effective-agents
+
+**Start here →** [7.1 · Chatbot API with memory](01-chatbot-api-with-memory-in-a-database)

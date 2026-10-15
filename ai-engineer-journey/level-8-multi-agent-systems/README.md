@@ -15,7 +15,11 @@ All projects share `agent_core.py`, a ~120-line toolkit you can read in 10 minut
 | 8.7 | [Human-in-the-loop agent](07-human-in-the-loop-file-organizer-agent) | approvals, sandboxing, audit logs | any agent that takes real actions |
 | 8.8 | [Capstone: incident responder](08-capstone-ai-incident-response-team) | full multi-agent workflow | DevOps / SRE automation |
 
-**Setup:** same as Level 7 (`ANTHROPIC_API_KEY`). Tip: `export CLAUDE_MODEL=claude-haiku-5-5` makes multi-agent runs very cheap while you learn.
+**Setup:** same as Level 7 (`ANTHROPIC_API_KEY`). Tip: `export CLAUDE_MODEL=claude-haiku-5-5` makes multi-agent runs very cheap while you learn. You can also mix models inside one team: `Agent(..., model="claude-haiku-5-5")` gives just that agent a cheaper model, and the cost report prices each agent separately.
+
+Every project has offline tests (`pytest -v`) that use a fake LLM, so you can check your setup and your changes without spending anything.
 
 **Key reading:** Anthropic, "Building effective agents" (workflows vs. agents, the five patterns used in this level): https://www.anthropic.com/engineering/building-effective-agents
 And "How we built our multi-agent research system": https://www.anthropic.com/engineering/multi-agent-research-system
+
+**Start here →** [8.1 · Writer + critic](01-writer-and-critic-reflection-loop)

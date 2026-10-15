@@ -10,11 +10,11 @@ FILES = {
 }
 
 
-def build(root="workspace/downloads"):
+def build(root=Path(__file__).parent / "workspace" / "downloads"):
     folder = Path(root)
     folder.mkdir(parents=True, exist_ok=True)
     for name, content in FILES.items():
-        (folder / name).write_text(content)
+        (folder / name).write_text(content, encoding="utf-8")
     return folder
 
 

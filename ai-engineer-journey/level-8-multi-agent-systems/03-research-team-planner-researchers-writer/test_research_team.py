@@ -19,6 +19,11 @@ def test_full_pipeline_with_parallel_researchers():
     assert report == "Report with citations [1]."
     researcher_calls = [c for c in fake.calls if "researcher" in c["system"]]
     assert len(researcher_calls) == 3
-    assert researcher_calls[0]["tools"][0]["type"] == "web_search_20260209"
+    assert researcher_calls[0]["tools"][0]["type"].startswith("web_search_")   # version depends on CLAUDE_MODEL
     writer_prompt = [c for c in fake.calls if "research briefs" in c["system"]][0]["messages"][0]["content"]
     assert "q two" in writer_prompt
+
+
+def test_web_search_version_matches_the_model():
+    assert rt.web_search_tool("claude-opus-5-5")["type"] == "web_search_20260209"
+    assert rt.web_search_tool("claude-haiku-5-5")["type"] == "web_search_20250305"
