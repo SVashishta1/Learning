@@ -1,6 +1,6 @@
 # 🚀 AI Engineer Journey: from "Hello API" to multi-agent systems
 
-**52 hands-on projects in 9 levels.** Each one is small enough to finish in an evening and builds on the last, so you gain confidence at every step. Every project folder has its own **README** (what you build, a "like you're 10" explanation, exact run steps, key ideas, "your turn" challenges, and videos to watch), its own `requirements.txt`, and (from Level 1 on, where it makes sense) **tests**.
+**52 hands-on projects in 9 levels.** Each one is small enough to finish in an evening and builds on the last, so you gain confidence at every step. Every project folder has its own **README** (what you build, a "like you're 10" explanation, why it matters, exact install and run steps with the output you should see, a step-by-step walkthrough of the code, fixes for common problems, three exercises with hints and solutions, a self-check quiz, videos to watch and a link to the next project), its own `requirements.txt`, and (from Level 1 on, where it makes sense) **tests**.
 
 ```
 Level 0  Setup ───────────────► your workbench

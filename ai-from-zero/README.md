@@ -2,7 +2,9 @@
 
 **No experience needed.** 32 small projects that take you from "what is Python?" to building chatbots, AI that answers questions about your own documents (RAG), vector databases, and teams of AI agents.
 
-Each project is **one short file** with plain-English comments and a README of the form "run this → see this → try this". The theory is kept to a sentence or two.
+Each project is **one short file** with plain-English comments. Every project README follows the same pattern, so you never get stuck on your own: what you'll build → why it matters → what you'll learn → install → run it (with the output you should see) → how the code works, step by step → fixes for common problems → three exercises with hints and solutions → a short self-check quiz → a link to the next lesson.
+
+**New here?** Open [00 · Start here](00-start-here) and follow it line by line: it installs everything you need on Windows, Mac or Linux.
 
 | Part | You'll build | Time |
 |------|-------------|------|
