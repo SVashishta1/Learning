@@ -1,1 +1,3 @@
-# nothing required! (torch is optional, only for the cross-check at the end)
+# Nothing is required: engine.py, nn.py and demo.py use plain Python.
+# Optional, only for the PyTorch cross-check at the end of demo.py:
+# torch>=2.2

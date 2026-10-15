@@ -19,8 +19,11 @@ That's it. Every model up to GPT is this loop at a bigger scale. You'll build it
 | 2.6 | [Micrograd autograd engine](06-micrograd-autograd-engine) | how `loss.backward()` really works |
 
 ```bash
-pip install numpy matplotlib torch   # torch is only needed for 2.5 and 2.6
+pip install numpy matplotlib torch   # matplotlib is for 2.4's picture; torch is for 2.5 (and optional in 2.6)
 ```
+Each project folder also has its own `requirements.txt`, so `pip install -r requirements.txt` inside a folder installs just what that project needs. No API keys, no GPU: everything here runs on any laptop in seconds.
 
 **The one playlist for this level:** Karpathy's *Neural Networks: Zero to Hero* https://www.youtube.com/playlist?list=PLAqhIrjkxbuWI23v9cThsA9GvCAUhRvKZ
 **Visual intuition:** 3Blue1Brown's neural network series https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi
+
+**Finish line for Level 2:** your NumPy backprop matches PyTorch (2.5) and your own autograd engine trains a network (2.6). Then go to [Level 3 · Classic ML](../level-3-classic-ml).

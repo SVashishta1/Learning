@@ -11,7 +11,7 @@ Y = np.array([[0], [1], [1], [0]], dtype=float)
 
 sigmoid = lambda z: 1 / (1 + np.exp(-z))
 
-# Random small starting weights
+# Random starting weights (from a bell curve around 0). Learning will tune them.
 W1, b1 = rng.normal(0, 1, (2, 4)), np.zeros(4)   # 2 inputs -> 4 hidden
 W2, b2 = rng.normal(0, 1, (4, 1)), np.zeros(1)   # 4 hidden -> 1 output
 
@@ -43,13 +43,22 @@ def backward(X, Y, h, p, W2):
 
 
 # ---- Gradient check: compare our calculus with the "nudge" method from 2.1 ----
+# For every weight in W1: nudge it up a tiny bit, then down, and see how the loss changes.
 _, h, _, p = forward(X, W1, b1, W2, b2)
 dW1, *_ = backward(X, Y, h, p, W2)
 eps = 1e-6
-W1_plus = W1.copy(); W1_plus[0, 0] += eps
-numeric = (loss_fn(forward(X, W1_plus, b1, W2, b2)[3], Y) - loss_fn(p, Y)) / eps
-print(f"gradient check W1[0,0]: by hand {dW1[0, 0]:.6f} vs nudge {numeric:.6f}")
-assert abs(dW1[0, 0] - numeric) < 1e-4, "backprop has a bug!"
+worst = 0.0
+for i, j in np.ndindex(W1.shape):          # every (row, column) position in W1
+    W1_up, W1_down = W1.copy(), W1.copy()
+    W1_up[i, j] += eps
+    W1_down[i, j] -= eps
+    loss_up = loss_fn(forward(X, W1_up, b1, W2, b2)[3], Y)
+    loss_down = loss_fn(forward(X, W1_down, b1, W2, b2)[3], Y)
+    numeric = (loss_up - loss_down) / (2 * eps)          # "rise over run", measured on both sides
+    worst = max(worst, abs(dW1[i, j] - numeric))
+    print(f"gradient check W1[{i},{j}]: by hand {dW1[i, j]:+.6f} | nudge {numeric:+.6f}")
+print(f"biggest difference: {worst:.1e}")
+assert worst < 1e-7, "backprop has a bug!"
 
 # ---- Training loop ----
 lr = 2.0

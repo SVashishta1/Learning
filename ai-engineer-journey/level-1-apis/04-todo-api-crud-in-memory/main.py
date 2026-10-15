@@ -55,7 +55,8 @@ def get_todo(todo_id: int):
 @app.patch("/todos/{todo_id}", response_model=Todo)            # U: update
 def update_todo(todo_id: int, changes: TodoUpdate):
     todo = find(todo_id)
-    for field, value in changes.model_dump(exclude_unset=True).items():
+    # exclude_unset: only fields the client actually sent. exclude_none: treat null as "leave it alone".
+    for field, value in changes.model_dump(exclude_unset=True, exclude_none=True).items():
         setattr(todo, field, value)
     return todo
 

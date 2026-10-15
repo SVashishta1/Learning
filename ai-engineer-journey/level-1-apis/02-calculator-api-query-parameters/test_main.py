@@ -20,3 +20,15 @@ def test_divide_by_zero_is_a_400():
 def test_missing_parameter_is_a_422():
     # FastAPI validates inputs for free: 422 means "your input has the wrong shape"
     assert client.get("/add?a=2").status_code == 422
+
+
+def test_wrong_type_is_a_422():
+    # "hello" is not a number, so FastAPI rejects it before our function even runs
+    assert client.get("/add?a=hello&b=3").status_code == 422
+
+
+def test_too_big_result_is_a_400():
+    # 1e308 * 10 is bigger than the largest float, so the answer would be "infinity"
+    r = client.get("/multiply", params={"a": 1e308, "b": 10})
+    assert r.status_code == 400
+    assert r.json()["detail"] == "Result is not a finite number"

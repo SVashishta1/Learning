@@ -9,7 +9,11 @@ FORECAST_URL = "https://api.open-meteo.com/v1/forecast"   # free, no API key nee
 
 
 class WeatherError(Exception):
-    pass
+    """The weather service failed (down, too slow, or sent an error)."""
+
+
+class CityNotFound(WeatherError):
+    """The geocoding service has never heard of this city."""
 
 
 class WeatherClient:
@@ -27,7 +31,7 @@ class WeatherClient:
                 self.calls_made += 1
                 r = self.http.get(url, params=params)
                 if r.status_code >= 500:            # server hiccup -> worth retrying
-                    raise httpx.HTTPStatusError("server error", request=r.request, response=r)
+                    raise httpx.HTTPStatusError(f"server error {r.status_code}", request=r.request, response=r)
                 r.raise_for_status()                 # 4xx -> our mistake, don't retry
                 return r.json()
             except (httpx.TransportError, httpx.HTTPStatusError) as e:
@@ -35,7 +39,7 @@ class WeatherClient:
                 if is_client_error or attempt == self.retries:
                     raise WeatherError(f"Weather service failed: {e}") from e
                 time.sleep(0.2 * 2 ** attempt)       # exponential backoff: 0.4s, 0.8s, ...
-        raise WeatherError("unreachable")
+        raise WeatherError("retries must be at least 1")   # only reached if retries=0
 
     def current(self, city: str) -> dict:
         key = city.strip().lower()
@@ -45,7 +49,7 @@ class WeatherClient:
 
         places = self._get(GEOCODE_URL, {"name": city, "count": 1}).get("results") or []
         if not places:
-            raise WeatherError(f"City '{city}' not found")
+            raise CityNotFound(f"City '{city}' not found")
         p = places[0]
         data = self._get(FORECAST_URL, {"latitude": p["latitude"], "longitude": p["longitude"],
                                         "current": "temperature_2m,wind_speed_10m"})

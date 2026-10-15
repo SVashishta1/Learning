@@ -7,14 +7,14 @@ import numpy as np
 
 
 class Layer:
-    params: list = []
+    params = ()                        # layers without weights (ReLU, Tanh, Sigmoid) have nothing to learn
     def forward(self, x): raise NotImplementedError
     def backward(self, grad): raise NotImplementedError
 
 
 class Linear(Layer):
     def __init__(self, n_in, n_out, rng):
-        # "He/Xavier-style" init: scale random weights so signals don't explode or vanish
+        # Xavier (Glorot) init: scale random weights by layer size so signals don't explode or vanish
         self.W = rng.normal(0, np.sqrt(2 / (n_in + n_out)), (n_in, n_out))
         self.b = np.zeros(n_out)
         self.params = [self.W, self.b]

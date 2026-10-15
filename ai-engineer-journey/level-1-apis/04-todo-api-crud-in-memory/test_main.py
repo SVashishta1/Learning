@@ -23,3 +23,14 @@ def test_full_crud_lifecycle():
 
 def test_empty_title_rejected():
     assert client.post("/todos", json={"title": ""}).status_code == 422
+
+
+def test_patch_only_changes_what_you_send():
+    tid = client.post("/todos", json={"title": "keep me"}).json()["id"]
+    r = client.patch(f"/todos/{tid}", json={"title": None, "done": True})   # null = "leave it alone"
+    assert r.json()["title"] == "keep me" and r.json()["done"] is True
+
+
+def test_missing_todo_is_404():
+    assert client.get("/todos/9999").status_code == 404
+    assert client.delete("/todos/9999").status_code == 404

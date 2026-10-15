@@ -3,7 +3,7 @@ import tempfile
 
 os.environ["DATABASE_URL"] = f"sqlite:///{tempfile.mkdtemp()}/test.db"
 from fastapi.testclient import TestClient  # noqa: E402
-from main import app  # noqa: E402
+from main import app, fix_db_url  # noqa: E402
 
 client = TestClient(app)
 
@@ -33,3 +33,20 @@ def test_wrong_password_and_missing_token():
 def test_duplicate_username():
     client.post("/signup", json={"username": "dup", "password": "password123"})
     assert client.post("/signup", json={"username": "dup", "password": "password123"}).status_code == 409
+
+
+def test_password_rules():
+    # 40 x "é" is only 40 characters but 80 bytes: too long for bcrypt, so a clean 422 (not a crash)
+    assert client.post("/signup", json={"username": "emo", "password": "é" * 40}).status_code == 422
+    assert client.post("/signup", json={"username": "short", "password": "abc"}).status_code == 422
+    assert login("short", "x" * 100).status_code == 401      # absurdly long login attempt: 401, not 500
+
+
+def test_todos_need_a_token():
+    assert client.post("/todos", json={"title": "sneaky"}).status_code == 401
+
+
+def test_fix_db_url():
+    assert fix_db_url("postgresql://u:p@host/db") == "postgresql+psycopg://u:p@host/db"
+    assert fix_db_url("postgres://u:p@host/db") == "postgresql+psycopg://u:p@host/db"
+    assert fix_db_url("sqlite:///./app.db") == "sqlite:///./app.db"

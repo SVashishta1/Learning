@@ -1,15 +1,26 @@
-"""Project 1.6: sign up, log in, and get your OWN private to-do list."""
+"""Project 1.7: the login + private to-do API from 1.6, packed for Docker and the cloud (same code)."""
 import os
 
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import ForeignKey, String, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
-from security import create_token, hash_password, read_token, verify_password
+from security import MAX_PASSWORD_BYTES, create_token, hash_password, read_token, verify_password
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+
+def fix_db_url(url: str) -> str:
+    """Cloud hosts (Render, Railway, Heroku) give URLs like postgresql://... or postgres://...
+    SQLAlchemy doesn't understand postgres://, and SQLAlchemy 2.0 would look for the old psycopg2 driver
+    on postgresql://. Saying postgresql+psycopg:// always picks psycopg 3, the driver we installed."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+DATABASE_URL = fix_db_url(os.getenv("DATABASE_URL", "sqlite:///./app.db"))
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {})
 SessionLocal = sessionmaker(bind=engine)
 
@@ -59,6 +70,14 @@ def current_user(token: str = Depends(oauth2), db: Session = Depends(get_db)) ->
 class SignUp(BaseModel):
     username: str = Field(min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_]+$")
     password: str = Field(min_length=8, max_length=72)
+
+    @field_validator("password")
+    @classmethod
+    def fits_in_bcrypt(cls, value: str) -> str:
+        # 72 characters can be more than 72 bytes (é = 2 bytes, emoji = 4), and bcrypt only accepts 72 bytes
+        if len(value.encode()) > MAX_PASSWORD_BYTES:
+            raise ValueError(f"password must be at most {MAX_PASSWORD_BYTES} bytes")
+        return value
 
 
 class TodoIn(BaseModel):

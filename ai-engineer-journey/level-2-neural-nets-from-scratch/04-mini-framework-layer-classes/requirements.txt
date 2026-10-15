@@ -1,2 +1,2 @@
-numpy
-matplotlib
+numpy>=1.26               # fast arrays and matrix maths
+matplotlib>=3.8           # draws moons_boundary.png (optional: the script still runs without it)

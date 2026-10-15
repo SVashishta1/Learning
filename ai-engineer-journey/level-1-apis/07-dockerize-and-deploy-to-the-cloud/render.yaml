@@ -1,17 +1,25 @@
-# Render "Blueprint": creates the web service + a free Postgres database from this file.
+# Render "Blueprint": creates the web service + a free Postgres database from this one file.
+# Docs: https://render.com/docs/blueprint-spec
 services:
   - type: web
     name: login-todo-api
-    runtime: docker
+    runtime: docker                 # build the Dockerfile instead of guessing how to run Python
     plan: free
-    healthCheckPath: /health
+    # This repo holds many projects, so tell Render which folder is this app.
+    # dockerfilePath and dockerContext are relative to rootDir.
+    rootDir: ai-engineer-journey/level-1-apis/07-dockerize-and-deploy-to-the-cloud
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health        # Render pings this to know the app is alive
     envVars:
       - key: SECRET_KEY
-        generateValue: true
+        generateValue: true         # Render makes a long random secret for you
       - key: DATABASE_URL
-        fromDatabase:
+        fromDatabase:               # copy the connection URL of the database below
           name: login-todo-db
           property: connectionString
+
 databases:
   - name: login-todo-db
     plan: free
+    ipAllowList: []                 # only your Render services can connect, not the whole internet

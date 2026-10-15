@@ -54,7 +54,8 @@ def get_joke(joke_id: int):
 
 @app.post("/jokes", status_code=201)
 def add_joke(joke: NewJoke):
-    new = {"id": max(j["id"] for j in JOKES) + 1, **joke.model_dump()}
+    # New id = biggest id so far + 1 (default=0 keeps this working even if the list is empty)
+    new = {"id": max((j["id"] for j in JOKES), default=0) + 1, **joke.model_dump()}
     JOKES.append(new)
     return new
 

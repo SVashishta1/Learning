@@ -3,9 +3,6 @@
 The student's rule is:   prediction = w * x
 We start with a silly guess (w = 0.5) and let the mistakes teach us.
 """
-import random
-
-random.seed(0)
 data = [(x, 2 * x) for x in [1, 2, 3, 4, 5]]   # the answers we want to learn from
 
 

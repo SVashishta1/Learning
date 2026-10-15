@@ -4,7 +4,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-# Default: a file called todos.db next to this script. For Postgres, set e.g.
+# Default: a file called todos.db in the folder you start the server from. For Postgres, set e.g.
 #   DATABASE_URL=postgresql+psycopg://todo:todo@localhost:5432/todos
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./todos.db")
 

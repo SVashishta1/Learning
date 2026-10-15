@@ -16,4 +16,8 @@ Every AI product you'll build later (chatbots, RAG apps, agents) sits behind an 
 | 1.7 | [Dockerize & deploy](07-dockerize-and-deploy-to-the-cloud) | containers, env vars, cloud deploy |
 | 1.8 | [Call other APIs](08-weather-proxy-calling-other-apis) | being a *client*: timeouts, retries, caching (exactly what LLM APIs need) |
 
-**Finish line for Level 1:** your login + to-do API is live on a public URL. 🎉
+**How each project works:** `cd` into its folder, `pip install -r requirements.txt` (with your venv from 0.1 active), start it with `uvicorn main:app --reload`, play with it at http://127.0.0.1:8000/docs, and run `pytest -v` (from 1.2 on). No API keys are needed anywhere in this level.
+
+**Extra tools:** Docker Desktop for 1.5 Part B (or an installed PostgreSQL) and for 1.7; a free Render account for deploying in 1.7.
+
+**Finish line for Level 1:** your login + to-do API is live on a public URL. 🎉 Then go to [Level 2 · Neural nets from scratch](../level-2-neural-nets-from-scratch).

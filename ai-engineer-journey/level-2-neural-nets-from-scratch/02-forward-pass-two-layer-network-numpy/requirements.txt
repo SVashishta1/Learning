@@ -1,1 +1,1 @@
-numpy
+numpy>=1.26               # fast arrays and matrix maths

@@ -38,6 +38,7 @@ class Value:
         return out
 
     def __pow__(self, k):
+        assert isinstance(k, (int, float)), "only plain-number powers, like x ** 2 or x ** -1"
         out = Value(self.data ** k, (self,), f"**{k}")
         def _backward():
             self.grad += k * self.data ** (k - 1) * out.grad
@@ -66,6 +67,7 @@ class Value:
     def __rmul__(self, other): return self * other
     def __rsub__(self, other): return Value(other) - self
     def __truediv__(self, other): return self * (other ** -1 if isinstance(other, Value) else 1 / other)
+    def __rtruediv__(self, other): return other * self ** -1      # so 2 / x works too
 
     def backward(self):
         # 1. topological sort: make sure we process a node only after everything that USES it

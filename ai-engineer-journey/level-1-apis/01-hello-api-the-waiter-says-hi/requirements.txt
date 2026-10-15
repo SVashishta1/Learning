@@ -1,2 +1,2 @@
-fastapi
-uvicorn[standard]
+fastapi>=0.115            # the web framework that turns Python functions into API routes
+uvicorn[standard]>=0.30   # the server that runs your app (uvicorn main:app)

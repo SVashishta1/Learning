@@ -1,5 +1,6 @@
-__pycache__
-*.db
+# Files Docker should NOT copy into the image (** = in any folder)
+**/__pycache__
+**/*.db
+**/.pytest_cache
 .venv
 .env
-.pytest_cache

@@ -1,1 +1,3 @@
-# install inside Docker from app/requirements.txt; for local tests: pip install -r app/requirements.txt
+# The app's packages live in app/requirements.txt (that's the file the Dockerfile installs).
+# To run the tests on your own computer instead of in Docker:  pip install -r app/requirements.txt
+-r app/requirements.txt

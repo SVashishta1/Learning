@@ -1,2 +1,2 @@
-numpy
-torch
+numpy>=1.26               # fast arrays and matrix maths
+torch>=2.2                # PyTorch (the CPU version is fine)

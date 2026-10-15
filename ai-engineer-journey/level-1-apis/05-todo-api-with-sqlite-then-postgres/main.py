@@ -61,7 +61,8 @@ def get_todo(todo_id: int, db: Session = Depends(get_db)):
 @app.patch("/todos/{todo_id}", response_model=Todo)
 def update_todo(todo_id: int, changes: TodoUpdate, db: Session = Depends(get_db)):
     row = find(db, todo_id)
-    for field, value in changes.model_dump(exclude_unset=True).items():
+    # exclude_unset: only fields the client actually sent. exclude_none: treat null as "leave it alone".
+    for field, value in changes.model_dump(exclude_unset=True, exclude_none=True).items():
         setattr(row, field, value)
     db.commit()
     db.refresh(row)

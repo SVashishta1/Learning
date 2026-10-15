@@ -6,7 +6,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg://app:app@db:5432/app   # "db" = the service name below
-      SECRET_KEY: ${SECRET_KEY:-change-me-locally}
+      SECRET_KEY: ${SECRET_KEY:-local-dev-secret-change-me-in-production}
     depends_on:
       db:
         condition: service_healthy
