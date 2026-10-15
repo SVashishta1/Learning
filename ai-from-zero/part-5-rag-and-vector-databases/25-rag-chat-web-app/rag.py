@@ -18,12 +18,21 @@ def read_file(path: Path) -> str:
 
 def cut_into_chunks(text: str, size: int = 500) -> list[str]:
     """Split text into pieces of about `size` characters, without cutting paragraphs in half when possible."""
+    pieces = []
+    for paragraph in text.split("\n\n"):               # a blank line = a new paragraph
+        while len(paragraph) > size:                    # too long (PDFs often have no blank lines): cut at a space
+            cut = paragraph.rfind(" ", 0, size)
+            cut = cut if cut > 0 else size
+            pieces.append(paragraph[:cut])
+            paragraph = paragraph[cut:].lstrip()
+        pieces.append(paragraph)
+
     chunks, current = [], ""
-    for paragraph in text.split("\n\n"):
-        if len(current) + len(paragraph) > size and current:
+    for piece in pieces:                                # glue small pieces together until a chunk is full
+        if len(current) + len(piece) > size and current.strip():
             chunks.append(current.strip())
             current = ""
-        current += paragraph + "\n\n"
+        current += piece + "\n\n"
     if current.strip():
         chunks.append(current.strip())
     return chunks
@@ -31,9 +40,11 @@ def cut_into_chunks(text: str, size: int = 500) -> list[str]:
 
 def add_document(path: Path) -> int:
     chunks = cut_into_chunks(read_file(path))
-    library.upsert(ids=[f"{path.name}-{i}" for i in range(len(chunks))],     # same id again = replace, not duplicate
-                   documents=chunks,
-                   metadatas=[{"source": path.name} for _ in chunks])
+    library.delete(where={"source": path.name})        # forget this file's old chunks (it may have changed)
+    if chunks:                                          # a scanned PDF (only pictures, no text) gives 0 chunks
+        library.upsert(ids=[f"{path.name}-{i}" for i in range(len(chunks))],
+                       documents=chunks,
+                       metadatas=[{"source": path.name} for _ in chunks])
     return len(chunks)
 
 
@@ -44,6 +55,8 @@ def add_folder(folder: str = "docs"):
 
 
 def find_relevant(question: str, how_many: int = 4) -> list[dict]:
+    if library.count() == 0:                            # empty library: nothing to search
+        return []
     found = library.query(query_texts=[question], n_results=min(how_many, library.count()))
     return [{"text": text, "source": meta["source"]} for text, meta in zip(found["documents"][0], found["metadatas"][0])]
 

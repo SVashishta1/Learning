@@ -30,7 +30,7 @@ def as_vector(numbers) -> str:
 def add_folder(folder="docs"):
     db.execute("DELETE FROM chunks")                                # start fresh each run (simple for learning)
     for path in sorted(Path(folder).glob("*.md")) + sorted(Path(folder).glob("*.txt")):
-        pieces = [p.strip() for p in path.read_text().split("\n\n") if p.strip()]
+        pieces = [p.strip() for p in path.read_text(encoding="utf-8").split("\n\n") if p.strip()]   # 1 paragraph = 1 chunk
         for piece, vector in zip(pieces, embed(pieces)):
             db.execute("INSERT INTO chunks (source, content, embedding) VALUES (%s, %s, %s::vector)",
                        (path.name, piece, as_vector(vector)))
@@ -42,7 +42,7 @@ def find_relevant(question, how_many=4):
     # <=> is pgvector's "cosine distance" operator: smaller = more similar. It's plain SQL!
     rows = db.execute("""SELECT source, content, 1 - (embedding <=> %s::vector) AS similarity
                          FROM chunks ORDER BY embedding <=> %s::vector LIMIT %s""", (q, q, how_many)).fetchall()
-    return [{"source": s, "text": t, "similarity": round(sim, 2)} for s, t, sim in rows]
+    return [{"source": s, "text": t, "similarity": sim} for s, t, sim in rows]
 
 
 if __name__ == "__main__":
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     question = " ".join(sys.argv[1:]) or "What is the hotel limit in Paris, and how fast must I submit receipts?"
     sources = find_relevant(question)
     for s in sources:
-        print(f"   {s['similarity']}  [{s['source']}] {s['text'][:70].replace(chr(10), ' ')}...")
+        print(f"   {s['similarity']:.2f}  [{s['source']}] {s['text'][:70].replace(chr(10), ' ')}...")
     numbered = "\n\n".join(f"[{n}] {s['text']}" for n, s in enumerate(sources, start=1))
     print("\n💬", ai.ask(f"<sources>\n{numbered}\n</sources>\n\nQuestion: {question}",
                          system="Answer using ONLY the numbered sources and cite them like [1]. If they don't contain the answer, say so."))

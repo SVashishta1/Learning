@@ -2,7 +2,7 @@
 import shutil
 from pathlib import Path
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -28,7 +28,9 @@ def ask(q: Question):
 
 @app.post("/upload")
 def upload(file: UploadFile = File(...)):
-    path = Path("docs") / Path(file.filename).name
+    path = Path("docs") / Path(file.filename or "").name     # .name drops any folder part, for safety
+    if path.suffix.lower() not in {".pdf", ".txt", ".md"}:
+        raise HTTPException(400, "Please upload a .pdf, .txt or .md file.")
     with path.open("wb") as f:
         shutil.copyfileobj(file.file, f)
     return {"file": path.name, "chunks": rag.add_document(path)}

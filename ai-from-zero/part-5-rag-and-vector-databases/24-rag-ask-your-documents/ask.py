@@ -4,16 +4,24 @@ import sys
 
 import rag
 
+
+def ask_and_show(question):
+    reply, sources = rag.answer(question)
+    print(f"\n💬 {reply}\n")
+    for n, s in enumerate(sources, start=1):            # show which chunks the answer was based on
+        preview = s["text"][:80].replace("\n", " ")
+        print(f"   [{n}] {s['source']}: {preview}...")
+    print()
+
+
 rag.add_folder("docs")
 print(f"\n✅ {rag.library.count()} chunks stored in the vector database.\n")
 
-questions = sys.argv[1:]
-while True:
-    question = questions.pop(0) if questions else (None if sys.argv[1:] else input("❓ Your question (Enter to quit): ").strip())
-    if not question:
-        break
-    reply, sources = rag.answer(question)
-    print(f"\n💬 {reply}\n")
-    for n, s in enumerate(sources, start=1):
-        print(f"   [{n}] {s['source']}: {s['text'][:80]}...")
-    print()
+if len(sys.argv) > 1:                                   # a question was typed after "python ask.py"
+    ask_and_show(" ".join(sys.argv[1:]))
+else:                                                   # no question given: keep asking until you press Enter
+    while True:
+        question = input("❓ Your question (Enter to quit): ").strip()
+        if not question:
+            break
+        ask_and_show(question)

@@ -15,7 +15,10 @@ def tool(function, description, inputs):
                          "required": list(inputs)}}}
 
 
-WEB_SEARCH = {"type": "web_search_20260209", "name": "web_search", "max_uses": 3}   # Claude's built-in web search
+# Claude's built-in web search (it runs on Anthropic's side, you don't write any code for it).
+# Haiku models use the basic version of the tool; the bigger models use the newer, smarter one.
+WEB_SEARCH = {"type": "web_search_20250305" if "haiku" in ai.MODEL else "web_search_20260209",
+              "name": "web_search", "max_uses": 3}
 
 
 def run_agent(task, tools=(), system="You are a helpful assistant.", name="Agent", web_search=False,
@@ -29,17 +32,23 @@ def run_agent(task, tools=(), system="You are a helpful assistant.", name="Agent
     for step in range(max_steps):
         response = ai.send(messages=messages, system=system, max_tokens=4000, **({"tools": definitions} if definitions else {}))
         messages.append({"role": "assistant", "content": response.content})
+        for block in response.content:
+            if block.type == "server_tool_use":             # Claude used a built-in tool (web search) on its own side
+                say(f"   🌐 {name} used {block.name}({json.dumps(block.input)})")
+                if trace is not None:
+                    trace.append(f"{block.name}({json.dumps(block.input)})")
 
         if response.stop_reason == "pause_turn":           # a long web search paused; let it continue
             continue
         if response.stop_reason != "tool_use":              # no tools wanted -> this is the final answer
-            return "".join(b.text for b in response.content if b.type == "text")
+            answer = "".join(b.text for b in response.content if b.type == "text")
+            return answer or f"(No answer. The AI stopped because: {response.stop_reason})"
 
         results = []
         for block in response.content:
             if block.type != "tool_use":
                 continue
-            if block.name in needs_approval and input(f"   ⚠️  {name} wants to run {block.name}({json.dumps(block.input)}). Allow? [y/N] ").lower() != "y":
+            if block.name in needs_approval and input(f"   ⚠️  {name} wants to run {block.name}({json.dumps(block.input)}). Allow? [y/N] ").strip().lower() != "y":
                 output = "The human said NO. Don't do this; explain or try something else."
             else:
                 try:

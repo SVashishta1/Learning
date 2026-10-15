@@ -9,7 +9,11 @@ def calculate(expression):
     allowed = set("0123456789+-*/(). ")
     if not set(expression) <= allowed:                  # safety: only digits and maths symbols
         return "Error: only numbers and + - * / ( ) are allowed"
-    return str(eval(expression))
+    try:
+        result = eval(expression)                       # eval() runs the text as Python maths: "2*3" -> 6
+        return str(round(result, 10))                   # hide tiny computer rounding errors like 12.499999999999998
+    except Exception as error:                          # e.g. dividing by zero: tell the AI instead of crashing
+        return f"Error: {error}"
 
 
 # 2. DESCRIBE the tool so the AI knows it exists and how to call it

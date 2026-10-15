@@ -35,9 +35,9 @@ with ThreadPoolExecutor() as pool:
 all_notes = "\n\n".join(f"## {q}\n{n}" for q, n in zip(plan.questions, notes))
 
 # 3. WRITER
-report = ai.ask(f"Topic: {topic}\n\nResearch notes:\n{all_notes}\n\nWrite the report.", max_tokens=4000,
+report = ai.ask(f"Topic: {topic}\n\nResearch notes:\n{all_notes}\n\nWrite the report.", max_tokens=8000,
                 system="You write clear, friendly reports for beginners: a short summary, then sections, then a list of sources. "
                        "Use only facts from the notes.")
-with open("report.md", "w") as f:
+with open("report.md", "w", encoding="utf-8") as f:
     f.write(report)
 print(f"\n{report}\n\n📄 Saved to report.md")

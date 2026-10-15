@@ -33,9 +33,12 @@ function bubble(cls, text, who, tools){ const d=document.createElement("div"); d
   const log=document.getElementById("log"); log.appendChild(d); log.scrollTop=log.scrollHeight; return d; }
 async function refreshTasks(){ const d=await (await fetch("/tasks")).json(); document.getElementById("tasks").textContent="✅ To-do list\n\n"+d.tasks; }
 async function ask(text){ text=text.trim(); if(!text) return; bubble("user", text); const wait=bubble("bot","The team is thinking…");
-  const d=await (await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})})).json();
-  wait.remove(); bubble("bot", d.reply, ICON[d.specialist], d.tools_used); refreshTasks(); }
+  const r=await fetch("/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+  wait.remove(); if(!r.ok){ bubble("bot","⚠️ Something went wrong. Look at the terminal where uvicorn is running."); return; }
+  const d=await r.json(); bubble("bot", d.reply, ICON[d.specialist], d.tools_used); refreshTasks(); }
 document.getElementById("file").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; const fd=new FormData(); fd.append("file",f);
-  const d=await (await fetch("/upload",{method:"POST",body:fd})).json(); bubble("bot","Added "+d.file+" to your library ("+d.chunks+" chunks).","📚 Librarian"); };
+  const r=await fetch("/upload",{method:"POST",body:fd}); const d=await r.json(); e.target.value="";
+  if(!r.ok){ bubble("bot","⚠️ "+(d.detail||"Upload failed.")); return; }
+  bubble("bot","Added "+d.file+" to your library ("+d.chunks+" chunks).","📚 Librarian"); };
 refreshTasks();
 </script></body></html>

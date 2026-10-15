@@ -26,8 +26,8 @@ def refund_order(order_id, amount):
     order = ORDERS.get(order_id.upper())
     if not order:
         return "No order with that number"
-    if float(amount) > order["price"]:
-        return f"Refused: can't refund more than the order price (${order['price']})"
+    if not 0 < float(amount) <= order["price"]:          # a rule in CODE: the AI can't talk its way past it
+        return f"Refused: a refund must be more than $0 and at most the order price (${order['price']})"
     order["status"] += f", refunded ${amount}"
     return f"Refunded ${amount} for {order_id}"
 

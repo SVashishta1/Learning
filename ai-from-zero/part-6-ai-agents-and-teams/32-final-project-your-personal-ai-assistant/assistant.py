@@ -20,14 +20,30 @@ library = chromadb.PersistentClient(path="chroma_data").get_or_create_collection
 
 
 def add_document(path: Path) -> int:
-    text = "\n".join(p.extract_text() or "" for p in PdfReader(path).pages) if path.suffix == ".pdf" else path.read_text()
-    chunks = [c.strip() for c in text.split("\n\n") if c.strip()]
-    library.upsert(ids=[f"{path.name}-{i}" for i in range(len(chunks))], documents=chunks,
-                   metadatas=[{"source": path.name}] * len(chunks))
+    if path.suffix.lower() == ".pdf":
+        text = "\n".join(page.extract_text() or "" for page in PdfReader(path).pages)
+    else:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+    chunks = []
+    for paragraph in text.split("\n\n"):              # 1 paragraph = 1 chunk...
+        paragraph = paragraph.strip()
+        while len(paragraph) > 500:                    # ...but long ones (PDFs often have no blank lines) are cut at a space
+            cut = paragraph.rfind(" ", 0, 500)
+            cut = cut if cut > 0 else 500
+            chunks.append(paragraph[:cut])
+            paragraph = paragraph[cut:].strip()
+        if paragraph:
+            chunks.append(paragraph)
+    library.delete(where={"source": path.name})       # forget this file's old chunks (it may have changed)
+    if chunks:
+        library.upsert(ids=[f"{path.name}-{i}" for i in range(len(chunks))], documents=chunks,
+                       metadatas=[{"source": path.name}] * len(chunks))
     return len(chunks)
 
 
 def search_my_documents(question):
+    if library.count() == 0:
+        return "The library is empty. Ask the user to upload a document."
     found = library.query(query_texts=[question], n_results=min(4, library.count()))
     return "\n\n".join(f"[{m['source']}] {d}" for d, m in zip(found["documents"][0], found["metadatas"][0]))
 
@@ -48,8 +64,8 @@ def list_tasks():
 
 
 def finish_task(task_id):
-    db.execute("UPDATE tasks SET done = 1 WHERE id = ?", (int(task_id),)); db.commit()
-    return f"Task #{task_id} marked done"
+    changed = db.execute("UPDATE tasks SET done = 1 WHERE id = ?", (int(task_id),)).rowcount; db.commit()
+    return f"Task #{task_id} marked done" if changed else f"There is no task #{task_id}"
 
 
 # ---------- the team ----------
@@ -84,5 +100,5 @@ def handle(message, history):
 
 
 for path in sorted(Path("docs").iterdir()):          # load the docs folder when the app starts
-    if path.suffix in {".md", ".txt", ".pdf"}:
+    if path.suffix.lower() in {".md", ".txt", ".pdf"}:
         add_document(path)

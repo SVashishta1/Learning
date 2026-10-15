@@ -3,9 +3,11 @@ import chromadb
 
 db = chromadb.PersistentClient(path="chroma_data")             # saved in the chroma_data folder
 recipes = db.get_or_create_collection("recipes", configuration={"hnsw": {"space": "cosine"}})   # a collection = like a table; "cosine" = compare meaning
+print(f"Already saved on disk from your last run: {recipes.count()} recipes.")   # 0 the first time
 
 # ADD documents. Chroma turns each one into numbers (embeddings) automatically.
 # "metadatas" are extra labels you can FILTER on, just like columns in a normal database.
+# "upsert" = insert, or replace if that id already exists (so running this file twice doesn't make duplicates).
 recipes.upsert(
     ids=["r1", "r2", "r3", "r4", "r5", "r6"],
     documents=[
@@ -21,7 +23,7 @@ recipes.upsert(
         {"diet": "fish", "minutes": 20}, {"diet": "vegetarian", "minutes": 5}, {"diet": "vegan", "minutes": 15},
     ],
 )
-print(f"The database holds {recipes.count()} recipes.\n")
+print(f"After adding: the database holds {recipes.count()} recipes.\n")
 
 
 def show(title, results):
@@ -41,4 +43,4 @@ show("🔎 'healthy food' ready in under 20 minutes",
 # UPDATE and DELETE work like a normal database
 recipes.update(ids=["r5"], documents=["Mango and passion fruit smoothie with oat milk"], metadatas=[{"diet": "vegan", "minutes": 5}])
 recipes.delete(ids=["r3"])
-print(f"After one update and one delete: {recipes.count()} recipes. Run me again: the data is still saved on disk.")
+print(f"After one update and one delete: {recipes.count()} recipes. Run me again: the first line will show they were saved on disk.")

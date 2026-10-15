@@ -24,12 +24,14 @@ async function loadDocs(){ const docs=await (await fetch("/documents")).json(); 
 async function send(e){
   e.preventDefault(); const box=document.getElementById("box"), text=box.value.trim(); if(!text) return;
   box.value=""; bubble("user", text); const bot=bubble("bot", "Searching your documents…");
-  const d=await (await fetch("/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:chatId,text})})).json();
-  bot.textContent=d.reply; const s=document.createElement("div"); s.className="src";
+  const r=await fetch("/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:chatId,text})});
+  if(!r.ok){ bot.textContent="⚠️ Something went wrong. Look at the terminal where uvicorn is running."; return; }
+  const d=await r.json(); bot.textContent=d.reply; const s=document.createElement("div"); s.className="src";
   s.textContent="Sources: "+d.sources.map(x=>`[${x.n}] ${x.source}`).join("  "); bot.appendChild(s);
 }
 document.getElementById("file").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; const fd=new FormData(); fd.append("file", f);
-  bubble("user","📄 Uploading "+f.name+"…"); const d=await (await fetch("/upload",{method:"POST",body:fd})).json();
-  bubble("bot","Added "+d.file+" ("+d.chunks+" chunks). Ask me about it!"); loadDocs(); };
+  bubble("user","📄 Uploading "+f.name+"…"); const r=await fetch("/upload",{method:"POST",body:fd}); const d=await r.json();
+  if(!r.ok){ bubble("bot","⚠️ "+(d.detail||"Upload failed.")); return; }
+  bubble("bot","Added "+d.file+" ("+d.chunks+" chunks). Ask me about it!"); loadDocs(); e.target.value=""; };
 loadDocs();
 </script></body></html>
