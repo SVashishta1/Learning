@@ -5,14 +5,14 @@ import time
 from contextlib import asynccontextmanager
 
 import torch
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from PIL import Image, UnidentifiedImageError
 
 from common import eval_transform, load_checkpoint
 
-MODEL_PATH = os.getenv("MODEL_PATH", "transfer_model.pt")
-MAX_BYTES = 5 * 1024 * 1024
-state = {}
+MODEL_PATH = os.getenv("MODEL_PATH", "transfer_model.pt")   # override with: MODEL_PATH=other.pt uvicorn api:app
+MAX_BYTES = 5 * 1024 * 1024                                   # 5 MB upload limit
+state = {}                                                    # filled at startup: the model and its class names
 
 
 @asynccontextmanager
@@ -33,7 +33,7 @@ def health():
 
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...), top_k: int = 3):
+async def predict(file: UploadFile = File(...), top_k: int = Query(3, ge=1, le=10)):
     if "model" not in state:
         raise HTTPException(503, f"No model at {MODEL_PATH}. Train one in project 4.3 and copy it here.")
     data = await file.read()
@@ -41,7 +41,7 @@ async def predict(file: UploadFile = File(...), top_k: int = 3):
         raise HTTPException(413, "Image too large (max 5 MB)")
     try:
         img = Image.open(io.BytesIO(data)).convert("RGB")
-    except UnidentifiedImageError:
+    except (UnidentifiedImageError, OSError):          # not an image at all, or a broken/truncated one
         raise HTTPException(400, "That file isn't an image")
     start = time.perf_counter()
     with torch.no_grad():

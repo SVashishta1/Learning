@@ -1,4 +1,6 @@
 """Project 3.6 step 1: build a full scikit-learn Pipeline, tune it, evaluate it honestly, save it."""
+from pathlib import Path
+
 import joblib
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -13,6 +15,7 @@ from data import make_customers
 
 NUMERIC = ["tenure_months", "monthly_charges", "support_calls"]
 CATEGORICAL = ["contract", "internet", "payment_method"]
+MODEL_PATH = Path(__file__).with_name("churn_model.joblib")   # saved next to this file, where api.py looks
 
 df = make_customers()
 print(f"{len(df)} customers, churn rate {df.churned.mean():.1%}")
@@ -42,5 +45,5 @@ proba = model.predict_proba(X_test)[:, 1]
 print(f"\nWinner: {best_name}. Held-out test AUC {roc_auc_score(y_test, proba):.3f}")
 print(classification_report(y_test, proba > 0.5, digits=3))
 
-joblib.dump({"pipeline": model, "features": NUMERIC + CATEGORICAL, "model_name": best_name}, "churn_model.joblib")
+joblib.dump({"pipeline": model, "features": NUMERIC + CATEGORICAL, "model_name": best_name}, MODEL_PATH)
 print("Saved churn_model.joblib  ->  now run: uvicorn api:app --reload")

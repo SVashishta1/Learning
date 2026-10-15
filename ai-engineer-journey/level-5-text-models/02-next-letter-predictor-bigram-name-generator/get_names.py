@@ -12,8 +12,12 @@ jackson sebastian aiden matthew samuel david joseph carter owen wyatt john jack 
 def load_names(path="names.txt"):
     if not os.path.exists(path):
         try:
-            urllib.request.urlretrieve(URL, path)
+            urllib.request.urlretrieve(URL, path + ".part")   # download to a temp name first...
+            os.replace(path + ".part", path)                  # ...so a failed download never leaves a broken names.txt
         except Exception as e:
+            if os.path.exists(path + ".part"):
+                os.remove(path + ".part")
             print(f"(download failed: {e}; using {len(FALLBACK)} built-in names)")
             return FALLBACK
-    return open(path).read().split()
+    with open(path, encoding="utf-8") as f:
+        return f.read().split()                               # one name per line -> list of names

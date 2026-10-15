@@ -21,7 +21,7 @@ queries = sys.argv[1:] or ["I want my money back", "I forgot my login", "the box
                            "stop charging me every month", "is my credit card safe with you"]
 
 
-def embed_with_transformer(texts):
+def embed_with_transformer(texts):                       # (texts unused: the model is already trained)
     from sentence_transformers import SentenceTransformer
     model = SentenceTransformer("all-MiniLM-L6-v2")      # ~90 MB download the first time; 384-number vectors
     return lambda batch: model.encode(batch, normalize_embeddings=True)
@@ -29,15 +29,20 @@ def embed_with_transformer(texts):
 
 def embed_with_tfidf(texts):
     from sklearn.feature_extraction.text import TfidfVectorizer
-    vec = TfidfVectorizer().fit(texts + queries)
-    return lambda batch: (lambda m: m / (np.linalg.norm(m, axis=1, keepdims=True) + 1e-9))(vec.transform(batch).toarray())
+    vec = TfidfVectorizer().fit(texts + queries)           # one column per word, weighted by how rare it is
+
+    def embed(batch):
+        m = vec.transform(batch).toarray()
+        return m / (np.linalg.norm(m, axis=1, keepdims=True) + 1e-9)   # unit length, so dot product = cosine
+    return embed
 
 
 for name, make in [("TF-IDF (keyword matching)", embed_with_tfidf), ("Sentence embeddings (meaning)", embed_with_transformer)]:
     try:
         embed = make(FAQ)
     except Exception as e:
-        print(f"\n[{name}] skipped: {e}\n  -> pip install sentence-transformers (needs internet the first time)")
+        print(f"\n[{name}] skipped: {e}\n  -> run: pip install sentence-transformers"
+              "\n  -> the model downloads from huggingface.co the first time, so you need internet once")
         continue
     faq_vecs = embed(FAQ)
     print(f"\n===== {name} =====")

@@ -20,7 +20,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 mean, std = X_train.mean(0), X_train.std(0)
 Xs_train, Xs_test = (X_train - mean) / std, (X_test - mean) / std
 
-w, b, lr = np.zeros(4), 0.0, 0.1
+w, b, lr = np.zeros(len(features)), 0.0, 0.1   # one weight per feature, all starting at 0
 for step in range(500):
     pred = Xs_train @ w + b
     err = pred - y_train
@@ -35,8 +35,9 @@ pred = model.predict(X_test)
 print(f"[scikit-learn] MAE ${mean_absolute_error(y_test, pred):.1f}k | RMSE ${root_mean_squared_error(y_test, pred):.1f}k | R² {r2_score(y_test, pred):.3f}")
 
 print("\nWhat the model learned (thousands of $ per unit) vs the hidden truth:")
-for name, coef, truth in zip(features, model.coef_, [2.5, 10, -1.2, -4]):
-    print(f"  {name:13s} {coef:+7.2f}   (truth {truth:+})")
+hidden_truth = {"size_m2": 2.5, "bedrooms": 10, "age_years": -1.2, "km_to_center": -4}   # the rule in make_data.py
+for name, coef in zip(features, model.coef_):
+    print(f"  {name:13s} {coef:+7.2f}   (truth {hidden_truth.get(name, 0):+})")
 
 # Our from-scratch weights are on the scaled features; convert back to compare
 print("from-scratch, unscaled:", np.round(w / std, 2))

@@ -27,5 +27,9 @@ def test_empty_canvas_is_400():
     assert client.post("/predict", json={"image": base64.b64encode(buf.getvalue()).decode()}).status_code == 400
 
 
+def test_garbage_is_400():
+    assert client.post("/predict", json={"image": "data:image/png;base64,bm90IGFuIGltYWdl"}).status_code == 400
+
+
 def test_homepage():
     assert "Draw a digit" in client.get("/").text

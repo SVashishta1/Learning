@@ -39,14 +39,20 @@ optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad],
 loss_fn = nn.CrossEntropyLoss()
 
 for epoch in range(1 if SMOKE else 5):
-    model.train()
+    # Normally you'd call model.train() here. But the frozen backbone contains BatchNorm layers, and in
+    # train mode they keep updating their ImageNet averages from YOUR few photos, which hurts accuracy.
+    # The only thing learning is the new Linear head, which acts the same in both modes, so stay in eval().
+    model.eval()
     for x, y in train_loader:
         loss = loss_fn(model(x.to(device)), y.to(device))
         optimizer.zero_grad(); loss.backward(); optimizer.step()
-    model.eval()
     with torch.no_grad():
         correct = sum((model(x.to(device)).argmax(1).cpu() == y).sum().item() for x, y in val_loader)
     print(f"epoch {epoch + 1} | last batch loss {loss.item():.3f} | val accuracy {correct / len(val_set):.1%}")
 
-torch.save({"state_dict": model.state_dict(), "classes": classes}, "transfer_model.pt")
-print("saved transfer_model.pt (copy it to project 4.4 to serve it)")
+if SMOKE:
+    print("smoke run: not saving (random weights would overwrite your real model)")
+else:
+    # Save the weights AND the class names: the model only outputs numbers (0, 1, 2...)
+    torch.save({"state_dict": model.state_dict(), "classes": classes}, "transfer_model.pt")
+    print("saved transfer_model.pt (copy it to project 4.4 to serve it)")

@@ -57,14 +57,26 @@ def sample(model, temperature=0.8, max_len=20):
     return "".join(out)
 
 
+@torch.no_grad()
+def full_loss(model):
+    """Average loss over EVERY name (not just one random batch), so you can compare it with the bigram's 2.455."""
+    total, count = 0.0, 0
+    for i in range(0, len(names), 1000):
+        x, y = make_batch(names[i:i + 1000])
+        logits, _ = model(x)
+        total += nn.functional.cross_entropy(logits.reshape(-1, V), y.reshape(-1), ignore_index=-100, reduction="sum").item()
+        count += (y != -100).sum().item()          # number of real (non-padding) letters
+    return total / count
+
+
 model = NameRNN(V)
 opt = torch.optim.Adam(model.parameters(), lr=3e-3)
 loss_fn = nn.CrossEntropyLoss(ignore_index=-100)
 steps = 50 if SMOKE else 3000
 for step in range(1, steps + 1):
-    batch = [names[i] for i in torch.randint(0, len(names), (64,))]
+    batch = [names[i] for i in torch.randint(0, len(names), (64,))]   # 64 random names
     x, y = make_batch(batch)
-    logits, _ = model(x)
+    logits, _ = model(x)                                  # scores for the next letter at every position
     loss = loss_fn(logits.reshape(-1, V), y.reshape(-1))
     opt.zero_grad(); loss.backward()
     nn.utils.clip_grad_norm_(model.parameters(), 1.0)     # RNNs can have exploding gradients; clip them
@@ -72,6 +84,7 @@ for step in range(1, steps + 1):
     if step % (steps // 6) == 0:
         print(f"step {step:5d} | loss {loss.item():.3f} | sample: {sample(model)}")
 
+print(f"\nloss on all {len(names)} names: {full_loss(model):.3f}  (the bigram model in 5.2 got 2.455)")
 print("\nFresh names (temperature 0.8):", ", ".join(sample(model) for _ in range(10)))
 print("Wild names   (temperature 1.5):", ", ".join(sample(model, 1.5) for _ in range(5)))
 in_data = set(names)

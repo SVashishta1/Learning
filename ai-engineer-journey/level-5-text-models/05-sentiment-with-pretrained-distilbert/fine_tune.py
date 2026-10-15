@@ -28,7 +28,9 @@ train = train.map(encode, batched=True).with_format("torch", columns=["input_ids
 test = test.map(encode, batched=True).with_format("torch", columns=["input_ids", "attention_mask", "label"])
 
 # 3. Model: pretrained DistilBERT body + a NEW 2-class head (randomly initialised -> needs fine-tuning)
-model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased", num_labels=2).to(device)
+labels = {0: "NEGATIVE", 1: "POSITIVE"}                      # names, so your saved model prints words, not LABEL_0/1
+model = AutoModelForSequenceClassification.from_pretrained(
+    "distilbert-base-uncased", num_labels=2, id2label=labels, label2id={v: k for k, v in labels.items()}).to(device)
 optimizer = torch.optim.AdamW(model.parameters(), lr=3e-5)   # tiny learning rate: nudge, don't wreck, the pretrained knowledge
 
 

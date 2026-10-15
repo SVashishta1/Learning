@@ -35,7 +35,7 @@ const pos = e => { const r = c.getBoundingClientRect(), t = e.touches ? e.touche
 const start = e => { drawing = true; ctx.beginPath(); ctx.moveTo(...pos(e)); e.preventDefault(); };
 const move = e => { if (!drawing) return; ctx.lineTo(...pos(e)); ctx.stroke(); e.preventDefault();
   clearTimeout(timer); timer = setTimeout(predict, 120); };
-const stop = () => { drawing = false; predict(); };
+const stop = () => { if (!drawing) return; drawing = false; predict(); };   // only after a real stroke
 ["mousedown","touchstart"].forEach(ev => c.addEventListener(ev, start));
 ["mousemove","touchmove"].forEach(ev => c.addEventListener(ev, move));
 ["mouseup","mouseleave","touchend"].forEach(ev => c.addEventListener(ev, stop));

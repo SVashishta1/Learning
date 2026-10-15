@@ -66,12 +66,16 @@ if __name__ == "__main__":
         for x, y in train_loader:
             x, y = x.to(device), y.to(device)
             loss = loss_fn(model(x), y)
-            optimizer.zero_grad(); loss.backward(); optimizer.step(); scheduler.step()
+            optimizer.zero_grad(); loss.backward(); optimizer.step()
+            scheduler.step()               # OneCycleLR: learning rate warms up, then cools down, every batch
             total_loss += loss.item()
-        model.eval()
+        model.eval()                       # BatchNorm uses its learned averages, Dropout switches off
         with torch.no_grad():
             correct = sum((model(x.to(device)).argmax(1) == y.to(device)).sum().item() for x, y in test_loader)
         print(f"epoch {epoch + 1:2d} | train loss {total_loss / len(train_loader):.3f} | test accuracy {correct / len(test_set):.1%}")
 
-    torch.save(model.state_dict(), "cat_dog_cnn.pt")
-    print("saved cat_dog_cnn.pt")
+    if SMOKE:
+        print("smoke run: not saving (a model trained on random noise would overwrite your real one)")
+    else:
+        torch.save(model.state_dict(), "cat_dog_cnn.pt")
+        print("saved cat_dog_cnn.pt")

@@ -67,8 +67,14 @@ if __name__ == "__main__":
 
     try:
         import tiktoken
-        gpt = tiktoken.get_encoding("cl100k_base")
-        print(f"\nFor comparison, a real GPT tokenizer (100k vocab) uses {len(gpt.encode(sample))} tokens:",
-              [gpt.decode([t]) for t in gpt.encode(sample)])
-    except Exception:
+    except ImportError:
         print("\n(pip install tiktoken to compare with a real GPT tokenizer)")
+    else:
+        try:
+            gpt = tiktoken.get_encoding("cl100k_base")       # downloads ~1.7 MB of merges the first time
+        except Exception as e:
+            print(f"\n(tiktoken couldn't download its vocabulary, check your internet connection: {e})")
+        else:
+            gpt_ids = gpt.encode(sample)
+            print(f"\nFor comparison, a real GPT tokenizer (100k vocab) uses {len(gpt_ids)} tokens:",
+                  [gpt.decode([t]) for t in gpt_ids])

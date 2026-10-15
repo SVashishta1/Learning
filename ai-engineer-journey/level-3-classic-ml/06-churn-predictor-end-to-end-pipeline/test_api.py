@@ -4,8 +4,10 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-if not Path("churn_model.joblib").exists():
-    subprocess.run([sys.executable, "train.py"], check=True)
+HERE = Path(__file__).parent
+# The API needs a trained model. Train one first if it doesn't exist yet (takes ~30 seconds).
+if not (HERE / "churn_model.joblib").exists():
+    subprocess.run([sys.executable, "train.py"], check=True, cwd=HERE)
 
 from api import app  # noqa: E402
 
@@ -23,3 +25,8 @@ def test_risky_customer_scores_higher_than_loyal():
 
 def test_invalid_input_rejected():
     assert client.post("/predict", json={**risky, "contract": "forever"}).status_code == 422
+
+
+def test_missing_field_rejected():
+    incomplete = {k: v for k, v in risky.items() if k != "tenure_months"}
+    assert client.post("/predict", json=incomplete).status_code == 422

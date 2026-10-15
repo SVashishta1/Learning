@@ -8,6 +8,7 @@ import io
 import sys
 import urllib.request
 import zipfile
+from pathlib import Path
 
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
@@ -17,6 +18,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 
 UCI_URL = "https://archive.ics.uci.edu/static/public/228/sms+spam+collection.zip"
+SMALL_DATA = Path(__file__).with_name("messages.csv")   # works whichever folder you run from
+THRESHOLD = 0.5   # call it spam when the model is more than 50% sure
 
 
 def load(full: bool) -> pd.DataFrame:
@@ -29,7 +32,7 @@ def load(full: bool) -> pd.DataFrame:
             return pd.DataFrame(rows, columns=["label", "text"])
         except Exception as e:
             print(f"(couldn't download the full dataset: {e}; using messages.csv)")
-    return pd.read_csv("messages.csv")
+    return pd.read_csv(SMALL_DATA)
 
 
 def main():
@@ -42,20 +45,22 @@ def main():
     model = make_pipeline(CountVectorizer(lowercase=True, ngram_range=(1, 2), min_df=1), LogisticRegression(max_iter=1000, C=5))
     model.fit(X_train, y_train)
 
-    pred = model.predict(X_test)
+    # predict_proba gives [P(ham), P(spam)] per message; classes_ is alphabetical, so column 1 is "spam"
+    p_spam_test = model.predict_proba(X_test)[:, 1]
+    pred = ["spam" if p > THRESHOLD else "ham" for p in p_spam_test]
     print(classification_report(y_test, pred, digits=3))
     print("Confusion matrix (rows = truth, cols = prediction) [ham, spam]:")
     print(confusion_matrix(y_test, pred, labels=["ham", "spam"]))
 
-    vec, clf = model.named_steps["countvectorizer"], model.named_steps["logisticregression"]
+    vec, clf = model[0], model[-1]               # the two steps of the pipeline: vectoriser, then classifier
     words = vec.get_feature_names_out()
     order = clf.coef_[0].argsort()
     print("\nMost SPAMMY words:", ", ".join(words[order[-12:]][::-1]))
     print("Most HAMMY words: ", ", ".join(words[order[:12]]))
 
     for msg in args or ["Claim your free prize now", "Can we meet for coffee tomorrow?"]:
-        p_spam = model.predict_proba([msg])[0][list(clf.classes_).index("spam")]
-        print(f"\n'{msg}' -> {'SPAM' if p_spam > 0.5 else 'ham'} ({p_spam:.0%} spam)")
+        p_spam = model.predict_proba([msg])[0, 1]
+        print(f"\n'{msg}' -> {'SPAM' if p_spam > THRESHOLD else 'ham'} ({p_spam:.0%} spam)")
 
 
 if __name__ == "__main__":

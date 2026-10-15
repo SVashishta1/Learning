@@ -13,7 +13,8 @@ line = lambda title: print(f"\n{'=' * 8} {title} {'=' * (50 - len(title))}")
 
 # ---- 1. Overfitting vs underfitting, shown with polynomials ----
 line("1. Underfit / good fit / overfit")
-x = np.sort(rng.uniform(-3, 3, 30)); y = np.sin(x) + rng.normal(0, 0.25, 30)
+# Only 20 training points: a degree-15 curve has enough wiggle room to pass through almost every one.
+x = np.sort(rng.uniform(-3, 3, 20)); y = np.sin(x) + rng.normal(0, 0.25, 20)
 x_new = np.sort(rng.uniform(-3, 3, 200)); y_new = np.sin(x_new) + rng.normal(0, 0.25, 200)
 for degree in [1, 4, 15]:
     m = make_pipeline(PolynomialFeatures(degree), StandardScaler(), LinearRegression()).fit(x[:, None], y)

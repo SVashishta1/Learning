@@ -23,7 +23,9 @@ for name in names:
 # 2. NORMALISE each row into probabilities (+1 smoothing so nothing is impossible)
 P = (N + 1) / (N + 1).sum(axis=1, keepdims=True)
 
-print("\nAfter 'q' the most likely next letters are:", [(itos[i], f"{P[stoi['q'], i]:.0%}") for i in P[stoi["q"]].argsort()[::-1][:3]])
+letter = "q" if "q" in stoi else names[0][0]   # the small fallback name list has no "q"
+top3 = P[stoi[letter]].argsort()[::-1][:3]      # indices of the 3 biggest probabilities in that row
+print(f"\nAfter '{letter}' the most likely next letters are:", [(itos[i], f"{P[stoi[letter], i]:.0%}") for i in top3])
 print("Names most often start with:", [itos[i] for i in P[0].argsort()[::-1][:5]])
 
 # 3. GENERATE: start at ".", sample the next letter from the probabilities, repeat until "."

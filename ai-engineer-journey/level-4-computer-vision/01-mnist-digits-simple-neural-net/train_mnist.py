@@ -76,10 +76,15 @@ if __name__ == "__main__":
                 print(f"epoch {epoch + 1} batch {i:4d} | loss {loss.item():.3f}")
         print(f"epoch {epoch + 1} test accuracy: {evaluate(model, test_loader):.2%}")
 
-    torch.save(model.state_dict(), "mnist_mlp.pt")
-    print("saved mnist_mlp.pt")
+    if SMOKE:
+        print("smoke run: not saving (a model trained on random noise would overwrite your real one)")
+    else:
+        torch.save(model.state_dict(), "mnist_mlp.pt")   # only the learned numbers, not the code
+        print("saved mnist_mlp.pt")
 
-    x, y = test_set[0]
-    pred = model(x.unsqueeze(0).to(device)).argmax(1).item()
+    x, y = test_set[0]                             # the first test image and its true label
+    model.eval()
+    with torch.no_grad():
+        pred = model(x.unsqueeze(0).to(device)).argmax(1).item()   # unsqueeze(0): a "batch" of 1 image
     print(ascii_digit(x.numpy()))
     print(f"model says: {pred} | truth: {y}")
