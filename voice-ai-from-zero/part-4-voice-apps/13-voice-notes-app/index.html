@@ -24,7 +24,9 @@ const rec = document.getElementById("rec"), status = document.getElementById("st
 
 rec.onclick = async () => {
   if (recorder && recorder.state === "recording") { recorder.stop(); return; }
-  const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+  let mic;
+  try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); }          // ask for the microphone
+  catch (e) { status.textContent = "🎙️ I can't use the microphone: " + e.message; return; }
   recorder = new MediaRecorder(mic);
   chunks = [];
   recorder.ondataavailable = e => chunks.push(e.data);
@@ -34,8 +36,8 @@ rec.onclick = async () => {
     status.textContent = "✍️ writing it down...";
     const form = new FormData();
     form.append("audio", new Blob(chunks, { type: recorder.mimeType }), "note.webm");
-    await fetch("/notes", { method: "POST", body: form });
-    status.textContent = "";
+    const res = await fetch("/notes", { method: "POST", body: form });               // send it to server.py
+    status.textContent = res.ok ? "" : "❌ Something went wrong. Look at the terminal for the error.";
     loadNotes();
   };
   recorder.start();
@@ -44,7 +46,7 @@ rec.onclick = async () => {
 
 async function loadNotes() {
   const q = document.getElementById("search").value;
-  const notes = await (await fetch("/notes?q=" + encodeURIComponent(q))).json();
+  const notes = await (await fetch("/notes?q=" + encodeURIComponent(q))).json();   // ask the server for matching notes
   const box = document.getElementById("notes");
   box.innerHTML = "";
   for (const n of notes) {

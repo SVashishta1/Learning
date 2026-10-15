@@ -6,7 +6,7 @@
  .box{display:grid;gap:14px;width:min(420px,100%)}
  button{font:inherit;font-weight:700;padding:14px;border-radius:12px;border:0;cursor:pointer;background:#e5484d;color:#fff}
  button.stop{background:#30a46c} #meter{height:14px;border-radius:7px;background:#243040;overflow:hidden} #level{height:100%;width:0;background:#3dd68c;transition:width .05s}
- audio{width:100%} .note{color:#9aa8b8;font-size:14px}
+ audio{width:100%} a{color:#8ec5ff} .note{color:#9aa8b8;font-size:14px}
 </style></head>
 <body><div class="box">
  <h1 style="margin:0">🎙️ Voice recorder</h1>
@@ -16,34 +16,42 @@
  <p class="note">Everything stays in your browser. The first click asks for microphone permission.</p>
 </div>
 <script>
-let recorder, chunks = [], stream, raf;
+let recorder, chunks = [], stream, raf, ctx;
 const btn = document.getElementById("btn");
 
 btn.onclick = async () => {
   if (recorder && recorder.state === "recording") { recorder.stop(); return; }
-  stream = await navigator.mediaDevices.getUserMedia({ audio: true });     // ask for the microphone
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });   // ask for the microphone
+  } catch (e) {                                                             // blocked, or no microphone found
+    alert("I can't use the microphone: " + e.message + "\nAllow it in the address bar (🔒 icon) and try again.");
+    return;
+  }
   recorder = new MediaRecorder(stream);                                     // the browser's built-in recorder
   chunks = [];
-  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.ondataavailable = e => chunks.push(e.data);                     // pieces of compressed audio
   recorder.onstop = () => {
     const blob = new Blob(chunks, { type: recorder.mimeType });
     const url = URL.createObjectURL(blob);
     document.getElementById("list").insertAdjacentHTML("afterbegin",
-      `<p>${new Date().toLocaleTimeString()}<br><audio controls src="${url}"></audio></p>`);
+      `<p>${new Date().toLocaleTimeString()} · <a href="${url}" download="recording.webm">download</a><br>
+       <audio controls src="${url}"></audio></p>`);
     stream.getTracks().forEach(t => t.stop());
-    cancelAnimationFrame(raf); document.getElementById("level").style.width = "0";
+    cancelAnimationFrame(raf); ctx.close();                                  // stop the meter
+    document.getElementById("level").style.width = "0";
     btn.textContent = "Start recording"; btn.className = "";
   };
   recorder.start();
   btn.textContent = "Stop"; btn.className = "stop";
 
   // Live volume meter: read the loudness 60 times a second
-  const ctx = new AudioContext(), analyser = ctx.createAnalyser();
+  ctx = new AudioContext();
+  const analyser = ctx.createAnalyser();                                    // measures the sound as it passes
   ctx.createMediaStreamSource(stream).connect(analyser);
   const data = new Float32Array(analyser.fftSize);
   const tick = () => {
     analyser.getFloatTimeDomainData(data);
-    const loudness = Math.sqrt(data.reduce((s, x) => s + x * x, 0) / data.length);
+    const loudness = Math.sqrt(data.reduce((s, x) => s + x * x, 0) / data.length);   // RMS, like project 02
     document.getElementById("level").style.width = Math.min(100, loudness * 400) + "%";
     raf = requestAnimationFrame(tick);
   };

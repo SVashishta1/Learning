@@ -12,9 +12,9 @@
  <h1 style="margin:0">🗣️ Whisper, running in your browser</h1>
  <p style="margin:0;color:#9fb0c3">No server and no upload. The AI model is downloaded once, then runs on your own device.</p>
  <select id="model">
-   <option value="Xenova/whisper-tiny.en">tiny.en (40 MB, English only, fastest)</option>
-   <option value="Xenova/whisper-base" selected>base (75 MB, 99 languages)</option>
-   <option value="Xenova/whisper-small">small (250 MB, more accurate)</option>
+   <option value="onnx-community/whisper-tiny.en">tiny.en (~40–80 MB, English only, fastest)</option>
+   <option value="onnx-community/whisper-base" selected>base (~80–150 MB, 99 languages)</option>
+   <option value="onnx-community/whisper-small">small (~250–500 MB, more accurate)</option>
  </select>
  <div class="row"><button id="rec">🎙️ Record</button><label class="btn">📁 Pick an audio file<input type="file" id="file" accept="audio/*,video/*" hidden></label></div>
  <div id="status">Ready.</div>
@@ -25,14 +25,18 @@ import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers
 
 const $ = id => document.getElementById(id);
 let transcriber = null, loadedModel = null, recorder = null;
+// Use the graphics card (WebGPU) if this browser and computer support it, otherwise the CPU (WebAssembly)
+const device = (await navigator.gpu?.requestAdapter()) ? "webgpu" : "wasm";
 
 async function getTranscriber() {
   const name = $("model").value;
   if (transcriber && loadedModel === name) return transcriber;
-  const device = navigator.gpu ? "webgpu" : "wasm";          // use the graphics card if the browser allows it
+  // How precise the model's numbers are: smaller numbers ("q8", "q4") = smaller download and faster.
+  // On the GPU the encoder needs full precision ("fp32"); on the CPU 8-bit numbers ("q8") work everywhere.
+  const dtype = device === "webgpu" ? { encoder_model: "fp32", decoder_model_merged: "q4" } : "q8";
   $("status").textContent = `Downloading ${name} (only the first time)...`;
   transcriber = await pipeline("automatic-speech-recognition", name, {
-    device,
+    device, dtype,
     progress_callback: p => { if (p.status === "progress") $("status").textContent = `Downloading ${p.file}: ${Math.round(p.progress)}%`; },
   });
   loadedModel = name;
@@ -44,13 +48,14 @@ async function transcribe(blob) {
   try {
     // Whisper wants 16,000 numbers per second, mono. The browser can convert any audio for us:
     const ctx = new AudioContext({ sampleRate: 16000 });
-    const audio = (await ctx.decodeAudioData(await blob.arrayBuffer())).getChannelData(0);
+    const audio = (await ctx.decodeAudioData(await blob.arrayBuffer())).getChannelData(0);   // first channel = mono
+    ctx.close();
     const t = await getTranscriber();
     $("status").textContent = `Transcribing ${(audio.length / 16000).toFixed(1)} s of audio...`;
     const start = performance.now();
     const result = await t(audio, { chunk_length_s: 30, stride_length_s: 5 });   // long audio is handled in 30 s pieces
     $("out").textContent = result.text.trim();
-    $("status").textContent = `Done in ${((performance.now() - start) / 1000).toFixed(1)} s on ${navigator.gpu ? "your GPU (WebGPU)" : "your CPU (WebAssembly)"}.`;
+    $("status").textContent = `Done in ${((performance.now() - start) / 1000).toFixed(1)} s on ${device === "webgpu" ? "your GPU (WebGPU)" : "your CPU (WebAssembly)"}.`;
   } catch (e) {
     $("status").textContent = "Something went wrong: " + e.message;
   }
@@ -59,7 +64,9 @@ async function transcribe(blob) {
 
 $("rec").onclick = async () => {
   if (recorder && recorder.state === "recording") { recorder.stop(); return; }
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { $("status").textContent = "I can't use the microphone: " + e.message; return; }
   const chunks = [];
   recorder = new MediaRecorder(stream);
   recorder.ondataavailable = e => chunks.push(e.data);

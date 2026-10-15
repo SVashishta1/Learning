@@ -39,12 +39,14 @@ let recorder;
 
 async function send(blob, name) {
   status.textContent = "⏳ Transcribing and summarizing... (about 1 minute per 5–10 minutes of audio)";
+  $("upload").disabled = $("rec").disabled = true;            // one meeting at a time
   const form = new FormData();
   form.append("audio", blob, name);
   form.append("title", $("title").value || "Meeting");
   const res = await fetch("/meetings", { method: "POST", body: form });
-  const data = await res.json();
-  status.textContent = res.ok ? "" : "❌ " + data.detail;
+  const data = await res.json().catch(() => ({}));             // {} if the server sent an error page
+  $("upload").disabled = $("rec").disabled = false;
+  status.textContent = res.ok ? "" : "❌ " + (data.detail || "Something went wrong. Look at the terminal.");
   if (res.ok) { loadList(); show(data); }
 }
 
@@ -52,7 +54,9 @@ $("upload").onclick = () => { const f = $("file").files[0]; if (f) send(f, f.nam
 
 $("rec").onclick = async () => {
   if (recorder && recorder.state === "recording") { recorder.stop(); return; }
-  const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+  let mic;
+  try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+  catch (e) { status.textContent = "🎙️ I can't use the microphone: " + e.message; return; }
   const chunks = [];
   recorder = new MediaRecorder(mic);
   recorder.ondataavailable = e => chunks.push(e.data);
@@ -106,8 +110,9 @@ function show(m) {
     $("answer").textContent = "🤔 ...";
     const form = new FormData();
     form.append("question", $("q").value);
-    const res = await (await fetch(`/meetings/${m.id}/ask`, { method: "POST", body: form })).json();
-    $("answer").textContent = res.answer;
+    const res = await fetch(`/meetings/${m.id}/ask`, { method: "POST", body: form });
+    const data = await res.json().catch(() => ({}));
+    $("answer").textContent = res.ok ? data.answer : "❌ " + (data.detail || "Something went wrong.");
   };
 }
 

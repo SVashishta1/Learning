@@ -18,19 +18,22 @@ before = deque(maxlen=10)               # the last 0.3 s, so the first syllable 
 speech, talking = [], False
 
 print("🎧 Just talk. (Ctrl+C to stop)")
-with sd.InputStream(samplerate=RATE, channels=1, dtype="float32", blocksize=CHUNK,
-                    callback=lambda chunk, *_: mic.put(chunk[:, 0].copy())):
-    while True:
-        chunk = mic.get()
-        event = vad(torch.from_numpy(chunk))              # None, {"start": ...} or {"end": ...}
-        if event and "start" in event:
-            talking, speech = True, list(before)
-            print("🟢 speaking...", end="\r")
-        if talking:
-            speech.append(chunk)
-        else:
-            before.append(chunk)
-        if event and "end" in event:
-            talking = False
-            segments, _ = whisper.transcribe(np.concatenate(speech), beam_size=1)
-            print("📝", " ".join(s.text.strip() for s in segments), " " * 10)
+try:
+    with sd.InputStream(samplerate=RATE, channels=1, dtype="float32", blocksize=CHUNK,
+                        callback=lambda chunk, *_: mic.put(chunk[:, 0].copy())):
+        while True:
+            chunk = mic.get()
+            event = vad(torch.from_numpy(chunk))              # None, {"start": ...} or {"end": ...}
+            if event and "start" in event:
+                talking, speech = True, list(before)          # start with the 0.3 s before the voice began
+                print("🟢 speaking...", end="\r")
+            if talking:
+                speech.append(chunk)
+            else:
+                before.append(chunk)
+            if event and "end" in event:
+                talking = False
+                segments, _ = whisper.transcribe(np.concatenate(speech), beam_size=1)
+                print("📝", " ".join(s.text.strip() for s in segments), " " * 10)
+except KeyboardInterrupt:
+    print("\n👋 Stopped.")

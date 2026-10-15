@@ -2,17 +2,20 @@
 # Usage: python transcribe.py ../../part-1-sound-basics/01-record-and-play-your-voice/my_voice.wav
 import sys
 import time
+from pathlib import Path
 
 import whisper
 
 path = sys.argv[1] if len(sys.argv) > 1 else "../../part-1-sound-basics/01-record-and-play-your-voice/my_voice.wav"
 size = sys.argv[2] if len(sys.argv) > 2 else "base"          # tiny, base, small, medium, large-v3, turbo
+if not Path(path).exists():
+    sys.exit(f"Can't find {path}. Record one with project 01, or pass a file: python transcribe.py my_file.mp3")
 
 print(f"Loading the Whisper '{size}' model (downloads once)...")
-model = whisper.load_model(size)
+model = whisper.load_model(size)              # saved in ~/.cache/whisper, so the next run is instant
 
 start = time.time()
-result = model.transcribe(path)               # that's it: audio in, text out
+result = model.transcribe(path)               # that's it: audio in, text out (ffmpeg reads the file)
 print(f"\n📝 {result['text'].strip()}\n")
 print(f"Language: {result['language']} | took {time.time() - start:.1f} s")
 

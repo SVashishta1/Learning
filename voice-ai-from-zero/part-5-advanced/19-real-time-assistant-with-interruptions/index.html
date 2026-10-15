@@ -44,7 +44,7 @@ function stopTalking() {                      // you started speaking: go quiet 
 
 document.getElementById("start").onclick = async () => {
   document.getElementById("start").disabled = true;
-  const ws = new WebSocket(`ws://${location.host}/ws`);
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);   // an always-open connection
   ws.onmessage = e => {
     if (e.data instanceof Blob) {             // a WAV with one spoken sentence
       if (!ignoreAudio) { audioQueue.push(e.data); playNext(); }
@@ -54,12 +54,18 @@ document.getElementById("start").onclick = async () => {
     if (msg.type === "stop") stopTalking();
     if (msg.type === "you") { show(msg.text, "you"); botBubble = null; ignoreAudio = false; }
     if (msg.type === "bot") { botBubble = botBubble || show("", "bot"); botBubble.textContent += msg.text + " "; }
+    if (msg.type === "error") document.getElementById("status").textContent = "❌ " + msg.text;
   };
+  ws.onclose = () => { document.getElementById("status").textContent = "Disconnected. Reload the page to start again."; };
 
   // Microphone → 16 kHz numbers → WebSocket, 512 at a time (what Silero VAD expects)
-  const mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-  const ctx = new AudioContext({ sampleRate: 16000 });
+  let mic;
+  try { mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (e) { document.getElementById("status").textContent = "🎙️ I can't use the microphone: " + e.message; return; }
+  const ctx = new AudioContext({ sampleRate: 16000 });          // the browser resamples the mic to 16 kHz for us
   await ctx.resume();
+  // An AudioWorklet is a tiny piece of code that runs on the browser's audio thread and sees every sample.
+  // Ours just forwards each block of 128 samples to the page.
   const code = `class Mic extends AudioWorkletProcessor {
     process(inputs) { if (inputs[0][0]) this.port.postMessage(inputs[0][0].slice()); return true; }
   } registerProcessor("mic", Mic);`;
@@ -69,11 +75,12 @@ document.getElementById("start").onclick = async () => {
 
   let buffer = new Float32Array(0);
   node.port.onmessage = e => {                // the browser gives us 128 samples at a time
+    if (ws.readyState !== WebSocket.OPEN) return;
     const joined = new Float32Array(buffer.length + e.data.length);
     joined.set(buffer);
     joined.set(e.data, buffer.length);
     buffer = joined;
-    while (buffer.length >= 512 && ws.readyState === WebSocket.OPEN) {
+    while (buffer.length >= 512) {             // send exactly 512 samples (32 ms) per message
       ws.send(buffer.slice(0, 512));
       buffer = buffer.slice(512);
     }

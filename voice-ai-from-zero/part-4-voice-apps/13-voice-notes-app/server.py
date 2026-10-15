@@ -20,9 +20,9 @@ def home():
 
 
 @app.post("/notes")
-async def add_note(audio: UploadFile):
-    sound = io.BytesIO(await audio.read())                      # the browser's recording (webm)
-    segments, _ = model.transcribe(sound, vad_filter=True)
+def add_note(audio: UploadFile):                                 # a normal "def": FastAPI runs it in a helper thread,
+    sound = io.BytesIO(audio.file.read())                       # so the server stays responsive while Whisper works
+    segments, _ = model.transcribe(sound, vad_filter=True)      # the browser's recording (webm) -> text
     text = " ".join(s.text.strip() for s in segments) or "(nothing heard)"
     created = datetime.now().strftime("%Y-%m-%d %H:%M")
     db.execute("INSERT INTO notes (created, text) VALUES (?, ?)", (created, text))
@@ -31,7 +31,7 @@ async def add_note(audio: UploadFile):
 
 
 @app.get("/notes")
-def list_notes(q: str = ""):
+def list_notes(q: str = ""):                                     # /notes?q=milk -> only notes containing "milk"
     rows = db.execute("SELECT id, created, text FROM notes WHERE text LIKE ? ORDER BY id DESC",
                       (f"%{q}%",)).fetchall()
     return [{"id": i, "created": c, "text": t} for i, c, t in rows]

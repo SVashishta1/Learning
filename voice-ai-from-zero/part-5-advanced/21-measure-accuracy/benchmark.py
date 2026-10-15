@@ -20,39 +20,44 @@ SENTENCES = [
     "Machine learning models need a lot of good quality data.",
     "She sells seashells by the seashore on sunny Saturdays.",
 ]
-KOKORO = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/"
-for name in ["kokoro-v1.0.onnx", "voices-v1.0.bin"]:
-    if not Path(name).exists():
-        urllib.request.urlretrieve(KOKORO + name, name)
+MODELS = Path(__file__).resolve().parents[2] / "models"          # shared with project 11: voice-ai-from-zero/models/
+URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/"
+MODELS.mkdir(exist_ok=True)
+for name in ["kokoro-v1.0.onnx", "voices-v1.0.bin"]:             # same files as project 11 (~340 MB, once)
+    if not (MODELS / name).exists():
+        print(f"Downloading {name} into {MODELS} (once, please wait)...")
+        urllib.request.urlretrieve(URL + name, MODELS / (name + ".part"))
+        (MODELS / (name + ".part")).rename(MODELS / name)
 
 
 def clean(text):
     """Ignore capitals and punctuation when comparing: 'Hello, World!' == 'hello world'."""
-    return re.sub(r"[^a-z0-9' ]", "", text.lower()).strip()
+    return " ".join(re.sub(r"[^a-z0-9' ]", "", text.lower()).split())    # .split() + join = single spaces
 
 
 # 1. Make the test audio: each sentence in a different voice, then a noisy copy
-kokoro = Kokoro("kokoro-v1.0.onnx", "voices-v1.0.bin")
+print("Making the test audio with Kokoro...")
+kokoro = Kokoro(str(MODELS / "kokoro-v1.0.onnx"), str(MODELS / "voices-v1.0.bin"))
 voices = ["af_heart", "am_adam", "bf_emma", "bm_george", "af_nicole", "am_michael"]
 clips = []
 for sentence, voice in zip(SENTENCES, voices):
     samples, rate = kokoro.create(sentence, voice=voice, lang="en-us")
     clips.append(resample_poly(samples, 2, 3).astype(np.float32))    # 24 kHz -> 16 kHz for Whisper
-noise = np.random.default_rng(0)
+noise = np.random.default_rng(0)                                    # seed 0 = the same "random" noise every run
 tests = {"clean": clips,
-         "noisy": [c + 0.05 * noise.standard_normal(len(c)).astype(np.float32) for c in clips]}
-audio_seconds = sum(len(c) for c in clips) / 16000
+         "noisy": [c + 0.05 * noise.standard_normal(len(c)).astype(np.float32) for c in clips]}   # add hiss
+audio_seconds = sum(len(c) for c in clips) / 16000                  # total length of one set of clips
 
 # 2. Run every model on every clip
 print(f"{'model':8} {'audio':6} {'WER':>6} {'speed':>12}")
 for size in SIZES:
-    model = WhisperModel(size, device="cpu", compute_type="int8")
+    model = WhisperModel(size, device="cpu", compute_type="int8")     # downloads each size once
     for condition, audios in tests.items():
         start = time.time()
         heard = [" ".join(s.text for s in model.transcribe(a, language="en", beam_size=1)[0]) for a in audios]
         seconds = time.time() - start
-        wer = jiwer.wer([clean(s) for s in SENTENCES], [clean(h) for h in heard])
-        print(f"{size:8} {condition:6} {wer:6.1%} {audio_seconds / seconds:9.1f}x RT")
+        wer = jiwer.wer([clean(s) for s in SENTENCES], [clean(h) for h in heard])   # wrong words / total words
+        print(f"{size:8} {condition:6} {wer:6.1%} {audio_seconds / seconds:9.1f}x RT")   # RT = faster than real time
         for truth, guess in zip(SENTENCES, heard):
             if clean(truth) != clean(guess):
                 print(f"         ✗ {guess.strip()}")

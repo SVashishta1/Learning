@@ -25,16 +25,20 @@ from silero_vad import VADIterator, load_silero_vad
 
 MODEL = "llama3.2:3b"
 VOICE = "af_heart"
-KOKORO = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/"
 SYSTEM = ("You are a friendly voice assistant. Your replies are spoken aloud, so answer in 1-3 short "
           "sentences, with no lists, emojis or markdown. If you're interrupted, don't repeat yourself.")
+MODELS = Path(__file__).resolve().parents[2] / "models"          # shared with project 11: voice-ai-from-zero/models/
+URL = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/"
 
-for name in ["kokoro-v1.0.onnx", "voices-v1.0.bin"]:
-    if not Path(name).exists():
-        urllib.request.urlretrieve(KOKORO + name, name)
+MODELS.mkdir(exist_ok=True)
+for name in ["kokoro-v1.0.onnx", "voices-v1.0.bin"]:             # same files as project 11 (~340 MB, once)
+    if not (MODELS / name).exists():
+        print(f"Downloading {name} into {MODELS} (once, please wait)...")
+        urllib.request.urlretrieve(URL + name, MODELS / (name + ".part"))
+        (MODELS / (name + ".part")).rename(MODELS / name)
 
 ears = WhisperModel("base", device="cpu", compute_type="int8")
-mouth = Kokoro("kokoro-v1.0.onnx", "voices-v1.0.bin")
+mouth = Kokoro(str(MODELS / "kokoro-v1.0.onnx"), str(MODELS / "voices-v1.0.bin"))
 app = FastAPI()
 
 
@@ -61,18 +65,26 @@ async def sentences(chat):
     async with httpx.AsyncClient(timeout=120) as client:
         async with client.stream("POST", "http://localhost:11434/api/chat",
                                  json={"model": MODEL, "messages": chat, "stream": True}) as response:
-            async for line in response.aiter_lines():
-                if line:
-                    text += json.loads(line)["message"]["content"]
-                    *finished, text = re.split(r"(?<=[.!?])\s+", text)   # keep the unfinished part
-                    for sentence in finished:
-                        yield sentence
+            async for line in response.aiter_lines():               # Ollama sends one JSON line per word or two
+                if not line:
+                    continue
+                data = json.loads(line)
+                if "error" in data:                                   # e.g. the model isn't downloaded
+                    raise RuntimeError(data["error"])
+                text += data["message"]["content"]
+                *finished, text = re.split(r"(?<=[.!?])\s+", text)   # split after . ! or ?, keep the unfinished part
+                for sentence in finished:
+                    yield sentence
     if text.strip():
         yield text.strip()
 
 
-async def answer(ws, audio, chat):
+async def answer(ws, question, chat):
+    audio = np.concatenate(question)
+    if len(audio) < 16000 * 0.3:                            # under 0.3 s: a cough or a click, not a question
+        return
     heard = await asyncio.to_thread(transcribe, audio)       # to_thread = don't freeze the server
+    question.clear()                                        # understood: your next words start a new question
     if not heard:
         return
     await ws.send_json({"type": "you", "text": heard})
@@ -84,6 +96,10 @@ async def answer(ws, audio, chat):
             await ws.send_json({"type": "bot", "text": sentence})
             await ws.send_bytes(wav)
             said.append(sentence)
+    except httpx.ConnectError:
+        await ws.send_json({"type": "error", "text": "Can't reach Ollama. Start the Ollama app and try again."})
+    except RuntimeError as error:
+        await ws.send_json({"type": "error", "text": f"Ollama says: {error}"})
     finally:                                                # also runs when you interrupt
         chat.append({"role": "assistant", "content": " ".join(said) or "..."})
 
@@ -95,6 +111,7 @@ async def conversation(ws: WebSocket):
     chat = [{"role": "system", "content": SYSTEM}]
     before = deque(maxlen=10)                               # last 0.3 s, so we keep your first syllable
     speech, talking, reply = [], False, None
+    question = []                                           # your words so far, until the assistant has understood them
     try:
         while True:
             chunk = np.frombuffer(await ws.receive_bytes(), dtype=np.float32).copy()   # 512 samples
@@ -110,7 +127,8 @@ async def conversation(ws: WebSocket):
                 before.append(chunk)
             if event and "end" in event:
                 talking = False
-                reply = asyncio.create_task(answer(ws, np.concatenate(speech), chat))
+                question.extend(speech)                     # if you paused and went on talking, both parts count
+                reply = asyncio.create_task(answer(ws, question, chat))   # runs alongside this loop
     except WebSocketDisconnect:
         if reply:
             reply.cancel()

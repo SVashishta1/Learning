@@ -24,14 +24,18 @@
 const $ = id => document.getElementById(id);
 
 // A) speechSynthesis: built into every browser, instant, uses your system's voices
-function loadVoices() {
-  $("voices").innerHTML = speechSynthesis.getVoices().map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join("");
+function loadVoices() {                       // the list can arrive late, so this runs again on "voiceschanged"
+  const voices = speechSynthesis.getVoices();
+  $("voices").innerHTML = voices.length
+    ? voices.map((v, i) => `<option value="${i}">${v.name} (${v.lang})</option>`).join("")
+    : `<option value="">(your system's default voice)</option>`;
 }
 speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
 $("speak").onclick = () => {
+  speechSynthesis.cancel();                    // stop anything still being spoken
   const say = new SpeechSynthesisUtterance($("text").value);
-  say.voice = speechSynthesis.getVoices()[$("voices").value];
-  say.rate = 1.0;
+  say.voice = speechSynthesis.getVoices()[$("voices").value] || null;   // null = default voice
+  say.rate = 1.0;                              // 0.5 = half speed, 2 = double speed
   speechSynthesis.speak(say);
 };
 
@@ -42,13 +46,14 @@ $("kokoro").onclick = async () => {
   try {
     if (!tts) {
       $("status").textContent = "Loading Kokoro (first time only, ~90 MB)...";
-      const { KokoroTTS } = await import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm");
+      const { KokoroTTS } = await import("https://cdn.jsdelivr.net/npm/kokoro-js@1.2.1/+esm");   // load the library only when needed
+      // q8 = 8-bit numbers (smaller download); wasm = run on the CPU, which works in every browser
       tts = await KokoroTTS.from_pretrained("onnx-community/Kokoro-82M-v1.0-ONNX", { dtype: "q8", device: "wasm" });
     }
     $("status").textContent = "Generating speech...";
     const start = performance.now();
-    const audio = await tts.generate($("text").value, { voice: $("kvoice").value });
-    $("player").src = URL.createObjectURL(audio.toBlob());
+    const audio = await tts.generate($("text").value, { voice: $("kvoice").value });   // the neural network runs here
+    $("player").src = URL.createObjectURL(audio.toBlob());                               // turn it into a playable WAV
     $("player").hidden = false; $("player").play();
     $("status").textContent = `Made in ${((performance.now() - start) / 1000).toFixed(1)} s on your device.`;
   } catch (e) { $("status").textContent = "Error: " + e.message; }

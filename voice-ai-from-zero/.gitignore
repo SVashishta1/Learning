@@ -1,12 +1,22 @@
 __pycache__/
 .venv/
+.venv-*/
+# audio and video you record or generate
 *.wav
 *.mp3
+*.m4a
+*.mp4
 *.webm
+# downloaded models (Kokoro, Piper) and half-finished downloads
 *.onnx
 *.onnx.json
 *.bin
+*.part
+models/
+# files the projects create
 *.db
 *.srt
 *.png
-models/
+notes.txt
+diary.txt
+transcript.txt
