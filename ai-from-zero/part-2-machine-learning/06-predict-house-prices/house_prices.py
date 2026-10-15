@@ -32,6 +32,10 @@ print(f"On houses it never saw, it's off by ${sum(errors) / len(errors):,.0f} on
 size_rule, bedroom_rule, km_rule = model.coef_
 print(f"It learned: +${size_rule:,.0f} per m², +${bedroom_rule:,.0f} per bedroom, -${abs(km_rule):,.0f} per km from the centre")
 
-# 6. USE IT on a new house
-size, bedrooms, km = [int(x) for x in sys.argv[1:4]] if len(sys.argv) >= 4 else (120, 3, 5)
-print(f"\n🏠 A {size} m², {bedrooms}-bedroom house {km} km from the centre: about ${model.predict([[size, bedrooms, km]])[0]:,.0f}")
+# 6. USE IT on a new house: the 3 numbers you typed, or an example house if you typed none
+try:
+    size, bedrooms, km = [float(x) for x in sys.argv[1:]] if len(sys.argv) > 1 else (120, 3, 5)
+except ValueError:     # not numbers, or not exactly 3 of them
+    sys.exit("Please give 3 numbers: size in m², bedrooms, km to the centre. Example: python house_prices.py 120 3 5")
+price = model.predict([[size, bedrooms, km]])[0]
+print(f"\n🏠 A {size:g} m², {bedrooms:g}-bedroom house {km:g} km from the centre: about ${price:,.0f}")

@@ -1,5 +1,6 @@
-# Step 1: train the house-price model once and SAVE it to a file.
+# Step 1: train the house-price model once and SAVE it to a file. Same made-up houses as project 06.
 import random
+from pathlib import Path
 
 import joblib
 from sklearn.linear_model import LinearRegression
@@ -12,5 +13,7 @@ for _ in range(500):
     prices.append(50_000 + 2_500 * size + 10_000 * bedrooms - 4_000 * km + random.randint(-20_000, 20_000))
 
 model = LinearRegression().fit(houses, prices)
-joblib.dump(model, "house_model.joblib")          # the trained "brain", saved like any other file
-print("Saved house_model.joblib. Now run: uvicorn api:app --reload")
+
+model_file = Path(__file__).parent / "house_model.joblib"     # save it next to this file
+joblib.dump(model, model_file)          # the trained "brain", saved like any other file
+print(f"Saved {model_file.name}. Now run: uvicorn api:app --reload")

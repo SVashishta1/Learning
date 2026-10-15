@@ -28,13 +28,14 @@ labels = [label for text, label in messages]
 model = make_pipeline(CountVectorizer(), LogisticRegression())
 model.fit(texts, labels)
 
-# Which words did it learn are the most "spammy"?
-words = model[0].get_feature_names_out()
-weights = model[1].coef_[0]
+# Which words did it learn are the most "spammy"? model[0] is step 1 of the pipeline, model[1] is step 2.
+words = model[0].get_feature_names_out()      # every word it saw in the examples
+weights = model[1].coef_[0]                   # one score per word: positive = points to spam
 top = sorted(zip(weights, words), reverse=True)[:8]
 print("Most spammy words:", ", ".join(word for _, word in top))
 
 tests = sys.argv[1:] or ["Claim your free prize now!", "See you at lunch tomorrow", "Click this link to win cash"]
 for text in tests:
+    # predict_proba gives one chance per label, in the order of model.classes_ (["ok", "spam"]). We want spam's.
     spam_chance = model.predict_proba([text])[0][list(model.classes_).index("spam")]
     print(f"{'🚫 SPAM' if spam_chance > 0.5 else '✅ ok  '} ({spam_chance:.0%})  {text}")

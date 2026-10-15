@@ -1,5 +1,5 @@
-# The same to-do API, but tasks are saved in a DATABASE file (tasks.db), so they survive restarts.
-# sqlite3 comes with Python: nothing to install. SQL is the language for talking to databases.
+# The to-do API from project 03, ready to go online. The only new part is the home page at "/".
+# Tasks are saved in a DATABASE file (tasks.db). sqlite3 comes with Python: nothing to install.
 import sqlite3
 
 from fastapi import FastAPI, HTTPException
@@ -13,6 +13,12 @@ db.execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT
 
 class NewTask(BaseModel):
     title: str
+
+
+# Online, people open your bare link first. Without this they'd see {"detail":"Not Found"}.
+@app.get("/")
+def home():
+    return {"message": "My to-do API is live! Add /docs to the end of this link to try it."}
 
 
 @app.get("/tasks")
