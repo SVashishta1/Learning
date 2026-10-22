@@ -17,3 +17,5 @@ In 2017 the paper *"Attention Is All You Need"* introduced the transformer. Ever
 **Before you start:** 6.1 runs anywhere in a second. 6.2 and 6.3 train models: on a laptop CPU expect roughly 15–60 minutes for the full runs (each has a quick `--smoke` check first), or use a free GPU on Google Colab. 6.4 and 6.5 download pretrained models (0.3–2 GB) the first time. No API key is needed in this level.
 
 **Start here →** [6.1 · Self-attention by hand](01-self-attention-by-hand-numpy)
+
+**Go deeper:** the [llm-from-scratch](../../llm-from-scratch) course rebuilds this level step by step alongside every video of Karpathy's *Neural Networks: Zero to Hero*, all the way to training your own tiny ChatGPT.

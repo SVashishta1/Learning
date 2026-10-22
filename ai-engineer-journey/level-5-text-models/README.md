@@ -21,3 +21,5 @@ That covers the whole level, but you don't need it all at once: 5.1 and 5.6 are 
 **Watch:** Karpathy's *makemore* series goes perfectly with 5.2 and 5.3: https://www.youtube.com/watch?v=PaCmpygFfXo
 
 **Finish line for Level 5:** your RNN beats the bigram's loss (5.3), semantic search finds answers that share no words with the question (5.4), and your own BPE tokenizer round-trips text with emoji (5.6). Then go to [Level 6 · Transformers](../level-6-transformers).
+
+**Go deeper:** the [llm-from-scratch](../../llm-from-scratch) course rebuilds this level step by step alongside every video of Karpathy's *Neural Networks: Zero to Hero*, all the way to training your own tiny ChatGPT.

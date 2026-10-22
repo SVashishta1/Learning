@@ -125,7 +125,7 @@ One thing attention does **not** know is word order: without the mask, the two "
 </details>
 
 ## Learn more (optional)
-- Attention in transformers, step-by-step (3Blue1Brown): https://www.youtube.com/results?search_query=3blue1brown+attention+in+transformers+step+by+step
+- Attention in transformers, step-by-step (3Blue1Brown): https://www.youtube.com/watch?v=eMlx5fFNoYc
 - The Illustrated Transformer (Jay Alammar, blog): https://jalammar.github.io/illustrated-transformer/
 
 ## Next

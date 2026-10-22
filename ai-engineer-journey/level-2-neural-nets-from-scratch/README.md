@@ -27,3 +27,5 @@ Each project folder also has its own `requirements.txt`, so `pip install -r requ
 **Visual intuition:** 3Blue1Brown's neural network series https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi
 
 **Finish line for Level 2:** your NumPy backprop matches PyTorch (2.5) and your own autograd engine trains a network (2.6). Then go to [Level 3 · Classic ML](../level-3-classic-ml).
+
+**Go deeper:** the [llm-from-scratch](../../llm-from-scratch) course rebuilds this level step by step alongside every video of Karpathy's *Neural Networks: Zero to Hero*, all the way to training your own tiny ChatGPT.

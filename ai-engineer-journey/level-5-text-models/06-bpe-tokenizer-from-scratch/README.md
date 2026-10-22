@@ -156,7 +156,7 @@ What to look at:
 </details>
 
 ## Learn more (optional)
-- Let's build the GPT Tokenizer (Karpathy): https://www.youtube.com/results?search_query=karpathy+let%27s+build+the+GPT+tokenizer
+- Let's build the GPT Tokenizer (Karpathy): https://www.youtube.com/watch?v=zduSFxRajkE
 - Karpathy's minbpe repo: https://github.com/karpathy/minbpe
 - See how GPT tokenizes your own text: https://platform.openai.com/tokenizer
 
