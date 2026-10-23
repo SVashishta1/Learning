@@ -1,0 +1,11 @@
+__pycache__/
+.venv/
+.venv-*/
+# downloaded or generated model files (they are big; never commit them)
+*.gguf
+*.safetensors
+*.onnx
+models/
+# files the lessons create when you run them
+rag.db
+results.csv
