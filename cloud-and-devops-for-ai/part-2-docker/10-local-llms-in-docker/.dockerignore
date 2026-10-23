@@ -1,0 +1,19 @@
+# Files and folders Docker must NOT send to the builder (one pattern per line).
+
+# Your local Python virtual environment (can be hundreds of MB).
+.venv/
+venv/
+
+# Python's cache files.
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Git history and secrets: never put these in an image.
+.git/
+.env
+
+# Docker's own files are not needed inside the image.
+Dockerfile*
+.dockerignore

@@ -1,0 +1,37 @@
+# A local LLM (Ollama) + our API. Start with:  docker compose up -d --build
+# Then download a model once:  docker compose exec ollama ollama pull qwen2.5:0.5b
+
+name: mood-llm
+
+services:
+  # 1. Ollama: downloads open models and runs them. Official image from Docker Hub.
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"          # so YOU can also call it from your laptop
+    volumes:
+      - ollama_models:/root/.ollama   # models live here and survive restarts
+    environment:
+      OLLAMA_KEEP_ALIVE: 10m   # keep the model in memory 10 minutes after the last question
+    healthcheck:
+      test: ["CMD", "ollama", "list"]   # works only when the Ollama server answers
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # 2. Our FastAPI app. It finds Ollama by its service name: http://ollama:11434
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:0.5b}
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ollama_models:

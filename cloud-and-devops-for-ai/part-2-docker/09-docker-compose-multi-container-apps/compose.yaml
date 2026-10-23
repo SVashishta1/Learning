@@ -1,0 +1,60 @@
+# Three containers that work as one app. Start them all with:  docker compose up -d --build
+
+# The project name: Docker puts it in front of every container, network and volume name.
+name: mood-compose
+
+services:
+  # 1. Our FastAPI app, built from the Dockerfile in this folder.
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://mood:${POSTGRES_PASSWORD:?Copy .env.example to .env first}@db:5432/mood
+      REDIS_URL: redis://cache:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # 2. The database. No "ports:" here, so only containers on "backend" can reach it.
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: mood
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copy .env.example to .env first}
+      POSTGRES_DB: mood
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mood -d mood"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # 3. The cache: a super-fast in-memory notebook.
+  cache:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - backend
+    restart: unless-stopped
+
+# Named volumes: storage that survives "docker compose down".
+volumes:
+  pgdata:
+
+# A private network just for this app.
+networks:
+  backend:
