@@ -1,0 +1,42 @@
+# GitHub Actions workflow: run the tests and the golden-set evals on every pull request.
+# GitHub only reads workflows from .github/workflows/ at the ROOT of a repository. To use it:
+#   mkdir -p .github/workflows && cp ci/claims-evals.yml .github/workflows/
+# (if this project is the root of its own repo, delete the "working-directory" lines below)
+name: claims-desk evals
+
+on:
+  pull_request:                     # every PR must keep the evals green
+  push:
+    branches: [main]
+  workflow_dispatch:                # a "Run workflow" button in the Actions tab
+
+permissions:
+  contents: read                    # least privilege: this job only reads the code
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}   # empty on forks and when no secret is set
+    defaults:
+      run:
+        working-directory: forward-deployed-ai-engineer/part-6-impact-capstones/25-capstone-full-customer-engagement-simulation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: forward-deployed-ai-engineer/part-6-impact-capstones/25-capstone-full-customer-engagement-simulation/requirements.txt
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Unit and end-to-end tests (FAKE mode, no key)
+        run: FAKE_LLM=1 pytest -q
+      - name: Golden-set evals (FAKE mode) - must be 100 %
+        run: FAKE_LLM=1 python evals/run_evals.py --min 1.0
+      - name: Golden-set evals with Claude (only when the secret exists, e.g. on main)
+        if: env.ANTHROPIC_API_KEY != ''
+        env:
+          SPECIALIST_MODEL: claude-haiku-5-5
+        run: python evals/run_evals.py --min 0.95

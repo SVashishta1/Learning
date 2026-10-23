@@ -1,0 +1,64 @@
+# Lesson 13's app with the tougher gateway v1.2, and "chaos knobs" on llm-service.
+# Start with:  docker compose up -d --build
+# Break the LLM on purpose, for example:  FAIL_RATE=0.5 docker compose up -d llm-service
+
+name: ai-resilience
+
+services:
+  gateway:
+    build: ./gateway
+    image: ai-gateway:1.2
+    ports:
+      - "8000:8000"
+    environment:
+      RAG_URL: http://rag-service:8000
+      LLM_URL: http://llm-service:8000
+      REDIS_URL: redis://redis:6379/0
+      RAG_TIMEOUT: "2"
+      LLM_TIMEOUT: "8"
+      RETRY_ATTEMPTS: "3"
+    depends_on:
+      redis:
+        condition: service_healthy
+      rag-service:
+        condition: service_healthy
+      # Note: NOT waiting for llm-service. A tough gateway starts even if the LLM is down.
+    restart: unless-stopped
+
+  worker:
+    build: ../13-queues-and-background-workers/worker
+    image: ai-worker:1.0
+    environment:
+      RAG_URL: http://rag-service:8000
+      LLM_URL: http://llm-service:8000
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  rag-service:
+    build: ../12-split-an-ai-app-into-services/rag-service
+    image: ai-rag-service:1.0
+    restart: unless-stopped
+
+  llm-service:
+    build: ../12-split-an-ai-app-into-services/llm-service
+    image: ai-llm-service:1.0
+    environment:
+      FAKE_LLM: ${FAKE_LLM:-1}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5-5}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Chaos knobs (lesson 12 built them in). 0 = behave normally.
+      FAIL_RATE: ${FAIL_RATE:-0}
+      DELAY_SECONDS: ${DELAY_SECONDS:-0}
+    restart: unless-stopped

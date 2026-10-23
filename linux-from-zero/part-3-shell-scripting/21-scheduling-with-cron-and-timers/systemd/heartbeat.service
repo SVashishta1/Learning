@@ -1,0 +1,12 @@
+# heartbeat.service - WHAT to run. The timer (heartbeat.timer) says WHEN.
+# This is a "user" unit: it lives in ~/.config/systemd/user/ and runs as you, no sudo needed.
+
+[Unit]
+# A short, human description (shown by systemctl status and in the logs)
+Description=Write one heartbeat line to ~/linux-practice/21/heartbeat.log
+
+[Service]
+# oneshot = run once, finish, done (not a server that keeps running)
+Type=oneshot
+# %h = your home folder (a systemd "specifier"). Always use full paths here.
+ExecStart=%h/linux-practice/21/heartbeat.sh

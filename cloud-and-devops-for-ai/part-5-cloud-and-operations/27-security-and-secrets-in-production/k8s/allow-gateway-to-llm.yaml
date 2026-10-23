@@ -1,0 +1,21 @@
+# Step 2: open exactly one door. Pods labelled app=llm accept connections
+# on port 5678 only from pods labelled app=gateway in the same namespace.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-gateway-to-llm
+  namespace: np-demo
+spec:
+  podSelector:
+    matchLabels:
+      app: llm             # WHO this policy protects
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: gateway # WHO may come in
+      ports:
+        - protocol: TCP
+          port: 5678       # on WHICH port

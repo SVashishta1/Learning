@@ -1,0 +1,5 @@
+# SMS gateway export. Format: time | sender | message
+2026-10-21 06:12 | +00 555 0101 | Riverside: water up to first floors on Mill Lane, approx 40 families upstairs or on roofs, need boats and drinking water
+2026-10-21 06:40 | +00 555 0177 | Rivrside here - still about 40 families stuck, old people too, no clean water since last night
+2026-10-21 07:05 | +00 555 0142 | Ferry Point: somos 25 personas en la iglesia, sin agua potable ni comida, hay 3 niños pequeños y una mujer embarazada
+2026-10-21 07:31 | +00 555 0190 | pls help

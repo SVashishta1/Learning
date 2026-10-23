@@ -1,0 +1,10 @@
+# Grafana reads this at start-up and creates the data source for you (no clicking).
+# (Traces are viewed in Jaeger's own UI at http://localhost:16686.)
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus              # the dashboard JSON refers to this id
+    type: prometheus
+    access: proxy                # Grafana's server (not your browser) talks to Prometheus
+    url: http://prometheus:9090
+    isDefault: true

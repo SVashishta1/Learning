@@ -1,0 +1,34 @@
+# A Deployment: "always keep 3 copies of the llm-service pod running".
+# Create or update it:  kubectl apply -f deployment.yaml
+apiVersion: apps/v1     # Deployments live in the "apps" API group, version v1
+kind: Deployment
+metadata:
+  name: llm-service
+  labels:
+    app: llm-service
+spec:
+  replicas: 3                  # how many identical pods you want
+  selector:                    # which pods belong to this Deployment...
+    matchLabels:
+      app: llm-service         # ...the ones wearing this label
+  template:                    # the pod "cookie cutter": every copy is made from this
+    metadata:
+      labels:
+        app: llm-service       # must match the selector above
+    spec:
+      containers:
+        - name: llm-service
+          image: ai-llm-service:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: FAKE_LLM
+              value: "1"
+          resources:
+            requests:          # what the scheduler reserves for this container on a node
+              cpu: 50m         # 50 millicores = 5% of one CPU core
+              memory: 64Mi     # 64 mebibytes of RAM
+            limits:            # the most it may use
+              cpu: 500m        # half a core; it gets slowed down above this
+              memory: 256Mi    # above this the container is killed ("OOMKilled")

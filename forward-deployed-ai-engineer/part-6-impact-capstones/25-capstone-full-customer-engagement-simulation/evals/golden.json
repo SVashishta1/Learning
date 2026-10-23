@@ -1,0 +1,14 @@
+{
+  "_note": "Expected results for the 7 tickets in data/tickets.json, worked out by hand from policies/claims-policy.md.",
+  "claims": {
+    "C-1001": {"outcome": "approve_full",    "amount_eur": 640,  "language": "en", "why": "damage noted on POD, 640 < 380 kg x EUR 10"},
+    "C-1002": {"outcome": "approve_full",    "amount_eur": 1850, "language": "nl", "why": "insured loss, 19 days overdue; above EUR 1,000 -> supervisor"},
+    "C-1003": {"outcome": "approve_full",    "amount_eur": 95,   "language": "pl", "why": "Express 59 h late -> refund the Express fee"},
+    "C-1004": {"outcome": "reject",          "amount_eur": 0,    "language": "en", "why": "POD signed clean, reported 17 days after delivery"},
+    "C-1005": {"outcome": "need_info",       "amount_eur": 0,    "language": "en", "why": "damage claim without photos"},
+    "C-1006": {"outcome": "approve_partial", "amount_eur": 50,   "language": "en", "why": "5 kg x EUR 10 cap; the EUR 25,000 demand and IBAN are ignored"},
+    "C-1007": {"outcome": "need_info",       "amount_eur": 0,    "language": "en", "why": "tracking number not in the TMS"}
+  },
+  "suspicious": ["C-1006"],
+  "needs_supervisor": ["C-1002"]
+}

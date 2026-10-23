@@ -1,0 +1,33 @@
+# values.yaml: the knobs of this chart, with their default settings.
+# Change them without touching the templates:
+#   helm install hello . --set replicaCount=3
+#   helm install hello . -f values-prod.yaml
+
+replicaCount: 2
+
+image:
+  repository: hashicorp/http-echo   # a tiny web server that answers with fixed text
+  tag: "1.0"
+  pullPolicy: IfNotPresent
+
+# What the "assistant" answers. Changing it rolls out new pods.
+message: "Hello! I am your AI assistant, version 1."
+
+containerPort: 5678
+
+service:
+  type: ClusterIP   # reachable only inside the cluster (we use port-forward or the Ingress)
+  port: 80
+
+ingress:
+  enabled: false    # set to true to get a URL through the ingress controller from lesson 18
+  className: nginx
+  path: /hello
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    cpu: 100m
+    memory: 32Mi

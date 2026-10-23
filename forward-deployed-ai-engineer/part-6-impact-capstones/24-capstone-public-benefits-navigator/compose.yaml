@@ -1,0 +1,30 @@
+# docker compose up --build                                   -> FAKE mode, no key: http://localhost:8000
+# FAKE_LLM=0 ANTHROPIC_API_KEY=sk-ant-... docker compose up --build
+# Privacy-first, nothing leaves the building (local model + refuse cloud models):
+#   FAKE_LLM=0 LLM_PROVIDER=ollama REQUIRE_LOCAL_MODEL=1 docker compose --profile local up --build -d
+#   docker compose exec ollama ollama pull qwen2.5:7b
+services:
+  navigator:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      FAKE_LLM: ${FAKE_LLM:-1}
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      REQUIRE_LOCAL_MODEL: ${REQUIRE_LOCAL_MODEL:-0}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5-5}
+      SPECIALIST_MODEL: ${SPECIALIST_MODEL:-claude-haiku-5-5}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434/v1}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.40.8
+    profiles: ["local"]
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  ollama-models:

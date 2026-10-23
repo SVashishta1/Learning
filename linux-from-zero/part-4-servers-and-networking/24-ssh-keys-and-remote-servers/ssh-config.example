@@ -1,0 +1,31 @@
+# ssh-config.example - copy the parts you need into ~/.ssh/config (your personal SSH address book).
+# Each "Host" block gives a short nickname to a server and remembers how to log in.
+# After that, "ssh practice" is enough instead of "ssh -i ~/.ssh/id_ed25519 -p 22 learner@localhost".
+
+# --- The practice server from this lesson (your own computer, via localhost) ---
+Host practice
+    # The real address: a name (server.example.com) or an IP (203.0.113.10). localhost = this computer.
+    HostName localhost
+    # The user name ON THE SERVER (change it to yours: run whoami)
+    User learner
+    # The port sshd listens on (22 is the default)
+    Port 22
+    # Which private key to use
+    IdentityFile ~/.ssh/id_ed25519
+    # Only offer that key (avoids "Too many authentication failures" when you have many keys)
+    IdentitiesOnly yes
+
+# --- A typical cloud server (example values: replace them) ---
+Host ai-server
+    HostName 203.0.113.10
+    User ubuntu
+    IdentityFile ~/.ssh/id_ed25519
+    # Send a small "still here" message every 60 s so idle connections are not cut
+    ServerAliveInterval 60
+    # Open a tunnel every time you connect: your localhost:8000 reaches the server's localhost:8000
+    LocalForward 8000 localhost:8000
+
+# --- Settings for every host (put this block LAST: the first value found wins) ---
+Host *
+    # Re-use your key's passphrase from ssh-agent, and add keys to the agent on first use
+    AddKeysToAgent yes

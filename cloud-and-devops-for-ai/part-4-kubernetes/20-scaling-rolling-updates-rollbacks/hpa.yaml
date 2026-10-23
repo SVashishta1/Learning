@@ -1,0 +1,20 @@
+# A HorizontalPodAutoscaler: adds or removes llm-service pods based on CPU use.
+# Needs metrics-server installed in the cluster (see the README).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: llm-service
+spec:
+  scaleTargetRef:                 # WHAT to scale
+    apiVersion: apps/v1
+    kind: Deployment
+    name: llm-service
+  minReplicas: 2                  # never fewer than 2 pods
+  maxReplicas: 6                  # never more than 6 pods
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50  # aim for 50% of the CPU *request* (50m), averaged over all pods

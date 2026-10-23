@@ -1,0 +1,13 @@
+# A LoadBalancer Service: asks the CLOUD for a real load balancer with a public IP.
+# On kind there is no cloud, so EXTERNAL-IP stays <pending>. That is expected.
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-service-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: llm-service
+  ports:
+    - port: 80          # the port on the (future) public IP
+      targetPort: 8000  # the pods' port

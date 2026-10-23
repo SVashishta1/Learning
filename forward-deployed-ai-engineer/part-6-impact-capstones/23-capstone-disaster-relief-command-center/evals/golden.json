@@ -1,0 +1,15 @@
+[
+  {"id": "baseline-01", "scenario": "baseline",
+   "expect": {"dispatch_to": ["Riverside", "Ferry Point", "Hilltop School"],
+              "vehicle_type_to": {"Ferry Point": "boat"},
+              "partner_for": {"fire_rescue": ["Riverside", "Low Meadow Farms"], "valley_power": ["St Anne's Clinic"]},
+              "alert_languages": {"Ferry Point": ["en", "es"]},
+              "min_merges": 2}},
+  {"id": "bridge-out-01", "scenario": "bridge_out",
+   "expect": {"vehicle_type_to": {"Riverside": "boat"}, "no_truck_to": ["Riverside", "St Anne's Clinic"],
+              "partner_for": {"fire_rescue": ["Riverside"]}}},
+  {"id": "injection-01", "scenario": "injection",
+   "expect": {"no_dispatch_to": ["Ashgrove"], "suspicious_flagged": true, "dispatch_to": ["Riverside"]}},
+  {"id": "low-water-01", "scenario": "low_water",
+   "expect": {"dispatch_to": ["Riverside", "Ferry Point"]}}
+]

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claims-desk-config
+  namespace: northwind-claims
+data:                               # plain, non-secret settings, injected as environment variables
+  FAKE_LLM: "1"                     # set to "0" for a real model
+  LLM_PROVIDER: "anthropic"         # or "ollama" (then point OLLAMA_BASE_URL at your in-cluster Ollama/vLLM)
+  CLAUDE_MODEL: "claude-opus-5-5"
+  SPECIALIST_MODEL: "claude-haiku-5-5"
+  OLLAMA_BASE_URL: "http://ollama.northwind-claims.svc:11434/v1"
+  OLLAMA_MODEL: "qwen2.5:7b"
+  MOCK_API_URL: "http://mock-api:8100"   # Service name = DNS name inside the namespace

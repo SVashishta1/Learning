@@ -1,0 +1,13 @@
+{
+  "emails_per_week":          {"value": 9000,   "source": "HelpDesk weekly report (Priya)"},
+  "share_in_scope":           {"value": 0.40,   "source": "Priya's estimate of WISMO share; confirm with SQL (lesson 05)"},
+  "minutes_today":            {"value": 6.0,    "source": "we timed 9 of Sam's tickets (4 to 9 minutes)"},
+  "minutes_with_ai":          {"value": 2.0,    "source": "Priya's target; to be measured in the pilot"},
+  "acceptance_rate":          {"value": 0.70,   "source": "Sam's 'good enough' bar: drafts sent with small or no edits"},
+  "agent_cost_per_hour":      {"value": 40.0,   "source": "finance: average loaded cost of an agent, USD"},
+  "input_tokens_per_ticket":  {"value": 6000,   "source": "our estimate: ticket + shipment data + 3 policy chunks + instructions"},
+  "output_tokens_per_ticket": {"value": 400,    "source": "our estimate: a short reply draft"},
+  "model":                    {"value": "claude-opus-5-5", "source": "default model of this course"},
+  "infra_cost_per_month":     {"value": 1500,   "source": "our estimate: small VM, database, monitoring in their Azure EU tenant"},
+  "build_cost":               {"value": 120000, "source": "pilot engagement price (12 weeks)"}
+}

@@ -1,0 +1,25 @@
+# An Ingress: ONE front door (port 80 on your laptop) that routes by URL path to different Services.
+# Needs an ingress controller running in the cluster (this lesson installs ingress-nginx).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-ingress
+spec:
+  ingressClassName: nginx        # which ingress controller should handle this Ingress
+  rules:
+    - http:                      # no "host:" line = any host name, e.g. localhost
+        paths:
+          - path: /search        # http://localhost/search ...
+            pathType: Prefix     # ... and anything that starts with /search
+            backend:
+              service:
+                name: rag-service
+                port:
+                  number: 8000
+          - path: /generate      # http://localhost/generate -> llm-service
+            pathType: Prefix
+            backend:
+              service:
+                name: llm-service
+                port:
+                  number: 8000

@@ -1,0 +1,27 @@
+# A deliberately BROKEN deployment: its liveness probe asks for /healthz, which llm-service doesn't have.
+# Watch Kubernetes restart it again and again:  kubectl get pods -l app=probe-demo -w
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probe-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: probe-demo
+  template:
+    metadata:
+      labels:
+        app: probe-demo
+    spec:
+      containers:
+        - name: llm-service
+          image: ai-llm-service:1.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /healthz        # WRONG on purpose: the real path is /health -> 404 -> probe fails
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 2

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Browser LLM</title>
+  <style>
+    :root { --bg: #f7f7f5; --card: #ffffff; --text: #1d1d1b; --muted: #6b6b66; --accent: #2f6fde; --me: #e8f0fe; --line: #deded8; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #161615; --card: #1f1f1d; --text: #ececea; --muted: #a3a39d; --accent: #7aa7ff; --me: #23314d; --line: #34342f; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 720px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 1.4rem; margin: 8px 0; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 12px 0; }
+    #status { color: var(--muted); font-size: 0.9rem; }
+    progress { width: 100%; height: 10px; }
+    #chat { min-height: 200px; display: flex; flex-direction: column; gap: 8px; }
+    .msg { padding: 8px 12px; border-radius: 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .user { background: var(--me); align-self: flex-end; max-width: 85%; }
+    .bot { border: 1px solid var(--line); align-self: flex-start; max-width: 85%; }
+    form { display: flex; gap: 8px; }
+    input { flex: 1; min-width: 0; padding: 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; }
+    button { padding: 10px 16px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #speed { color: var(--muted); font-size: 0.85rem; min-height: 1.3em; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>🧠 An LLM inside your browser</h1>
+  <div class="card">
+    <div id="status">Press "Load model". The first time, the model downloads (300 MB to 1 GB) and is then kept in your browser's cache.</div>
+    <progress id="bar" value="0" max="1" hidden></progress>
+    <p><button id="load">Load model</button></p>
+  </div>
+  <div class="card" id="chat"></div>
+  <form id="form">
+    <input id="question" placeholder="Ask something..." autocomplete="off" disabled>
+    <button id="send" disabled>Send</button>
+  </form>
+  <div id="speed"></div>
+</main>
+
+<script type="module">
+// Pinned versions: the page keeps working even when the libraries change.
+const WEBLLM_URL = "https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm";
+const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.2.0";
+const SYSTEM = "You are a helpful assistant. Answer in at most 3 short sentences.";
+
+const $ = (id) => document.getElementById(id);
+const history = [];              // the conversation, like the messages list in Python
+let generate = null;             // filled in by loadWebLLM() or loadTransformers()
+
+function show(text) { $("status").textContent = text; }
+function progress(fraction) { $("bar").hidden = false; $("bar").value = fraction; }
+
+function addMessage(role, text) {
+  const div = document.createElement("div");
+  div.className = "msg " + (role === "user" ? "user" : "bot");
+  div.textContent = text;          // textContent, never innerHTML: model output is shown as plain text
+  $("chat").append(div);
+  return div;
+}
+
+// Does this browser have a usable GPU through WebGPU?
+async function findGPU() {
+  if (!("gpu" in navigator)) return null;
+  try { return await navigator.gpu.requestAdapter(); } catch { return null; }
+}
+
+// Plan A: WebLLM runs the model on the GPU with WebGPU (fast).
+async function loadWebLLM(adapter) {
+  const webllm = await import(WEBLLM_URL);
+  // q4f16 = 4-bit weights, 16-bit maths: smaller and faster, but needs the GPU feature "shader-f16".
+  const model = adapter.features.has("shader-f16")
+    ? "Qwen2.5-0.5B-Instruct-q4f16_1-MLC" : "Qwen2.5-0.5B-Instruct-q4f32_1-MLC";
+  const engine = await webllm.CreateMLCEngine(model, {
+    initProgressCallback: (p) => { show(p.text); progress(p.progress); },
+  });
+  show(`✅ Ready: ${model} on your GPU (WebGPU, via WebLLM)`);
+  return async (messages, onToken) => {
+    const chunks = await engine.chat.completions.create({ messages, stream: true, temperature: 0.7, max_tokens: 256 });
+    for await (const chunk of chunks) onToken(chunk.choices[0]?.delta?.content || "");
+  };
+}
+
+// Plan B: transformers.js runs a smaller model on the CPU with WebAssembly (slower, works everywhere).
+async function loadTransformers() {
+  const { pipeline, TextStreamer } = await import(TRANSFORMERS_URL);
+  const model = "HuggingFaceTB/SmolLM2-360M-Instruct";
+  const generator = await pipeline("text-generation", model, {
+    device: "wasm", dtype: "q4",
+    progress_callback: (p) => {
+      if (p.status === "progress") { show(`Downloading ${p.file}...`); progress(p.progress / 100); }
+    },
+  });
+  show(`✅ Ready: ${model} on your CPU (WebAssembly, via transformers.js). No WebGPU found, so this is the slower plan B.`);
+  return async (messages, onToken) => {
+    const streamer = new TextStreamer(generator.tokenizer, {
+      skip_prompt: true, skip_special_tokens: true, callback_function: onToken,
+    });
+    await generator(messages, { max_new_tokens: 256, do_sample: false, streamer });
+  };
+}
+
+$("load").addEventListener("click", async () => {
+  $("load").disabled = true;
+  try {
+    const adapter = await findGPU();
+    show(adapter ? "WebGPU found. Loading WebLLM..." : "No WebGPU here. Loading transformers.js on the CPU...");
+    generate = adapter ? await loadWebLLM(adapter) : await loadTransformers();
+    $("question").disabled = $("send").disabled = false;
+    $("question").focus();
+  } catch (error) {
+    show("❌ Could not load the model: " + error.message);
+    $("load").disabled = false;
+  }
+});
+
+$("form").addEventListener("submit", async (event) => {
+  event.preventDefault();                       // stop the browser from reloading the page
+  const question = $("question").value.trim();
+  if (!question || !generate) return;
+  $("question").value = "";
+  $("question").disabled = $("send").disabled = true;
+  addMessage("user", question);
+  history.push({ role: "user", content: question });
+  const box = addMessage("assistant", "…");
+  let reply = "", pieces = 0;
+  const start = performance.now();
+  try {
+    const messages = [{ role: "system", content: SYSTEM }, ...history.slice(-10)];
+    await generate(messages, (piece) => {
+      if (!piece) return;
+      reply += piece; pieces += 1;
+      box.textContent = reply;
+    });
+    history.push({ role: "assistant", content: reply });
+    const seconds = (performance.now() - start) / 1000;
+    $("speed").textContent = `${pieces} pieces in ${seconds.toFixed(1)} s (≈ ${(pieces / seconds).toFixed(1)} tokens/s)`;
+  } catch (error) {
+    box.textContent = "❌ " + error.message;
+  }
+  $("question").disabled = $("send").disabled = false;
+  $("question").focus();
+});
+</script>
+</body>
+</html>

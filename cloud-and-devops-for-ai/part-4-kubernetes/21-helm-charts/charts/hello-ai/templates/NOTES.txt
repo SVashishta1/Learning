@@ -1,0 +1,10 @@
+{{ .Chart.Name }} is installed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}" (revision {{ .Release.Revision }}).
+
+Talk to it:
+  kubectl -n {{ .Release.Namespace }} port-forward service/{{ include "hello-ai.fullname" . }} 8080:{{ .Values.service.port }}
+  curl http://localhost:8080
+{{- if .Values.ingress.enabled }}
+
+Or through the Ingress:
+  curl http://localhost{{ .Values.ingress.path }}
+{{- end }}

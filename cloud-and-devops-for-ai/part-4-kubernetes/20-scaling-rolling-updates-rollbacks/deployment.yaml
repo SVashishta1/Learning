@@ -1,0 +1,62 @@
+# llm-service, production-style: resources, health probes and a careful update strategy.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-service
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5          # keep the last 5 versions so you can roll back
+  strategy:
+    type: RollingUpdate            # replace pods a few at a time (the other option, Recreate, stops all first)
+    rollingUpdate:
+      maxSurge: 1                  # at most 1 EXTRA pod above "replicas" during an update
+      maxUnavailable: 0            # never go below "replicas" ready pods: zero downtime
+  selector:
+    matchLabels:
+      app: llm-service
+  template:
+    metadata:
+      labels:
+        app: llm-service
+    spec:
+      containers:
+        - name: llm-service
+          image: ai-llm-service:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: FAKE_LLM
+              value: "1"
+          resources:
+            requests:
+              cpu: 50m            # the HPA measures CPU use as a % of THIS number
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          readinessProbe:         # "may this pod receive traffic yet?"
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 2  # wait 2 s after start before the first check
+            periodSeconds: 5        # then check every 5 s
+            failureThreshold: 3     # 3 failures in a row = not ready (taken out of the Service)
+          livenessProbe:          # "is this pod still alive, or should it be restarted?"
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3     # 3 failures in a row = restart the container
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-service
+spec:
+  selector:
+    app: llm-service
+  ports:
+    - port: 8000
+      targetPort: 8000

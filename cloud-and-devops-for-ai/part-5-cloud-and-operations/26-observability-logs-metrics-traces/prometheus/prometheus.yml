@@ -1,0 +1,17 @@
+# Prometheus "pulls" (scrapes) metrics: every scrape_interval it visits each target's /metrics page.
+global:
+  scrape_interval: 5s       # visit every target every 5 seconds (15s-60s is normal in production)
+  evaluation_interval: 5s   # check the alert rules every 5 seconds
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: ask-api               # becomes the label job="ask-api" on every metric
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["api:8000"]       # "api" = the compose service name, reachable on the compose network
+
+  - job_name: prometheus            # Prometheus watches itself too
+    static_configs:
+      - targets: ["localhost:9090"]

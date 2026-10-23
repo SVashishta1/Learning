@@ -1,0 +1,8 @@
+# Tells Grafana: "load every dashboard JSON file from this folder".
+apiVersion: 1
+providers:
+  - name: ai-dashboards
+    folder: AI
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

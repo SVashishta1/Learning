@@ -1,0 +1,2 @@
+pytest
+torch  # optional: only for the PyTorch comparison

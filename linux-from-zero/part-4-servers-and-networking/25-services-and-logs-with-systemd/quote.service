@@ -1,0 +1,38 @@
+# quote.service - tells systemd how to run quote-server.py as a service.
+# Installed by install.sh as /etc/systemd/system/quote.service
+
+[Unit]
+# A human description: shown in systemctl status and in the logs
+Description=Quote server (lesson 25 practice service)
+# Where to read more (shown by systemctl status)
+Documentation=https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html
+# Start only after the network is up, and ask for the network to be brought up
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# simple = the program in ExecStart IS the service; it keeps running in the foreground
+Type=simple
+# Run as this unprivileged user and group (created by install.sh), never as root
+User=quote
+Group=quote
+# The folder the program starts in
+WorkingDirectory=/opt/quote
+# Settings passed to the program as environment variables
+Environment=PORT=8077
+Environment=GREETING=Hello
+# Optional extra settings file; the - means "fine if it does not exist"
+EnvironmentFile=-/etc/quote.env
+# The command to run. Always a FULL path.
+ExecStart=/usr/bin/python3 /opt/quote/quote-server.py
+# If it crashes (exits with an error or is killed), start it again after 3 seconds
+Restart=on-failure
+RestartSec=3
+# Small safety settings: no gaining new privileges, a private /tmp
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+# "systemctl enable" hooks the service into multi-user.target = the normal running state of a server,
+# so it starts automatically at every boot
+WantedBy=multi-user.target

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "hours",
+    "title": "Opening hours",
+    "text": "Moonbeam Coffee is open from 7am to 7pm on weekdays and from 8am to 5pm on weekends. We are closed on public holidays."
+  },
+  {
+    "id": "refunds",
+    "title": "Refund policy",
+    "text": "If your drink is wrong, tell the barista and we will make a new one for free. Coffee beans can be refunded within 14 days if the bag is unopened."
+  },
+  {
+    "id": "wifi",
+    "title": "Wi-Fi",
+    "text": "Free Wi-Fi is available in every shop. The network name is MoonbeamGuest and the password is printed on your receipt."
+  },
+  {
+    "id": "milk",
+    "title": "Milk options",
+    "text": "We offer whole milk, skimmed milk, oat milk, almond milk and soy milk. Plant-based milk costs no extra."
+  },
+  {
+    "id": "loyalty",
+    "title": "Loyalty card",
+    "text": "Every drink earns one stamp on your loyalty card. Ten stamps give you a free drink of any size."
+  },
+  {
+    "id": "pets",
+    "title": "Pets",
+    "text": "Dogs are welcome on the terrace and inside our Riverside shop. We keep a water bowl and dog biscuits at the counter."
+  }
+]

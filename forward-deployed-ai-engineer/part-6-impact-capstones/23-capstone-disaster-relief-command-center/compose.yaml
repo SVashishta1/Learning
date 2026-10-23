@@ -1,0 +1,27 @@
+# docker compose up --build            -> FAKE mode, no key needed: http://localhost:8000
+# FAKE_LLM=0 ANTHROPIC_API_KEY=sk-ant-... docker compose up --build            -> Claude
+# FAKE_LLM=0 LLM_PROVIDER=ollama docker compose --profile local up --build     -> open models, nothing leaves your machine
+services:
+  relief:
+    build: .
+    ports:
+      - "8000:8000"                                   # your computer's port : the container's port
+    environment:
+      FAKE_LLM: ${FAKE_LLM:-1}                        # ${NAME:-default}: use $NAME from your shell, else the default
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5-5}
+      SPECIALIST_MODEL: ${SPECIALIST_MODEL:-claude-haiku-5-5}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434/v1}   # "ollama" = the service below, by name
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
+    restart: unless-stopped
+
+  ollama:                                             # only starts with: --profile local
+    image: ollama/ollama:0.40.8
+    profiles: ["local"]
+    volumes:
+      - ollama-models:/root/.ollama                   # downloaded models survive restarts
+    restart: unless-stopped
+
+volumes:
+  ollama-models:

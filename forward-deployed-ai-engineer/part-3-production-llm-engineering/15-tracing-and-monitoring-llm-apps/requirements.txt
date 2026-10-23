@@ -1,0 +1,6 @@
+anthropic>=1.13
+pydantic>=2
+httpx
+opentelemetry-sdk
+opentelemetry-exporter-otlp-proto-grpc
+pytest

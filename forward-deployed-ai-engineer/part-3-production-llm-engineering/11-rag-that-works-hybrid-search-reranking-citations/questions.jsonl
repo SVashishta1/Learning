@@ -1,0 +1,15 @@
+{"question": "What is form CL-7 used for?", "doc": "claims-and-damage.md", "must_include": "CL-7"}
+{"question": "Can I send UN3481 batteries?", "doc": "dangerous-goods.md", "must_include": "UN3481"}
+{"question": "My parcel never showed up and tracking has been frozen for ages. When do you consider it gone for good?", "doc": "claims-and-damage.md", "must_include": "10 working days"}
+{"question": "How cold do you keep frozen stuff?", "doc": "cold-chain.md", "must_include": "minus 18"}
+{"question": "Is there a fee to redirect a parcel that's already on its way?", "doc": "address-changes-and-collections.md", "must_include": "£6"}
+{"question": "We got billed twice on our card, how quickly will we get the money back?", "doc": "refunds-and-credits.md", "must_include": "5 working days"}
+{"question": "What happens if the temperature goes out of range during transit?", "doc": "cold-chain.md", "must_include": "30 minutes"}
+{"question": "Do you deliver on weekends?", "doc": "delivery-promise-and-sla.md", "must_include": "Saturday delivery is available"}
+{"question": "What is the most you pay out for a broken item if we didn't buy extra insurance?", "doc": "claims-and-damage.md", "must_include": "£50"}
+{"question": "Express cut-off time", "doc": "delivery-promise-and-sla.md", "must_include": "15:00"}
+{"question": "How long do service credits last?", "doc": "refunds-and-credits.md", "must_include": "expire after 12 months"}
+{"question": "Which sites are allowed to handle medicines?", "doc": "cold-chain.md", "must_include": "Leeds and Bristol"}
+{"question": "Do you deliver to France?", "unanswerable": true}
+{"question": "What is the name of Northwind's CEO?", "unanswerable": true}
+{"question": "Can I pay my invoices in bitcoin?", "unanswerable": true}

@@ -1,0 +1,12 @@
+[
+  {"metric": "error_rate", "op": ">", "threshold": 0.05, "severity": "page",
+   "action": "more than 5% of questions fail; check the provider status page and the error events in Jaeger"},
+  {"metric": "p95_latency_ms", "op": ">", "threshold": 3000, "severity": "warn",
+   "action": "the slowest 5% take over 3 s; look at the longest traces to see which span is slow"},
+  {"metric": "idk_rate", "op": ">", "threshold": 0.30, "severity": "warn",
+   "action": "many 'I don't know' answers; are documents missing or is retrieval broken?"},
+  {"metric": "empty_retrieval_rate", "op": ">", "threshold": 0.50, "severity": "warn",
+   "action": "retrieval finds nothing for most questions; check the index"},
+  {"metric": "cost_per_1000_requests_usd", "op": ">", "threshold": 2.0, "severity": "warn",
+   "action": "spending more than budgeted; check tokens_per_request and prompt caching (lesson 14)"}
+]

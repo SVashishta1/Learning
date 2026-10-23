@@ -1,0 +1,45 @@
+# Four containers: your API + the three tools that watch it.
+#   api        -> http://localhost:8000/docs   (the AI service, writes logs, exposes /metrics, sends traces)
+#   prometheus -> http://localhost:9090        (collects metrics every 5 s, checks alert rules)
+#   grafana    -> http://localhost:3000        (dashboards; login admin / admin)
+#   jaeger     -> http://localhost:16686       (shows traces)
+services:
+  api:
+    build: ./app
+    ports:
+      - "8000:8000"
+    environment:
+      FAKE_LLM: "${FAKE_LLM:-1}"                      # 1 = fake model (free). Set FAKE_LLM=0 to use Claude
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"     # only needed with FAKE_LLM=0
+      CLAUDE_MODEL: "${CLAUDE_MODEL:-claude-opus-5-5}"
+      FAKE_ERROR_RATE: "${FAKE_ERROR_RATE:-0.05}"     # share of fake calls that fail (0.05 = 5 %)
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318"  # where to send traces (Jaeger's OTLP door)
+    depends_on:
+      - jaeger
+
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus:ro   # prometheus.yml + alerts.yml, read-only
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"   # local practice only: never use this password for real
+      GF_AUTH_ANONYMOUS_ENABLED: "true"     # view dashboards without logging in
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro   # data sources + dashboard list
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro   # the dashboard JSON files
+    depends_on:
+      - prometheus
+
+  jaeger:
+    image: jaegertracing/jaeger:2.22.0
+    ports:
+      - "16686:16686"   # the web UI
+      - "4318:4318"     # OTLP over HTTP: where apps send their spans

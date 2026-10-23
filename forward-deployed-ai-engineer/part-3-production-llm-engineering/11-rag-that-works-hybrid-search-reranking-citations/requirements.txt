@@ -1,0 +1,8 @@
+anthropic>=1.13
+pydantic>=2
+httpx
+numpy
+chromadb
+pytest
+# optional, only for --rerank cross-encoder:
+# sentence-transformers

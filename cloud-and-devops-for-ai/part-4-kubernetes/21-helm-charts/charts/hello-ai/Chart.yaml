@@ -1,0 +1,7 @@
+# Chart.yaml: the chart's ID card.
+apiVersion: v2                 # chart format version 2 (Helm 3 and Helm 4)
+name: hello-ai                 # the chart's name
+description: A tiny "AI assistant" web service, packaged as a Helm chart for learning.
+type: application              # "application" = installs things ("library" = only shares helpers)
+version: 0.1.0                 # the CHART's version: bump it every time you change the chart
+appVersion: "1.0"              # the version of the APP inside (shown in "helm list"); just a label

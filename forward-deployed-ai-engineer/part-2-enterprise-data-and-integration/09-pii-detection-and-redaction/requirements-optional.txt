@@ -1,0 +1,5 @@
+# Optional extras for the --ner option and presidio_demo.py (about 60 MB in total)
+spacy
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+presidio-analyzer
+presidio-anonymizer

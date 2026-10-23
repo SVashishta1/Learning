@@ -1,0 +1,11 @@
+# Step 1 of zero trust: in this namespace, NO pod accepts incoming connections
+# unless another policy explicitly allows it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: np-demo
+spec:
+  podSelector: {}          # {} = every pod in the namespace
+  policyTypes:
+    - Ingress              # we control incoming traffic; no "ingress:" rules listed = allow nothing

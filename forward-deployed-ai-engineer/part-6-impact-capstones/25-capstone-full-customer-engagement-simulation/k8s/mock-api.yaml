@@ -1,0 +1,38 @@
+# Stand-in for Northwind's HelpDesk / TMS gateway / Finance APIs. At the customer you delete this file
+# and set MOCK_API_URL to their real gateway.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-api
+  namespace: northwind-claims
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: mock-api}
+  template:
+    metadata:
+      labels: {app: mock-api}
+    spec:
+      containers:
+        - name: mock-api
+          image: northwind/claims-desk:0.1.0
+          command: ["uvicorn", "mock_api:app", "--host", "0.0.0.0", "--port", "8100"]
+          ports: [{containerPort: 8100}]
+          env:
+            - {name: FAIL_RATE, value: "0.1"}
+            - name: MOCK_CLIENT_SECRET
+              valueFrom: {secretKeyRef: {name: claims-desk-secrets, key: MOCK_CLIENT_SECRET}}
+          readinessProbe:
+            httpGet: {path: /healthz, port: 8100}
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-api
+  namespace: northwind-claims
+spec:
+  selector: {app: mock-api}
+  ports: [{port: 8100, targetPort: 8100}]

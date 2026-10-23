@@ -1,0 +1,68 @@
+# Lesson 12's app + a queue (Redis) + a background worker.
+# Start with:  docker compose up -d --build
+# More workers: docker compose up -d --scale worker=3
+
+name: ai-queue
+
+services:
+  gateway:
+    build: ./gateway
+    image: ai-gateway:1.1
+    ports:
+      - "8000:8000"
+    environment:
+      RAG_URL: http://rag-service:8000
+      LLM_URL: http://llm-service:8000
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      rag-service:
+        condition: service_healthy
+      llm-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # The background worker. No "ports:": nobody calls it; it pulls jobs from Redis.
+  worker:
+    build: ./worker
+    image: ai-worker:1.0
+    environment:
+      RAG_URL: http://rag-service:8000
+      LLM_URL: http://llm-service:8000
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+      rag-service:
+        condition: service_healthy
+      llm-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # The queue and the job-status notebook.
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # These two are built from lesson 12's folders: same code, same images.
+  rag-service:
+    build: ../12-split-an-ai-app-into-services/rag-service
+    image: ai-rag-service:1.0
+    restart: unless-stopped
+
+  llm-service:
+    build: ../12-split-an-ai-app-into-services/llm-service
+    image: ai-llm-service:1.0
+    environment:
+      FAKE_LLM: ${FAKE_LLM:-1}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5-5}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Make every fake answer take 3 seconds, so you can watch jobs move from queued -> running -> done.
+      DELAY_SECONDS: ${LLM_DELAY_SECONDS:-3}
+    restart: unless-stopped

@@ -1,0 +1,24 @@
+# DELIBERATELY INSECURE Kubernetes Deployment. Compare with ../secure/deployment.yaml.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leaky-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leaky-api
+  template:
+    metadata:
+      labels:
+        app: leaky-api
+    spec:
+      containers:
+        - name: api
+          image: leaky-api:latest          # BAD: "latest" tag
+          env:
+            - name: ANTHROPIC_API_KEY
+              value: "put-your-real-key-here" # BAD: secret written in plain text in the manifest
+          securityContext:
+            privileged: true                # BAD: the container can control the whole node
+          # BAD: no resources.limits, so one pod can eat all CPU and memory on the node

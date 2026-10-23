@@ -1,0 +1,17 @@
+# heartbeat.timer - WHEN to run heartbeat.service (same name, different ending).
+
+[Unit]
+Description=Run heartbeat.service every minute
+
+[Timer]
+# OnCalendar = a calendar rule. "minutely" = every minute at :00 seconds.
+# Other examples: daily, hourly, Mon..Fri 09:00, *-*-* 02:30:00
+OnCalendar=minutely
+# Persistent=true = if the computer was off at run time, run once as soon as it is back on
+Persistent=true
+# AccuracySec = how precise to be. systemd may shift runs by up to 1 minute by default to save power.
+AccuracySec=1s
+
+[Install]
+# timers.target = "the group of all timers"; enable hooks this timer into it at every start-up
+WantedBy=timers.target

@@ -1,0 +1,18 @@
+# ONE pod running the llm-service container from lesson 12.
+# Create it:  kubectl apply -f pod.yaml
+apiVersion: v1          # which version of the Kubernetes API defines a "Pod"
+kind: Pod               # what kind of object this file describes
+metadata:
+  name: llm-pod         # the pod's name (must be unique in its namespace)
+  labels:               # sticky notes other objects can search for
+    app: llm-service
+spec:                   # "spec" = what you WANT
+  containers:
+    - name: llm-service              # a name for the container inside the pod
+      image: ai-llm-service:1.0      # the image you built in lesson 12 and loaded into kind
+      imagePullPolicy: IfNotPresent  # use the copy already on the node; don't try to download it
+      ports:
+        - containerPort: 8000        # the port uvicorn listens on (information for humans and tools)
+      env:
+        - name: FAKE_LLM
+          value: "1"                 # env values must be text, so "1" in quotes

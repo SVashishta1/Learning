@@ -1,0 +1,17 @@
+[
+  {
+    "id": "pastries",
+    "title": "Pastries",
+    "text": "Fresh croissants and cinnamon buns are baked every morning at 6am. Vegan pastries are marked with a green leaf."
+  },
+  {
+    "id": "wifi",
+    "title": "Wi-Fi",
+    "text": "Free Wi-Fi is available in every shop. Since October the network is called MoonbeamFast and needs no password."
+  },
+  {
+    "id": "events",
+    "title": "Events",
+    "text": "Every Friday evening the Riverside shop hosts an open mic night from 6pm to 9pm."
+  }
+]

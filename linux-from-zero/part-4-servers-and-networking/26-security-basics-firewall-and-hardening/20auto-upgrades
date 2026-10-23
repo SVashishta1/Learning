@@ -1,0 +1,8 @@
+// 20auto-upgrades - switches on automatic security updates (apt reads this file).
+// Lives in /etc/apt/apt.conf.d/20auto-upgrades. "dpkg-reconfigure unattended-upgrades" writes the same file.
+// "1" = do it every day, "0" = never.
+
+// Refresh the list of available packages every day (like "apt update")
+APT::Periodic::Update-Package-Lists "1";
+// Install security updates every day, using the rules in 50unattended-upgrades
+APT::Periodic::Unattended-Upgrade "1";

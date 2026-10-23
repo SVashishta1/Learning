@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+httpx
+python-multipart
+PyJWT[crypto]
+cryptography
+anthropic
+openai
+pytest

@@ -1,0 +1,9 @@
+# A ConfigMap: plain, NOT secret settings, kept outside the image.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: llm-config
+data:                          # every value is text, so numbers and flags go in quotes
+  FAKE_LLM: "1"                # 1 = canned answers, 0 = real Claude (needs the secret below)
+  CLAUDE_MODEL: "claude-opus-5-5"
+  DELAY_SECONDS: "0"

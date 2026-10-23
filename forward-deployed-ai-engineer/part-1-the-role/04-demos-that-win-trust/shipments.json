@@ -1,0 +1,11 @@
+{
+  "NW-4821907": {"customer": "Brouwer Metals", "from": "Rotterdam", "to": "Utrecht", "promised": "2026-10-20",
+                 "status": "delayed", "last_scan": "2026-10-21 06:40, Rotterdam hub: held, vehicle breakdown",
+                 "new_eta": "2026-10-22 before 12:00"},
+  "NW-3310452": {"customer": "Kowalska Trading", "from": "Kraków", "to": "Łódź", "promised": "2026-10-19",
+                 "status": "delivered", "last_scan": "2026-10-19 14:12, Łódź: delivered, signed by M. NOWAK",
+                 "new_eta": null},
+  "NW-7750031": {"customer": "Hartmann GmbH", "from": "Rotterdam", "to": "Düsseldorf", "promised": "2026-10-21",
+                 "status": "delivered", "last_scan": "2026-10-21 10:05, Düsseldorf: delivered, signed by L. FISCHER",
+                 "new_eta": null}
+}

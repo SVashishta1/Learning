@@ -1,0 +1,8 @@
+# Settings for "production". Only the values that DIFFER from values.yaml.
+# Use:  helm upgrade hello charts/hello-ai -f charts/hello-ai/values-prod.yaml
+replicaCount: 3
+message: "Hello from PRODUCTION. Please be nice to me."
+resources:
+  limits:
+    cpu: 200m
+    memory: 64Mi

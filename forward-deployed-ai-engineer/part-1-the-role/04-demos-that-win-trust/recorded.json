@@ -1,0 +1,30 @@
+{
+  "delayed": {
+    "category": "where_is_my_shipment",
+    "urgency": "high",
+    "summary": "Customer's pallet NW-4821907 to Utrecht is a day late and a production line is waiting.",
+    "draft_reply": "Dear Joost,\n\nI'm sorry your pallet NW-4821907 hasn't arrived yet. It was held at our Rotterdam hub this morning (21 October, 06:40) because of a vehicle breakdown. The new expected delivery time is 22 October before 12:00.\n\nBecause this delay of more than 24 hours was caused by us, you can request a 10% credit on the transport charge (delivery terms DT-3.2). Just reply to this email and we'll arrange it.\n\nAgain, our apologies for the disruption to your production line.\n\nKind regards,\nNorthwind Customer Support",
+    "cited_clauses": ["DT-3.1", "DT-3.2"]
+  },
+  "delivered": {
+    "category": "where_is_my_shipment",
+    "urgency": "medium",
+    "summary": "Customer says shipment NW-3310452 marked as delivered was not received and asks who signed.",
+    "draft_reply": "Dear Anna,\n\nThank you for checking with us. Our records show shipment NW-3310452 was delivered in Łódź on 19 October at 14:12 and signed for by M. NOWAK.\n\nCould you check with your colleagues whether M. Nowak received it? If it still can't be found, we can send the full proof of delivery within 2 working days (DT-4.1) and start an investigation.\n\nKind regards,\nNorthwind Customer Support",
+    "cited_clauses": ["DT-4.1"]
+  },
+  "damaged": {
+    "category": "damage_claim",
+    "urgency": "medium",
+    "summary": "Customer reports two crushed boxes in shipment NW-7750031 and wants compensation.",
+    "draft_reply": "Dear Lena,\n\nI'm sorry to hear that two boxes in shipment NW-7750031 arrived damaged. Thank you for reporting it so quickly and for the photos.\n\nDamage claims are handled by our Claims team (DT-5.1), so I have passed your email and photos to them. They will contact you directly about compensation.\n\nKind regards,\nNorthwind Customer Support",
+    "cited_clauses": ["DT-5.1"]
+  },
+  "no-number": {
+    "category": "where_is_my_shipment",
+    "urgency": "low",
+    "summary": "Customer asks where their parcel is but gives no tracking number.",
+    "draft_reply": "Hello,\n\nThank you for getting in touch. To find your parcel, could you send us your tracking number? It looks like NW-1234567 and is in your order confirmation email.\n\nAs soon as we have it, we'll check the latest status for you.\n\nKind regards,\nNorthwind Customer Support",
+    "cited_clauses": []
+  }
+}

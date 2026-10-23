@@ -1,0 +1,28 @@
+# Fake users: 3 tiny pods that call llm-service over and over, as fast as they can.
+# Start: kubectl apply -f load-generator.yaml     Stop: kubectl delete -f load-generator.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: load-generator
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: load-generator
+  template:
+    metadata:
+      labels:
+        app: load-generator
+    spec:
+      containers:
+        - name: load
+          image: busybox:1.37
+          # sh -c "...": run this little shell loop forever.
+          command: ["sh", "-c"]
+          args:
+            - |
+              while true; do
+                wget -q -O /dev/null --header "Content-Type: application/json" \
+                  --post-data '{"question": "Is the wifi free?", "context": ["Free Wi-Fi is available."]}' \
+                  http://llm-service:8000/generate
+              done

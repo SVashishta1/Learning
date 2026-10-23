@@ -1,0 +1,21 @@
+# jail.local - fail2ban settings. Copy to /etc/fail2ban/jail.local (never edit jail.conf: updates replace it).
+# fail2ban reads logs, counts failed logins per IP address, and tells the firewall to ban repeat offenders.
+
+[DEFAULT]
+# How long a ban lasts (s = seconds, m = minutes, h = hours, d = days)
+bantime = 1h
+# The time window in which failures are counted...
+findtime = 10m
+# ...and how many failures inside that window earn a ban
+maxretry = 5
+# Never ban these addresses: localhost (add your own home/office IP here, separated by spaces)
+ignoreip = 127.0.0.1/8 ::1
+
+[sshd]
+# Watch SSH logins
+enabled = true
+# Read sshd's messages from the systemd journal (Ubuntu 24.04 has no /var/log/auth.log by default
+# on minimal installs, and the journal always works)
+backend = systemd
+# Stricter than the default for SSH: 3 failures in 10 minutes = banned for 1 hour
+maxretry = 3

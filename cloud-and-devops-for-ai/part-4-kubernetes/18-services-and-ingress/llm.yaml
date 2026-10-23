@@ -1,0 +1,36 @@
+# llm-service: a Deployment + a ClusterIP Service, same pattern as rag.yaml.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: llm-service
+  template:
+    metadata:
+      labels:
+        app: llm-service
+    spec:
+      containers:
+        - name: llm-service
+          image: ai-llm-service:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: FAKE_LLM
+              value: "1"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm-service
+spec:
+  type: ClusterIP
+  selector:
+    app: llm-service
+  ports:
+    - port: 8000
+      targetPort: 8000

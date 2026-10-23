@@ -1,0 +1,19 @@
+# Dependabot: GitHub opens a pull request when a dependency has a newer (or fixed) version.
+# This file only works at the ROOT of a repository: <repo>/.github/dependabot.yml
+version: 2
+updates:
+  - package-ecosystem: "pip"            # Python requirements.txt files
+    directory: "/secure"                # folder that holds requirements.txt (relative to the repo root)
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "docker"         # FROM lines in Dockerfiles (e.g. python:3.12-slim)
+    directory: "/secure"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "github-actions" # the uses: lines in your workflows
+    directory: "/"
+    schedule:
+      interval: "weekly"

@@ -1,0 +1,32 @@
+# rag-service that reads its documents from a ConfigMap mounted as a FILE.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rag-service
+  template:
+    metadata:
+      labels:
+        app: rag-service
+    spec:
+      volumes:
+        - name: docs                 # a volume (a folder) made from the ConfigMap "rag-docs"
+          configMap:
+            name: rag-docs
+      containers:
+        - name: rag-service
+          image: ai-rag-service:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DOCS_FILE        # rag-service reads its documents from this path (lesson 12 code)
+              value: /config/docs.json
+          volumeMounts:
+            - name: docs             # put the "docs" volume...
+              mountPath: /config     # ...at this folder inside the container
+              readOnly: true

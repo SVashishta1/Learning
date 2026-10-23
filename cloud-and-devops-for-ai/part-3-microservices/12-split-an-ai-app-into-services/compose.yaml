@@ -1,0 +1,41 @@
+# Three small services that work together as one AI app.
+# Start them all with:  docker compose up -d --build
+
+name: ai-services
+
+services:
+  # 1. The front door: the only service users are meant to call.
+  gateway:
+    build: ./gateway
+    image: ai-gateway:1.0
+    ports:
+      - "8000:8000"
+    environment:
+      RAG_URL: http://rag-service:8000
+      LLM_URL: http://llm-service:8000
+    depends_on:
+      rag-service:
+        condition: service_healthy
+      llm-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # 2. Finds the documents that match a question.
+  rag-service:
+    build: ./rag-service
+    image: ai-rag-service:1.0
+    ports:
+      - "8001:8000" # published only so you can poke it while learning
+    restart: unless-stopped
+
+  # 3. Talks to the AI model (or fakes it).
+  llm-service:
+    build: ./llm-service
+    image: ai-llm-service:1.0
+    ports:
+      - "8002:8000" # published only so you can poke it while learning
+    environment:
+      FAKE_LLM: ${FAKE_LLM:-1}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5-5}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    restart: unless-stopped

@@ -1,0 +1,68 @@
+# Three pods in their own namespace, to practise NetworkPolicies:
+#   llm      a web server (pretend it is the expensive LLM service)
+#   gateway  the ONLY pod that should be allowed to call llm
+#   intruder any other pod (pretend an attacker got in here)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: np-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm
+  namespace: np-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llm
+  template:
+    metadata:
+      labels:
+        app: llm
+    spec:
+      containers:
+        - name: llm
+          image: hashicorp/http-echo:1.0
+          args: ["-listen=:5678", "-text=hello from the llm service"]
+          ports:
+            - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llm
+  namespace: np-demo
+spec:
+  selector:
+    app: llm
+  ports:
+    - port: 5678
+      targetPort: 5678
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gateway
+  namespace: np-demo
+  labels:
+    app: gateway            # the label the "allow" policy looks for
+spec:
+  containers:
+    - name: shell
+      image: busybox:1.37
+      command: ["sleep", "infinity"]   # just stay alive so we can run commands in it
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: intruder
+  namespace: np-demo
+  labels:
+    app: intruder
+spec:
+  containers:
+    - name: shell
+      image: busybox:1.37
+      command: ["sleep", "infinity"]

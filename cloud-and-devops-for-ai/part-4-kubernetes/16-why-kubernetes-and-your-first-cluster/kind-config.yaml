@@ -1,0 +1,23 @@
+# A practice Kubernetes cluster for this course: 1 control-plane node + 2 worker nodes.
+# Create it with:  kind create cluster --config kind-config.yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: ai-lab
+nodes:
+  # The "brain" node. It also gets the doors to your laptop (ports 80, 443, 30080).
+  - role: control-plane
+    labels:
+      ingress-ready: "true" # lesson 18 installs ingress-nginx on the node with this label
+    extraPortMappings:
+      - containerPort: 80 # web traffic for Ingress (lesson 18)
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443 # HTTPS traffic for Ingress
+        hostPort: 443
+        protocol: TCP
+      - containerPort: 30080 # a NodePort service (lesson 18)
+        hostPort: 30080
+        protocol: TCP
+  # Two "muscle" nodes where your apps will run.
+  - role: worker
+  - role: worker

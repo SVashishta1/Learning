@@ -1,0 +1,3 @@
+# Volunteer radio log (typed by the radio operator). Format: HHMM caller: message
+0815 Millbrook team: 12 houses with roof damage, 30 people moved to the village hall, food OK for today, need tarps for roofs
+0832 Ashgrove team: no flooding here, all fine, village hall can host 50 people if needed

@@ -1,0 +1,39 @@
+# crontab.example - example crontab lines, each explained.
+# A crontab line has 5 time fields, then the command:
+#
+#  .---------------- minute        (0 - 59)
+#  |  .------------- hour          (0 - 23)
+#  |  |  .---------- day of month  (1 - 31)
+#  |  |  |  .------- month         (1 - 12, or jan feb ...)
+#  |  |  |  |  .---- day of week   (0 - 7, 0 and 7 are both Sunday, or sun mon ...)
+#  |  |  |  |  |
+#  *  *  *  *  *  command to run
+#
+# Symbols:  *  = every value     ,  = a list (1,15)
+#           -  = a range (1-5)   /  = a step (*/10 = every 10)
+#
+# Lines starting with # are comments. Empty lines are fine.
+# Settings can go at the top, one per line:
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# Every minute: write a heartbeat line (the line this lesson installs, with your own home folder)
+# * * * * * $HOME/linux-practice/21/heartbeat.sh >> $HOME/linux-practice/21/cron.log 2>&1
+
+# Every day at 02:30: run the lesson 20 backup tool, keep 7 backups
+# 30 2 * * * $HOME/bin/backup.sh -k 7 >> $HOME/backup.log 2>&1
+
+# Every 15 minutes, only during working hours (9:00-17:45), Monday to Friday
+# */15 9-17 * * 1-5 $HOME/bin/check-api.sh
+
+# At 06:00 on the 1st of every month
+# 0 6 1 * * $HOME/bin/monthly-report.sh
+
+# Sundays at 03:00: clean files older than 7 days (find -mtime +7 = changed more than 7 days ago)
+# 0 3 * * 0 find $HOME/tmp -type f -mtime +7 -delete
+
+# Once, every time the computer starts
+# @reboot $HOME/bin/start-my-model-server.sh
+
+# % is special in crontab lines (it means "new line"), so it must be written as \%
+# 0 0 * * * tar -czf $HOME/backups/home-$(date +\%F).tar.gz $HOME/notes
