@@ -1,0 +1,6 @@
+pypdf
+openpyxl
+pandas
+beautifulsoup4
+reportlab
+pytest

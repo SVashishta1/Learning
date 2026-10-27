@@ -1,0 +1,14 @@
+[
+  {"id": "delayed",
+   "title": "Delayed shipment",
+   "email": "Hello, our pallet NW-4821907 was supposed to arrive in Utrecht yesterday and nothing has shown up. We have a production line waiting. Where is it?? Regards, Joost van Dijk, Brouwer Metals"},
+  {"id": "delivered",
+   "title": "Says delivered, customer disagrees",
+   "email": "Hi, tracking for NW-3310452 says delivered on Monday but our warehouse has no record of it. Can you check who signed for it? Thanks, Anna Kowalska"},
+  {"id": "damaged",
+   "title": "Damage claim (out of scope)",
+   "email": "Shipment NW-7750031 arrived today with two crushed boxes. Photos attached. We want compensation for the damaged goods. Lena Fischer, Hartmann GmbH"},
+  {"id": "no-number",
+   "title": "No tracking number",
+   "email": "hi where is my parcel, i ordered last week and still nothing. thanks"}
+]

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Northwind Reply Assistant</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f4f6f8; color: #1d2733; }
+    header { background: #12355b; color: white; padding: 14px 24px; }
+    header small { opacity: .8; margin-left: 8px; }
+    main { max-width: 980px; margin: 20px auto; padding: 0 16px; display: grid; gap: 16px;
+           grid-template-columns: 1fr 1fr; }
+    @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+    .card { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    textarea { width: 100%; box-sizing: border-box; height: 170px; font: inherit; padding: 8px; }
+    button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid #12355b; cursor: pointer;
+             background: white; color: #12355b; margin: 0 6px 6px 0; }
+    button.primary { background: #12355b; color: white; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 12px; margin-right: 6px;
+             background: #e6ecf2; }
+    .live { background: #d7f5de; color: #0d6b27; }
+    .recorded, .fallback { background: #fff1c7; color: #7a5600; }
+    .unavailable, .high { background: #fde0e0; color: #8a1c1c; }
+    pre { white-space: pre-wrap; font: inherit; background: #f7f9fb; padding: 10px; border-radius: 6px; }
+    dt { font-weight: 600; } dd { margin: 0 0 6px 0; }
+    .muted { color: #5b6773; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header><strong>Northwind Reply Assistant</strong><small>demo: drafts are always reviewed by an agent</small></header>
+  <main>
+    <section class="card">
+      <h3>1. Customer email</h3>
+      <div id="samples"></div>
+      <textarea id="email" placeholder="Paste a customer email here, or pick a sample above"></textarea>
+      <button class="primary" id="go">Draft reply</button>
+      <span class="muted" id="status"></span>
+    </section>
+    <section class="card">
+      <h3>2. Facts from the TMS <span class="muted">(looked up by code, not AI)</span></h3>
+      <dl id="facts"><dd class="muted">Nothing yet.</dd></dl>
+    </section>
+    <section class="card" style="grid-column: 1 / -1">
+      <h3>3. Draft reply</h3>
+      <div id="badges"></div>
+      <p class="muted" id="note"></p>
+      <pre id="draft">Nothing yet.</pre>
+      <p class="muted" id="sources"></p>
+    </section>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let sampleId = null;     // remembers which sample was picked, so a recorded answer can be used if needed
+
+    function badge(text, cls) {
+      const span = document.createElement("span");
+      span.className = "badge " + (cls || "");
+      span.textContent = text;   // textContent (not innerHTML) so email text can never inject HTML
+      return span;
+    }
+
+    fetch("/api/samples").then(r => r.json()).then(samples => {
+      for (const s of samples) {
+        const b = document.createElement("button");
+        b.textContent = s.title;
+        b.onclick = () => { $("email").value = s.email; sampleId = s.id; };
+        $("samples").appendChild(b);
+      }
+    });
+    $("email").addEventListener("input", () => { sampleId = null; });   // edited text is no longer the sample
+
+    $("go").onclick = async () => {
+      $("status").textContent = "Thinking...";
+      $("go").disabled = true;
+      try {
+        const reply = await fetch("/api/draft", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({email: $("email").value, sample_id: sampleId}),
+        });
+        const data = await reply.json();
+        if (!reply.ok) { throw new Error(JSON.stringify(data.detail || data)); }
+        show(data);
+        $("status").textContent = `Done in ${data.seconds} s`;
+      } catch (err) {
+        $("status").textContent = "Error: " + err.message;
+      } finally {
+        $("go").disabled = false;
+      }
+    };
+
+    function show(data) {
+      const facts = $("facts");
+      facts.replaceChildren();
+      const rows = data.shipment
+        ? [["Tracking", data.tracking], ["Status", data.shipment.status], ["Last scan", data.shipment.last_scan],
+           ["Promised", data.shipment.promised], ["New ETA", data.shipment.new_eta || "n/a"]]
+        : [["Tracking", data.tracking || "none found in the email"], ["Record", "no shipment record"]];
+      for (const [k, v] of rows) {
+        const dt = document.createElement("dt"); dt.textContent = k;
+        const dd = document.createElement("dd"); dd.textContent = v;
+        facts.append(dt, dd);
+      }
+      $("badges").replaceChildren(badge(data.mode.toUpperCase(), data.mode));
+      $("note").textContent = data.note || "";
+      if (data.triage) {
+        $("badges").append(badge(data.triage.category.replaceAll("_", " ")),
+                           badge("urgency: " + data.triage.urgency, data.triage.urgency));
+        $("draft").textContent = data.triage.draft_reply;
+        $("sources").textContent = "Policy cited: " + (data.triage.cited_clauses.join(", ") || "none");
+      } else {
+        $("draft").textContent = "No draft available.";
+        $("sources").textContent = "";
+      }
+    }
+  </script>
+</body>
+</html>
