@@ -1,0 +1,13 @@
+# Files the lessons create when you run them (they are re-created automatically).
+__pycache__/
+.pytest_cache/
+
+# Part 1
+part-1-neural-networks-from-scratch/*/mnist_data/
+part-1-neural-networks-from-scratch/06-pytorch-tensors-and-autograd/digit_net.pt
+
+# Part 2 (names.txt is downloaded from github.com/karpathy/makemore on first run)
+part-2-language-models-step-by-step/*/names.txt
+part-2-language-models-step-by-step/07-bigram-language-model/bigram_counts.png
+part-2-language-models-step-by-step/08-mlp-language-model/embeddings.png
+part-2-language-models-step-by-step/09-activations-batchnorm-and-initialization/hidden_activations.png
