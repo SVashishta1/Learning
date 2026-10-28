@@ -1,0 +1,5 @@
+# Optional: local voice in (faster-whisper) and out (Kokoro). Install with: pip install -r requirements-voice.txt
+faster-whisper==1.2.1
+av<19
+kokoro-onnx==0.6.1
+soundfile==0.14.0

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clinic Protocol Assistant</title>
+  <style>
+    :root { --bg: #f4f6f4; --card: #fff; --text: #1b1f1b; --muted: #5f6b5f; --accent: #1f7a4d; --warn-bg: #fff4d6; --warn: #6b4e00; --line: #d9e0d9; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #141814; --card: #1d221d; --text: #e7ece7; --muted: #a2b0a2; --accent: #5cc493; --warn-bg: #3a3112; --warn: #f3d27a; --line: #333b33; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.5 system-ui, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 1.4rem; margin: 4px 0 8px; }
+    .banner { background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 0.95rem; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin: 12px 0; }
+    label { display: block; font-weight: 600; margin: 8px 0 4px; }
+    input, textarea { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); font: inherit; }
+    textarea { min-height: 90px; resize: vertical; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    button { padding: 10px 16px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; cursor: pointer; }
+    button.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+    button:disabled { opacity: 0.5; cursor: default; }
+    #answer { white-space: pre-wrap; overflow-wrap: anywhere; }
+    #status, .small { color: var(--muted); font-size: 0.9rem; }
+    details { margin-top: 6px; }
+    summary { cursor: pointer; }
+    .source { border-top: 1px solid var(--line); padding: 6px 0; font-size: 0.9rem; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>🩺 Clinic Protocol Assistant</h1>
+  <p class="banner">Fictional training demo. The protocols are made up for a programming course. <strong>Not medical advice.</strong> Runs fully offline on this computer. Every question is recorded in the audit log: do not type patient names.</p>
+
+  <div class="card">
+    <label for="staff">Your staff ID</label>
+    <input id="staff" placeholder="e.g. nurse-amina" maxlength="20" autocomplete="off">
+    <label for="question">Question</label>
+    <textarea id="question" placeholder="e.g. How do I prepare ORS?"></textarea>
+    <div class="row">
+      <button id="ask">Ask</button>
+      <button id="mic" class="secondary">🎙️ Speak</button>
+      <button id="read" class="secondary" disabled>🔊 Read answer aloud</button>
+    </div>
+    <p id="status">Ready.</p>
+  </div>
+
+  <div class="card" id="result" hidden>
+    <div id="answer"></div>
+    <details>
+      <summary>Protocol excerpts used</summary>
+      <div id="sources"></div>
+    </details>
+    <p class="small" id="audit"></p>
+  </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let recorder = null, chunks = [];
+
+function status(text) { $("status").textContent = text; }
+
+// Remember the staff ID on this device only (a convenience; the server checks it on every request).
+try { $("staff").value = localStorage.getItem("staff_id") || ""; } catch {}
+
+async function ask() {
+  const staff_id = $("staff").value.trim(), question = $("question").value.trim();
+  if (!staff_id || !question) { status("Please fill in your staff ID and a question."); return; }
+  try { localStorage.setItem("staff_id", staff_id); } catch {}
+  $("ask").disabled = true;
+  status("Searching the protocols and writing an answer (10-60 seconds on a laptop)...");
+  try {
+    const response = await fetch("/api/ask", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ staff_id, question }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Please check the staff ID (letters, digits, - and _) and the question (3-500 characters).");
+    $("answer").textContent = data.answer;                     // textContent: show the model's text as plain text
+    $("sources").replaceChildren(...data.sources.map((s, i) => {
+      const div = document.createElement("div");
+      div.className = "source";
+      div.textContent = `[${i + 1}] ${s.file} · ${s.heading} (similarity ${s.score})\n${s.text}`;
+      return div;
+    }));
+    $("audit").textContent = `Logged as audit record ${data.audit_id} · model ${data.model}`;
+    $("result").hidden = false;
+    $("read").disabled = false;
+    status("Done. Always check the answer against the cited protocol.");
+  } catch (error) {
+    status("❌ " + error.message);
+  }
+  $("ask").disabled = false;
+}
+
+async function toggleMic() {
+  if (recorder) { recorder.stop(); return; }                    // second click = stop recording
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream);
+    chunks = [];
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+    recorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      recorder = null;
+      $("mic").textContent = "🎙️ Speak";
+      status("Writing down what you said...");
+      const form = new FormData();
+      form.append("audio", new Blob(chunks, { type: "audio/webm" }), "question.webm");
+      const response = await fetch("/api/transcribe", { method: "POST", body: form });
+      const data = await response.json();
+      if (!response.ok) { status("❌ " + data.detail); return; }
+      $("question").value = data.text;
+      status("Check the text, then press Ask.");
+    };
+    recorder.start();
+    $("mic").textContent = "⏹️ Stop";
+    status("🔴 Recording... press Stop when you're done.");
+  } catch (error) {
+    status("❌ Microphone not available: " + error.message);
+  }
+}
+
+async function readAloud() {
+  status("Making speech...");
+  const response = await fetch("/api/speak", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text: $("answer").textContent }),
+  });
+  if (!response.ok) { status("❌ " + (await response.json()).detail); return; }
+  new Audio(URL.createObjectURL(await response.blob())).play();
+  status("Playing.");
+}
+
+$("ask").addEventListener("click", ask);
+$("mic").addEventListener("click", toggleMic);
+$("read").addEventListener("click", readAloud);
+</script>
+</body>
+</html>

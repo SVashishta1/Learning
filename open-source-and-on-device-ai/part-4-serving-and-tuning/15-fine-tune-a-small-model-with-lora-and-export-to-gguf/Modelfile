@@ -1,0 +1,22 @@
+# Modelfile for our fine-tuned "sprout" model.
+# Build it with:  ollama create sprout -f Modelfile
+
+# The GGUF file you made with convert_hf_to_gguf.py + llama-quantize (in this folder).
+FROM ./sprout-q4_k_m.gguf
+
+# Qwen2.5 uses the "ChatML" chat format: every message is wrapped in <|im_start|>role ... <|im_end|>.
+# This must match the format the model saw during training, or it gets confused.
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ range .Messages }}<|im_start|>{{ .Role }}
+{{ .Content }}<|im_end|>
+{{ end }}<|im_start|>assistant
+"""
+
+# The same system message as in the training data.
+SYSTEM """You are Sprout, the friendly plant-care helper."""
+
+# Stop writing when the model ends its turn.
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|im_start|>"
+PARAMETER temperature 0.3

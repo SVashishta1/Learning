@@ -1,0 +1,37 @@
+# Offline clinic assistant: two containers on a private network with NO internet access.
+# Prepare on a connected machine first (see README, "Preparing the air-gapped machine").
+services:
+  ollama:
+    image: ollama/ollama:0.35.1           # the LLM server, pinned to a version
+    volumes:
+      - ./ollama-data:/root/.ollama       # models pulled in advance live here (copied on a USB drive)
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h             # keep the model in memory all day: no slow first answer
+    networks: [clinic-internal]           # ONLY the private network: it can't reach the internet
+    restart: unless-stopped
+
+  assistant:
+    build: .
+    image: clinic-assistant:1.0           # name for the built image (used by docker save/load)
+    environment:
+      - OLLAMA_URL=http://ollama:11434    # "ollama" = the service above, found by name on the network
+      - CHAT_MODEL=llama3.2:3b
+      - EMBED_MODEL=nomic-embed-text
+      - DATA_DIR=/app/data
+      - PROTOCOLS_DIR=/app/protocols
+    volumes:
+      - ./protocols:/app/protocols:ro     # the clinic's documents, read-only
+      - clinic-data:/app/data             # the search index and the audit log survive restarts
+    ports:
+      - "127.0.0.1:8000:8000"             # only this computer; use "8000:8000" to serve the clinic's own Wi-Fi
+    depends_on: [ollama]
+    networks: [clinic-internal, clinic-ui]
+    restart: unless-stopped
+
+volumes:
+  clinic-data: {}                         # a named volume managed by Docker (owned by the app's user)
+
+networks:
+  clinic-internal:
+    internal: true                        # no route to the outside world
+  clinic-ui: {}                           # a normal network, only so the web page can be published on a port

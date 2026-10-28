@@ -1,0 +1,5 @@
+# files the scripts make
+shapes.png
+receipt.png
+receipt.json
+__pycache__/

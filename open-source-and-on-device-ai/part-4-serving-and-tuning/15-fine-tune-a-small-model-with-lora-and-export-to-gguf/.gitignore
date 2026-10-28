@@ -1,0 +1,6 @@
+# made by the lesson (big files)
+sprout-lora/
+sprout-merged/
+*.gguf
+llama.cpp/
+__pycache__/

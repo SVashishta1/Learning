@@ -1,0 +1,6 @@
+# made by the app
+data/
+ollama-data/
+*.tar
+__pycache__/
+.pytest_cache/
