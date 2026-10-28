@@ -1,0 +1,15 @@
+{
+  "system": "rules",
+  "version": "v2",
+  "scores": {
+    "triage_category": 1.0,
+    "triage_priority": 1.0,
+    "answer_facts": 1.0,
+    "answer_semantic": 0.908,
+    "idk_correct": 1.0
+  },
+  "tolerance": {
+    "default": 0.02,
+    "answer_semantic": 0.1
+  }
+}

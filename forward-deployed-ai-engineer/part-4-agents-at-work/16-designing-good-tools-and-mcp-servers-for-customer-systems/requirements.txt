@@ -1,0 +1,7 @@
+mcp>=2
+fastapi
+uvicorn[standard]
+httpx
+anthropic>=1.13
+pydantic>=2
+pytest
