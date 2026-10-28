@@ -1,0 +1,23 @@
+{
+  "depot": "Oakford",
+  "items": {
+    "water_l":      {"unit_kg": 1.0,  "stock": 6000, "label": "drinking water (litres)"},
+    "food_ration":  {"unit_kg": 0.5,  "stock": 3000, "label": "food ration (1 person, 1 day)"},
+    "medical_kit":  {"unit_kg": 5.0,  "stock": 40,   "label": "first-aid / medical kit"},
+    "blanket":      {"unit_kg": 1.2,  "stock": 600,  "label": "blanket"},
+    "tarp":         {"unit_kg": 2.0,  "stock": 200,  "label": "tarpaulin for damaged roofs"},
+    "hygiene_kit":  {"unit_kg": 1.0,  "stock": 400,  "label": "hygiene kit (1 family)"}
+  },
+  "fleet": [
+    {"id": "Truck-1", "type": "truck", "capacity_kg": 3000, "speed_kmh": 30},
+    {"id": "Truck-2", "type": "truck", "capacity_kg": 2000, "speed_kmh": 30},
+    {"id": "Van-1",   "type": "truck", "capacity_kg": 800,  "speed_kmh": 40},
+    {"id": "Boat-1",  "type": "boat",  "capacity_kg": 600,  "speed_kmh": 12}
+  ],
+  "partners": {
+    "fire_rescue": "Valley Fire & Rescue boat team (people trapped by water)",
+    "red_cross":   "Red Cross shelter team (running and staffing shelters)",
+    "valley_power": "Valley Power (generators and fuel for critical sites)",
+    "valley_fm":   "Valley FM 98.1 (public radio announcements)"
+  }
+}

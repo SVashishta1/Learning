@@ -1,0 +1,8 @@
+# Exact versions this project was tested with (pinned = the same install every time, at every customer).
+anthropic==1.13.0      # Claude's official Python SDK
+pydantic==2.14.1       # typed tool inputs and reports
+httpx==0.28.1          # HTTP client: Northwind APIs, Ollama / vLLM
+fastapi==0.143.0       # the web API
+uvicorn==0.54.0        # the web server that runs FastAPI
+python-multipart==0.0.32  # lets FastAPI read form posts (the OAuth token request in mock_api.py)
+pytest==9.1.1          # tests and evals

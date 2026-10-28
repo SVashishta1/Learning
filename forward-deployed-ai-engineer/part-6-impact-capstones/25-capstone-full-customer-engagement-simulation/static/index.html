@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northwind Claims Desk</title>
+<style>
+  :root { --bg:#f5f6f8; --card:#fff; --text:#1c2230; --muted:#5e6676; --line:#dcdfe6; --accent:#1f4fd1;
+          --ok:#18794e; --bad:#b42318; --warn:#b54708; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111418; --card:#1a1e25; --text:#e6e9ef; --muted:#9aa2b1;
+          --line:#2b313b; --accent:#7ca0ff; --ok:#4cc38a; --bad:#ff7a6e; --warn:#f5a524; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui, sans-serif; }
+  header { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  h1 { font-size:18px; margin:0 10px 0 0; } h2 { font-size:15px; margin:0 0 10px; }
+  main { padding:16px; display:grid; gap:16px; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; min-width:0; }
+  .wide { grid-column:1 / -1; }
+  button, select, input { font:inherit; padding:6px 10px; border-radius:6px; border:1px solid var(--line); background:var(--card); color:var(--text); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .muted { color:var(--muted); font-size:13px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; } td, th { border-bottom:1px solid var(--line); padding:5px; text-align:left; vertical-align:top; }
+  .pending, .need_info { color:var(--warn); } .approved, .executed, .approve_full, .approve_partial { color:var(--ok); }
+  .rejected, .failed, .reject { color:var(--bad); }
+  .act { border-top:1px solid var(--line); padding:8px 0; }
+  pre { white-space:pre-wrap; word-break:break-word; font-size:12px; background:var(--bg); padding:8px; border-radius:6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Northwind AI claims desk</h1>
+  <button class="primary" id="run">Process the claims queue</button>
+  <span id="status" class="muted"></span>
+  <span id="info" class="muted"></span>
+</header>
+<main>
+  <section class="wide">
+    <h2>Batch report (head agent)</h2>
+    <p id="summary" class="muted">Press the button. FAKE mode takes a few seconds.</p>
+    <table id="claims"></table>
+    <ul id="risks"></ul>
+  </section>
+  <section>
+    <h2>Waiting for a human</h2>
+    <div class="row">
+      <input id="who" value="Priya" size="10" aria-label="your name">
+      <select id="role" aria-label="your role"><option value="handler">claims handler</option><option value="supervisor">claims supervisor</option></select>
+    </div>
+    <div id="actions"></div>
+    <button id="exec" disabled>Pay and send approved</button>
+  </section>
+  <section>
+    <h2>Reply drafts</h2>
+    <div id="drafts" class="muted">None yet.</div>
+    <h2 style="margin-top:12px">Northwind systems received (mock)</h2>
+    <pre id="outbox">{}</pre>
+  </section>
+  <section class="wide">
+    <h2>Trace</h2>
+    <div style="max-height:320px; overflow:auto"><table id="trace"></table></div>
+  </section>
+</main>
+<script>
+let rid = null, timer = null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function api(path, body) {
+  const r = await fetch(path, body ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {});
+  const d = await r.json(); if (!r.ok) throw new Error(d.detail || r.statusText); return d;
+}
+api("/api/info").then(i => $("info").textContent = "brain: " + i.provider);
+$("run").onclick = async () => {
+  try { const r = await api("/api/runs", {}); rid = r.id; clearInterval(timer); timer = setInterval(refresh, 1000); refresh(); }
+  catch (e) { $("status").textContent = e.message; }
+};
+$("exec").onclick = async () => { await api(`/api/runs/${rid}/execute`, {}); refresh(); };
+async function decide(aid, approve) {
+  try { await api(`/api/runs/${rid}/actions/${aid}`, {approve, by: $("who").value, role: $("role").value}); refresh(); }
+  catch (e) { alert(e.message); }
+}
+async function refresh() {
+  const m = await api(`/api/runs/${rid}`);
+  $("status").textContent = `${m.status} · ${m.budget.tool_calls} tool calls · $${m.budget.usd}`;
+  if (!["created", "running"].includes(m.status)) clearInterval(timer);
+  const p = m.plan;
+  $("summary").textContent = p ? p.summary : "The team is working...";
+  $("claims").innerHTML = "<tr><th>claim</th><th>tracking</th><th>type</th><th>lang</th><th>outcome</th><th>EUR</th><th>why</th></tr>" +
+    m.claims.map(c => { const a = m.assessments[c.claim_id] || {};
+      return `<tr><td>${c.claim_id}${c.suspicious ? " ⚠" : ""}</td><td>${esc(c.tracking)}</td><td>${c.claim_type}</td><td>${c.language}</td>
+      <td class="${a.outcome}">${esc(a.outcome)}</td><td>${a.amount_eur ?? ""}${a.needs_supervisor ? " (supervisor)" : ""}</td>
+      <td class="muted">${esc((a.reasons || []).join("; "))}</td></tr>`; }).join("");
+  $("risks").innerHTML = p ? p.risks.map(r => `<li>${esc(r)}</li>`).join("") : "";
+  $("actions").innerHTML = m.actions.map(a => `<div class="act"><b>${a.id}</b> <span class="${a.status}">${a.status}</span>
+      <span class="muted">${a.kind}</span><div>${esc(a.summary)}</div>
+      ${a.status === "pending" ? `<button onclick="decide('${a.id}', true)">Approve</button> <button onclick="decide('${a.id}', false)">Reject</button>`
+        : `<span class="muted">${esc(a.decided_by)} ${esc(a.result)}</span>`}</div>`).join("") || '<p class="muted">Nothing yet.</p>';
+  $("exec").disabled = !m.actions.some(a => a.status === "approved");
+  $("drafts").innerHTML = Object.values(m.drafts).map(d => `<details><summary>${d.claim_id} (${d.language})</summary><pre>${esc(d.text)}</pre></details>`).join("") || "None yet.";
+  $("trace").innerHTML = m.trace.map(t => `<tr><td>${t.t}</td><td>${esc(t.agent)}</td><td>${esc(t.kind)}</td><td>${esc(t.text)}</td></tr>`).join("");
+  $("outbox").textContent = JSON.stringify(await api("/api/outbox"), null, 2);
+}
+</script>
+</body>
+</html>

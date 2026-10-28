@@ -1,0 +1,11 @@
+from,to,km,status
+Oakford,Riverside,7.5,flooded
+Oakford,Hilltop School,4.5,open
+Hilltop School,Kestrel Bridge,8.5,open
+Kestrel Bridge,Riverside,7,open
+Riverside,St Anne's Clinic,1.5,open
+Riverside,Ferry Point,6.5,flooded
+Riverside,Low Meadow Farms,5.5,unknown
+Ferry Point,Low Meadow Farms,4.5,flooded
+Oakford,Millbrook,9,open
+Oakford,Ashgrove,7,open

@@ -1,0 +1,9 @@
+{
+  "mission": "UAV-3 morning survey",
+  "time": "2026-10-21T07:20",
+  "observations": [
+    {"grid": [21.8, 3.2], "observation": "about 25 people on church grounds, roads flooded on both sides", "confidence": 0.8},
+    {"grid": [19.9, 12.1], "observation": "Kestrel Bridge intact and passable to trucks", "confidence": 0.9},
+    {"grid": [17.9, 1.2], "observation": "farmhouse surrounded by water, 2 people waving from upper window, livestock stranded", "confidence": 0.6}
+  ]
+}

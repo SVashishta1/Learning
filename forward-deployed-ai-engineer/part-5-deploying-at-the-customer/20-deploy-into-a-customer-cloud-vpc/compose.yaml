@@ -1,0 +1,31 @@
+# What runs on the customer's VM inside their VPC (the VM itself is created by terraform/).
+#   echo -n "sk-ant-..." > secrets/anthropic_api_key      (only for LLM_PROVIDER=anthropic)
+#   docker compose up -d --build
+services:
+  assistant:
+    build: .
+    image: northwind/assistant:1.0.0
+    ports:
+      - "127.0.0.1:8000:8000"           # only this machine; the customer's internal load balancer forwards to it
+    environment:
+      LLM_PROVIDER: ${LLM_PROVIDER:-fake}
+      AWS_REGION: ${AWS_REGION:-eu-central-1}
+      BEDROCK_MODEL: ${BEDROCK_MODEL:-anthropic.claude-opus-5-5}
+      BEDROCK_BASE_URL: ${BEDROCK_BASE_URL:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}      # many customers force all outbound traffic through their proxy
+      NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1}
+    secrets:
+      - anthropic_api_key               # appears inside the container as the FILE /run/secrets/anthropic_api_key
+    read_only: true                     # the container cannot write to its own filesystem
+    tmpfs:
+      - /tmp                            # ...except a small in-memory /tmp
+    security_opt:
+      - no-new-privileges:true          # a process can never gain more rights than it started with
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "5"}   # don't fill the customer's disk with logs
+
+secrets:
+  anthropic_api_key:
+    file: ./secrets/anthropic_api_key   # a file on the VM, readable only by root (chmod 600)

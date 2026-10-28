@@ -1,0 +1,34 @@
+{
+  "_note": "FICTIONAL rules for learning only. The prose in the .md files and these numbers must match (a test checks it).",
+  "bbna": {"1": 1300, "2": 1760, "3": 2220, "4": 2680, "extra_person": 460},
+  "documents": {
+    "photo_id": "Photo ID of the applicant",
+    "proof_of_address": "Proof of address in Brightwater County (bill or tenancy agreement, last 3 months)",
+    "proof_of_income": "Proof of income for the last 30 days for every adult (payslips, pension letter)",
+    "child_age_proof": "Proof of age for each child (birth certificate or passport)",
+    "energy_bill": "A recent energy or heating bill in the applicant's name",
+    "tenancy_agreement": "Tenancy agreement (lease) showing the monthly rent",
+    "school_names": "Name of each child's school",
+    "work_or_study_proof": "Proof of work or study for every adult (contract, timetable or letter)"
+  },
+  "programmes": {
+    "foodbridge":  {"name": "FoodBridge", "form": "FB-1", "income_pct": 130, "needs": ["resident"],
+                    "documents": ["photo_id", "proof_of_address", "proof_of_income"],
+                    "form_fields": ["applicant_name", "address", "phone", "household_size", "monthly_income"]},
+    "kidcare":     {"name": "KidCare Health", "form": "KC-1", "income_pct": 250, "needs": ["resident", "child_under_19"],
+                    "documents": ["child_age_proof", "proof_of_address", "proof_of_income"],
+                    "form_fields": ["applicant_name", "address", "phone", "household_size", "monthly_income", "children_ages"]},
+    "warmhome":    {"name": "WarmHome", "form": "WH-1", "income_pct": 150, "needs": ["resident", "pays_heating"],
+                    "documents": ["energy_bill", "proof_of_income"],
+                    "form_fields": ["applicant_name", "address", "phone", "household_size", "monthly_income", "energy_company"]},
+    "rentrelief":  {"name": "RentRelief", "form": "RR-1", "income_pct": 200, "needs": ["resident", "rent_over_40pct"],
+                    "documents": ["tenancy_agreement", "proof_of_income"],
+                    "form_fields": ["applicant_name", "address", "phone", "household_size", "monthly_income", "monthly_rent", "landlord_name"]},
+    "schoolmeals": {"name": "School Meals", "form": "SM-1", "income_pct": 185, "needs": ["child_in_school"],
+                    "documents": ["school_names", "proof_of_income"],
+                    "form_fields": ["applicant_name", "address", "household_size", "monthly_income", "children_ages", "school_names"]},
+    "childcare":   {"name": "ChildCare Assist", "form": "CC-1", "income_pct": 200, "needs": ["child_under_13", "all_adults_work_or_study"],
+                    "documents": ["child_age_proof", "work_or_study_proof", "proof_of_income"],
+                    "form_fields": ["applicant_name", "address", "phone", "household_size", "monthly_income", "children_ages"]}
+  }
+}

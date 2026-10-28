@@ -1,0 +1,73 @@
+# Air-gapped stack. Two networks:
+#   airgap  (internal: true)  assistant + model server; NO route to the internet, not even through the host
+#   edge                      only the gateway, so people on the site network can open http://<host>:8000
+#
+# FAKE mode (no model server):          docker compose up -d
+# Ollama (CPU or NVIDIA GPU):           FAKE_LLM=0 docker compose --profile ollama up -d
+# vLLM (NVIDIA GPU, faster for many users):
+#   FAKE_LLM=0 MODEL_URL=http://vllm:8000/v1 CHAT_MODEL=Qwen/Qwen2.5-7B-Instruct docker compose --profile vllm up -d
+services:
+  assistant:
+    image: northwind/onprem-assistant:1.0.0
+    build: .
+    environment:
+      FAKE_LLM: ${FAKE_LLM:-1}
+      MODEL_URL: ${MODEL_URL:-http://ollama:11434/v1}
+      CHAT_MODEL: ${CHAT_MODEL:-qwen2.5:7b}
+      EMBED_MODEL: ${EMBED_MODEL:-nomic-embed-text}
+      AUDIT_LOG: /data/audit.jsonl
+    volumes:
+      - audit:/data                       # the audit log survives restarts and upgrades
+    networks: [airgap]
+    read_only: true
+    tmpfs: [/tmp]
+    restart: unless-stopped
+
+  gateway:
+    image: nginx:1.30-alpine
+    ports:
+      - "${GATEWAY_PORT:-8000}:8000"      # the site network reaches the assistant only through here
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [airgap, edge]
+    depends_on: [assistant]
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:0.40.8
+    profiles: ["ollama"]
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+    volumes:
+      - ollama-models:/root/.ollama       # filled from the offline bundle (bundle/install_bundle.sh)
+    networks: [airgap]
+    restart: unless-stopped
+    # NVIDIA GPU? Uncomment (needs the NVIDIA Container Toolkit on the host):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+
+  vllm:
+    image: vllm/vllm-openai:v0.10.1
+    profiles: ["vllm"]
+    command: ["--model", "Qwen/Qwen2.5-7B-Instruct", "--max-model-len", "8192"]
+    environment:
+      HF_HUB_OFFLINE: "1"                 # never try to download: weights come from the bundle
+    volumes:
+      - hf-cache:/root/.cache/huggingface # model weights copied here from the offline bundle
+    networks: [airgap]
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+
+networks:
+  airgap:
+    internal: true                        # Docker creates NO route out of this network
+  edge: {}
+
+volumes:
+  audit:
+  ollama-models:
+  hf-cache:

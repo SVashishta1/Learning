@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benefits Navigator</title>
+<style>
+  :root { --bg:#f7f6f2; --card:#fff; --text:#1f2328; --muted:#5d6470; --line:#dedbd2; --accent:#0f766e;
+          --ok:#15803d; --maybe:#b45309; --no:#9ca3af; --bad:#b42318; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141513; --card:#1d1f1c; --text:#ecebe6; --muted:#a3a39b;
+          --line:#30322e; --accent:#2dd4bf; --ok:#4ade80; --maybe:#fbbf24; --no:#6b7280; --bad:#ff7a6e; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui, sans-serif; }
+  .wrap { max-width:980px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; margin:8px 0 4px; } h2 { font-size:17px; margin:0 0 8px; }
+  .banner { background:var(--card); border:1px dashed var(--maybe); padding:8px 12px; border-radius:8px; font-size:14px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:14px; }
+  textarea, input { width:100%; font:inherit; padding:8px; border-radius:8px; border:1px solid var(--line);
+                    background:var(--bg); color:var(--text); }
+  button { font:inherit; padding:7px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text); cursor:pointer; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .muted { color:var(--muted); font-size:14px; }
+  .chip { display:inline-block; padding:2px 10px; margin:2px; border-radius:99px; border:1px solid currentColor; font-size:14px; }
+  .likely { color:var(--ok); } .maybe { color:var(--maybe); } .unlikely { color:var(--no); }
+  .pending { color:var(--maybe); } .approved, .executed { color:var(--ok); } .rejected, .failed { color:var(--bad); }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .explain { font-size:18px; }
+  pre { white-space:pre-wrap; word-break:break-word; font-size:12px; background:var(--bg); padding:8px; border-radius:8px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; } td, th { border-bottom:1px solid var(--line); padding:4px; text-align:left; vertical-align:top; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Benefits navigator</h1>
+  <div class="banner"><b>Practice project.</b> Brightwater County and all its programmes are fictional. This tool gives guidance, never decisions.</div>
+
+  <section>
+    <h2>1. Tell us about your household</h2>
+    <p class="muted">Who lives with you (ages), money coming in each month or week, rent, heating bills, work or study. Any language.</p>
+    <textarea id="story" rows="5"></textarea>
+    <label class="muted">Names of people in the household (optional, helps us hide them): <input id="names" placeholder="e.g. Maria Lopez, Leo Lopez"></label>
+    <div class="row">
+      <button class="primary" id="go">Find help</button>
+      <button onclick="example('en')">English example</button>
+      <button onclick="example('es')">Ejemplo en español</button>
+      <span id="status" class="muted"></span>
+    </div>
+    <p class="muted" id="info"></p>
+  </section>
+
+  <section id="result" hidden>
+    <h2>2. What you may get</h2>
+    <div id="chips"></div>
+    <p class="explain" id="explain"></p>
+    <p class="muted" id="disclaimer"></p>
+    <h2>3. Papers to bring</h2>
+    <table id="checklist"></table>
+    <h2 style="margin-top:14px">4. Forms ready to send (needs your OK)</h2>
+    <label class="muted">Who approves (family member and caseworker): <input id="who" value="Family + caseworker"></label>
+    <div id="actions"></div>
+    <div class="row"><button id="exec" disabled>Send approved forms</button></div>
+    <h2 style="margin-top:14px">5. Next steps</h2>
+    <ul id="steps"></ul>
+  </section>
+
+  <section id="details" hidden>
+    <h2>For the caseworker</h2>
+    <p class="muted">What the AI was allowed to see (personal details replaced):</p>
+    <pre id="redacted"></pre>
+    <div id="forms"></div>
+    <details><summary>Rules engine results</summary><pre id="rules"></pre></details>
+    <details><summary>Trace (every step every agent took)</summary><table id="trace"></table></details>
+  </section>
+</div>
+<script>
+const EX = {
+  en: "This is Aisha Khan, call me on 07700 900 123. I live at 4 Mill Lane, Brightwater. I'm a single mum, I work part-time and earn 1,450 a month. My daughter Zara is 2. Rent is 700 a month. I got an eviction notice last week.",
+  es: "Hola, me llamo María López y vivo en 12 Oak Street, Brightwater. Mi teléfono es 0612 345 678. Somos 4: mi esposo, yo y dos hijos de 3 y 8 años. Ganamos 3.600 al mes. Pagamos 1.100 de renta y también la factura de calefacción. Mi esposo trabaja y yo estudio."
+};
+const NAMES = { en: "Aisha Khan, Zara", es: "María López" };
+let sid = null, timer = null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function example(l) { $("story").value = EX[l]; $("names").value = NAMES[l]; }
+
+async function api(path, body) {
+  const r = await fetch(path, body ? {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : {});
+  const d = await r.json(); if (!r.ok) throw new Error(d.detail || r.statusText); return d;
+}
+api("/api/info").then(i => $("info").textContent = `AI: ${i.provider}${i.require_local_model ? " (local models only)" : ""}. Personal details are removed before any AI sees your words.`);
+
+$("go").onclick = async () => {
+  try {
+    const names = $("names").value.split(",").map(s => s.trim()).filter(Boolean);
+    sid = (await api("/api/sessions", {story: $("story").value, known_names: names})).id;
+    $("status").textContent = "Working..."; clearInterval(timer); timer = setInterval(refresh, 1000); refresh();
+  } catch (e) { $("status").textContent = e.message; }
+};
+$("exec").onclick = async () => { await api(`/api/sessions/${sid}/execute`, {}); refresh(); };
+async function decide(aid, approve) {
+  try { await api(`/api/sessions/${sid}/actions/${aid}`, {approve, by: $("who").value}); refresh(); } catch (e) { alert(e.message); }
+}
+async function reveal(p) {
+  const f = await api(`/api/sessions/${sid}/forms/${p}`);
+  $("form-" + p).textContent = JSON.stringify(f, null, 2);
+}
+
+const fromUrl = new URLSearchParams(location.search).get("session");   // e.g. opened by voice_intake.py --send
+if (fromUrl) { sid = fromUrl; timer = setInterval(refresh, 1000); }
+
+async function refresh() {
+  const m = await api(`/api/sessions/${sid}`);
+  $("status").textContent = `${m.status} · ${m.budget.tool_calls} tool calls · $${m.budget.usd}`;
+  if (m.status !== "running" && m.status !== "created") clearInterval(timer);
+  $("details").hidden = false;
+  $("redacted").textContent = m.story_redacted;
+  $("rules").textContent = JSON.stringify(m.rules, null, 2);
+  $("trace").innerHTML = m.trace.map(t => `<tr><td>${t.t}</td><td>${esc(t.agent)}</td><td>${esc(t.kind)}</td><td>${esc(t.text)}</td></tr>`).join("");
+  $("forms").innerHTML = Object.entries(m.forms).map(([p, f]) => `<p><b>${p}</b> draft (placeholders)
+     <button onclick="reveal('${p}')">Show personal details</button></p><pre id="form-${p}">${esc(JSON.stringify(f, null, 2))}</pre>`).join("");
+  const p = m.plan; if (!p) return;
+  $("result").hidden = false;
+  const names = Object.fromEntries(Object.entries(m.rules).map(([k, v]) => [k, v.name]));
+  $("chips").innerHTML = ["likely", "maybe", "unlikely"].map(s => p[s].map(x => `<span class="chip ${s}">${s}: ${esc(names[x] || x)}</span>`).join("")).join("");
+  $("explain").textContent = m.explanation ? m.explanation.text : "";
+  $("disclaimer").textContent = p.disclaimer;
+  $("checklist").innerHTML = m.checklist.map(d => `<tr><td>☐ ${esc(d.label)}</td><td class="muted">${d.for_programmes.map(x => esc(names[x])).join(", ")}</td></tr>`).join("") || "<tr><td>Nothing yet.</td></tr>";
+  $("actions").innerHTML = m.actions.map(a => `<p><b>${a.id}</b> <span class="${a.status}">${a.status}</span> ${esc(a.summary)}
+     ${a.status === "pending" ? `<button onclick="decide('${a.id}', true)">Approve</button> <button onclick="decide('${a.id}', false)">Reject</button>` : `<span class="muted">${esc(a.decided_by)} ${esc(a.result)}</span>`}</p>`).join("") || '<p class="muted">No forms are complete yet. See next steps.</p>';
+  $("exec").disabled = !m.actions.some(a => a.status === "approved");
+  $("steps").innerHTML = p.next_steps.map(s => `<li>${esc(s)}</li>`).join("");
+}
+</script>
+</body>
+</html>

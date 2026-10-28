@@ -1,0 +1,19 @@
+[
+  {"id": "es-family-of-4",
+   "story": "Hola, me llamo María López y vivo en 12 Oak Street, Brightwater. Mi teléfono es 0612 345 678. Somos 4: mi esposo, yo y dos hijos de 3 y 8 años. Ganamos 3.600 al mes. Pagamos 1.100 de renta y también la factura de calefacción. Mi esposo trabaja y yo estudio.",
+   "expect": {"likely": ["childcare", "kidcare", "schoolmeals", "warmhome"], "unlikely": ["foodbridge", "rentrelief"],
+              "language": "es", "pii": ["María López", "12 Oak Street", "0612 345 678"]}},
+  {"id": "single-adult-over-limit",
+   "story": "I'm Tom Baker, 30, I live alone in Brightwater and work full-time. I earn 3,000 a month and my rent is 900. Heating is included in my rent.",
+   "expect": {"likely": [], "language": "en", "pii": ["Tom Baker"]}},
+  {"id": "retired-couple",
+   "story": "My name is Ruth Evans. I'm 67 and my husband is 70, we are both retired and live in Brightwater. Our pension is 1,900 a month. We own our home, so no rent, but we pay the gas heating bill.",
+   "expect": {"likely": ["foodbridge", "warmhome"], "unlikely": ["rentrelief"], "language": "en", "pii": ["Ruth Evans"]}},
+  {"id": "single-mum-eviction",
+   "story": "This is Aisha Khan, call me on 07700 900 123 or aisha.k@example.com. I live at 4 Mill Lane, Brightwater. I'm a single mum, I work part-time and earn 1,450 a month. My daughter Zara is 2. Rent is 700 a month. I got an eviction notice last week.",
+   "expect": {"likely": ["childcare", "foodbridge", "kidcare", "rentrelief"], "maybe": ["warmhome"], "language": "en",
+              "submissions": ["foodbridge"], "pii": ["Aisha Khan", "07700 900 123", "aisha.k@example.com", "4 Mill Lane", "Zara"]}},
+  {"id": "weekly-wages",
+   "story": "We are a family of 3 in Brightwater: me, my partner and our son aged 10. I make 600 a week and my partner is unemployed. We pay 1,000 rent.",
+   "expect": {"likely": ["foodbridge", "kidcare", "schoolmeals"], "unlikely": ["rentrelief", "childcare"], "income": 2600, "language": "en", "pii": []}}
+]

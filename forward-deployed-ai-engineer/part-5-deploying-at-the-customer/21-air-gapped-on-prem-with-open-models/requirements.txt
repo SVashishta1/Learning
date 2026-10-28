@@ -1,0 +1,5 @@
+fastapi==0.143.0       # the web API
+uvicorn==0.54.0        # the web server
+httpx==0.28.1          # talks to the local model server (Ollama / vLLM)
+pydantic==2.14.1       # request validation
+pytest==9.1.1          # tests (not needed on the production host)
